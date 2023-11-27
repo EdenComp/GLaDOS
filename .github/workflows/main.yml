@@ -31,7 +31,6 @@ jobs:
   tests:
     name: "Tests"
     runs-on: ubuntu-latest
-    container: rust:latest
     needs:
       - compilation
     steps:
