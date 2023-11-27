@@ -1,0 +1,29 @@
+name: Repository mirroring
+
+on:
+  pull_request:
+    branches:
+      - main
+    types:
+      - closed
+
+env:
+  MIRROR_URL: "git@github.com:EpitechPromo2026/B-FUN-500-PAR-5-2-glados-reza.rahemtola.git"
+
+jobs:
+  push_to_mirror:
+    name: Push repository to mirror
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.merged == true
+    steps:
+      - name: Repository checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Repository mirroring
+        uses: pixta-dev/repository-mirroring-action@v1
+        with:
+          target_repo_url:
+            ${{ env.MIRROR_URL }}
+          ssh_private_key:
+            ${{ secrets.GIT_SSH_PRIVATE_KEY }}
