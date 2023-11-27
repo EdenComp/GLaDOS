@@ -1,0 +1,46 @@
+name: GLaDOS
+
+on:
+  push:
+
+env:
+  EXECUTABLES: "glados"
+
+jobs:
+  compilation:
+    name: "Compilation"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: haskell-actions/setup@v2
+        with:
+          ghc-version: '9.8.1'
+          enable-stack: true
+          stack-version: '2.13.1'
+      - name: Repository checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Compilation
+        timeout-minutes: 2
+        run: make
+      - name: Test executables presence
+        run: IFS=',' read -r -a array <<< ${{ env.EXECUTABLES }} ; for value in ${array[@]} ; do find . -executable -name "${value}" | grep -q . || exit 1 ; done
+
+  tests:
+    name: "Tests"
+    runs-on: ubuntu-latest
+    needs:
+      - compilation
+    steps:
+      - uses: haskell-actions/setup@v2
+        with:
+          ghc-version: '9.8.1'
+          enable-stack: true
+          stack-version: '2.13.1'
+      - name: Repository checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Tests
+        timeout-minutes: 2
+        run: make tests_run
