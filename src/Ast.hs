@@ -1,33 +1,62 @@
+{-# LANGUAGE RankNTypes #-}
+
 module Ast (
-  Ast (..),
+  AstNode (..),
+  Variable (..),
   sexprToAst,
-  runAst,
+  evalAstNode,
 ) where
 
+import Data.Type.Coercion ()
 import qualified SExpr (SymbolicExpression (Float, Integer, List, Symbol))
 
-data Ast
-  = Define String Int
-  | Integer Int
+data AstNode
+  = Integer Int
   | Float Float
   | Symbol String
   | Boolean Bool
-  | Call String Int Int
+  | Call String [AstNode]
   deriving (Show)
 
-sexprToAst :: SExpr.SymbolicExpression -> Maybe Ast
-sexprToAst (SExpr.Integer value) = Just (Integer value)
-sexprToAst (SExpr.Float value) = Just (Float value)
+data Variable = Variable
+  { identifier :: String
+  , value :: AstNode
+  }
+
+sexprToAst :: SExpr.SymbolicExpression -> Maybe AstNode
+sexprToAst (SExpr.Integer intValue) = Just (Integer intValue)
+sexprToAst (SExpr.Float floatValue) = Just (Float floatValue)
 sexprToAst (SExpr.Symbol "#t") = Just (Boolean True)
 sexprToAst (SExpr.Symbol "#f") = Just (Boolean False)
 sexprToAst (SExpr.Symbol sym) = Just (Symbol sym)
-sexprToAst (SExpr.List [SExpr.Symbol "define", SExpr.Symbol name, SExpr.Integer value]) = Just (Define name value)
-sexprToAst (SExpr.List [SExpr.Symbol op, SExpr.Integer left, SExpr.Integer right])
-  | op == "+" || op == "*" = Just (Call op left right)
-  | otherwise = Nothing
+sexprToAst (SExpr.List (SExpr.Symbol name : xs)) = Call name <$> mapM sexprToAst xs
+sexprToAst (SExpr.List []) = Just (Symbol "()")
 sexprToAst _ = Nothing
 
-runAst :: Ast -> Maybe Ast
-runAst (Call "+" l r) = Just (Integer (l + r))
-runAst (Call "*" l r) = Just (Integer (l * r))
-runAst _ = Nothing
+evalAstNode :: [Variable] -> AstNode -> Maybe AstNode
+evalAstNode variables (Call "+" [l, r]) = applyBinaryOpOnNodes variables l r (+)
+evalAstNode variables (Call "*" [l, r]) = applyBinaryOpOnNodes variables l r (*)
+evalAstNode variables (Call "-" [l, r]) = applyBinaryOpOnNodes variables l r (-)
+evalAstNode variables (Symbol iden) = getVariableValue iden variables
+evalAstNode _ _ = Nothing
+
+applyBinaryOpOnNodes :: [Variable] -> AstNode -> AstNode -> (forall b. (Num b) => b -> b -> b) -> Maybe AstNode
+applyBinaryOpOnNodes _ (Integer l) (Integer r) op = Just $ Integer (op l r)
+applyBinaryOpOnNodes _ (Integer l) (Float r) op = Just $ Float (op (fromIntegral l) r)
+applyBinaryOpOnNodes _ (Float l) (Float r) op = Just $ Float (op l r)
+applyBinaryOpOnNodes _ (Float l) (Integer r) op = Just $ Float (op l (fromIntegral r))
+applyBinaryOpOnNodes variables (Call name args) (Integer r) op = evalAstNode variables (Call name args) >>= \l -> applyBinaryOpOnNodes variables l (Integer r) op
+applyBinaryOpOnNodes variables (Integer l) (Call name args) op = evalAstNode variables (Call name args) >>= \r -> applyBinaryOpOnNodes variables (Integer l) r op
+applyBinaryOpOnNodes variables (Call name args) (Float r) op = evalAstNode variables (Call name args) >>= \l -> applyBinaryOpOnNodes variables l (Float r) op
+applyBinaryOpOnNodes variables (Float l) (Call name args) op = evalAstNode variables (Call name args) >>= \r -> applyBinaryOpOnNodes variables (Float l) r op
+applyBinaryOpOnNodes variables (Symbol sym) (Integer r) op = evalAstNode variables (Symbol sym) >>= \l -> applyBinaryOpOnNodes variables l (Integer r) op
+applyBinaryOpOnNodes variables (Integer l) (Symbol sym) op = evalAstNode variables (Symbol sym) >>= \r -> applyBinaryOpOnNodes variables (Integer l) r op
+applyBinaryOpOnNodes variables (Symbol sym) (Float r) op = evalAstNode variables (Symbol sym) >>= \l -> applyBinaryOpOnNodes variables l (Float r) op
+applyBinaryOpOnNodes variables (Float l) (Symbol sym) op = evalAstNode variables (Symbol sym) >>= \r -> applyBinaryOpOnNodes variables (Float l) r op
+applyBinaryOpOnNodes _ _ _ _ = Nothing
+
+getVariableValue :: [Char] -> [Variable] -> Maybe AstNode
+getVariableValue searchIdentifier (x : xs)
+  | identifier x == searchIdentifier = Just $ value x
+  | otherwise = getVariableValue searchIdentifier xs
+getVariableValue _ [] = Nothing
