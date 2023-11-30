@@ -4,7 +4,7 @@ module Ast (
   runAst,
 ) where
 
-import qualified SExpr (SymbolicExpression (Integer, List, Symbol))
+import qualified SExpr (SymbolicExpression (Float, Integer, List, Symbol))
 
 data Ast
   = Define String Int
@@ -16,7 +16,8 @@ data Ast
   deriving (Show)
 
 sexprToAst :: SExpr.SymbolicExpression -> Maybe Ast
-sexprToAst (SExpr.Integer int) = Just (Integer int)
+sexprToAst (SExpr.Integer value) = Just (Integer value)
+sexprToAst (SExpr.Float value) = Just (Float value)
 sexprToAst (SExpr.Symbol "#t") = Just (Boolean True)
 sexprToAst (SExpr.Symbol "#f") = Just (Boolean False)
 sexprToAst (SExpr.Symbol sym) = Just (Symbol sym)
