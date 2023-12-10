@@ -16,7 +16,7 @@ colorReset = "\x1b[0m"
 
 getUserInput :: IO ()
 getUserInput =
-  putStr (colorRed ++ "DreamBerd4-Interpret>>> " ++ colorReset)
+  putStr (colorRed ++ "DreamBerd4-Interpreter>>> " ++ colorReset)
     >> hFlush stdout
     >> isEOF
     >>= \eof ->
