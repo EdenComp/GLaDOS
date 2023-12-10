@@ -7,7 +7,7 @@ module SExpr (
 import Data.List (intercalate)
 
 data SymbolicExpression
-    = Number Float
+    = Number Integer
     | Symbol String
     | List [SymbolicExpression]
 
