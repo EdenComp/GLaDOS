@@ -14,6 +14,6 @@ processFile fileName =
 
 getInput :: IO ()
 getInput =
-  putStrLn "Welcome to DreamBerd4-Interpret!"
+  putStrLn "Welcome to DreamBerd4-Interpreter!"
     >> getUserInput
 
