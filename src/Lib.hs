@@ -7,8 +7,8 @@ import ReadInput (getInput, processFile)
 import System.Environment (getArgs)
 
 glados :: IO ()
-glados = do
-  args <- getArgs
-  case args of
-    [fileName] -> processFile fileName
-    _ -> getInput
+glados =
+  getArgs >>= \args ->
+    case args of
+      [fileName] -> processFile fileName
+      _           -> getInput

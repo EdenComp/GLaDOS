@@ -8,12 +8,12 @@ import GetFile (getFileContent)
 import GetInput (getUserInput)
 
 processFile :: FilePath -> IO ()
-processFile fileName = do
-  fileContent <- getFileContent fileName
-  putStrLn $ "Content of file " ++ fileName ++ " without comments:"
-  putStrLn fileContent
+processFile fileName =
+  getFileContent fileName
+    >>= \fileContent -> putStrLn ("Content of file " ++ fileName) >> putStrLn fileContent
 
 getInput :: IO ()
-getInput = do
+getInput =
   putStrLn "Welcome to DreamBerd4-Interpret!"
-  getUserInput
+    >> getUserInput
+

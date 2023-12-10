@@ -3,7 +3,7 @@ module GetInput
   )
 where
 
-import System.IO (hFlush, stdout)
+import System.IO (hFlush, stdout, isEOF)
 
 colorRed :: String
 colorRed = "\x1b[31m"
@@ -15,11 +15,15 @@ colorReset :: String
 colorReset = "\x1b[0m"
 
 getUserInput :: IO ()
-getUserInput = do
-  putStr $ colorRed ++ "DreamBerd4-Interpret>>> " ++ colorReset
-  hFlush stdout
-  userInput <- getLine
-  putStrLn $ "You entered: " ++ userInput
-  if userInput /= "exit"
-    then getUserInput
-    else putStrLn $ colorYellow ++ "Exit DreamBerd4!" ++ colorReset
+getUserInput =
+  putStr (colorRed ++ "DreamBerd4-Interpret>>> " ++ colorReset)
+    >> hFlush stdout
+    >> isEOF
+    >>= \eof ->
+      if eof
+        then putStrLn (colorYellow ++ "Exit DreamBerd4!" ++ colorReset)
+        else
+          getLine
+            >>= \userInput ->
+              putStrLn ("You entered: " ++ userInput)
+                >> getUserInput
