@@ -10,11 +10,10 @@ module Ast (
 
 import Data.Maybe (isNothing)
 import Data.Type.Coercion ()
-import qualified SExpr (SymbolicExpression (Float, Integer, List, Symbol))
+import qualified SExpr (SymbolicExpression (List, Number, Symbol))
 
 data AstNode
-  = Integer Int
-  | Float Float
+  = Number Float
   | Symbol String
   | Boolean Bool
   | Call String [AstNode]
@@ -28,8 +27,7 @@ data Variable = Variable
   deriving (Show)
 
 sexprToAst :: SExpr.SymbolicExpression -> Maybe AstNode
-sexprToAst (SExpr.Integer intValue) = Just (Integer intValue)
-sexprToAst (SExpr.Float floatValue) = Just (Float floatValue)
+sexprToAst (SExpr.Number val) = Just (Number val)
 sexprToAst (SExpr.Symbol "#t") = Just (Boolean True)
 sexprToAst (SExpr.Symbol "#f") = Just (Boolean False)
 sexprToAst (SExpr.Symbol sym) = Just (Symbol sym)
@@ -61,9 +59,7 @@ evalAstNode variables (Symbol iden) = getVariableValue iden variables >>= \ast -
 evalAstNode variables val = Just (val, variables)
 
 applyBinaryOpOnNodes :: [Variable] -> AstNode -> AstNode -> (forall b. (Num b) => b -> b -> b) -> Maybe AstNode
-applyBinaryOpOnNodes _ (Integer l) (Integer r) op = Just $ Integer (op l r)
-applyBinaryOpOnNodes _ (Integer l) (Float r) op = Just $ Float (op (fromIntegral l) r)
-applyBinaryOpOnNodes _ (Float l) (Float r) op = Just $ Float (op l r)
+applyBinaryOpOnNodes _ (Number l) (Number r) op = Just $ Number (op l r)
 applyBinaryOpOnNodes vars (Symbol l) (Symbol r) op = evalAstNode vars (Symbol l) >>= \(lResolved, newVariables) -> evalAstNode newVariables (Symbol r) >>= \(rResolved, newNewVariables) -> applyBinaryOpOnNodes newNewVariables lResolved rResolved op
 applyBinaryOpOnNodes vars (Call name args) r op = evalAstNode vars (Call name args) >>= \(l, newVariables) -> applyBinaryOpOnNodes newVariables l r op
 applyBinaryOpOnNodes vars (Symbol sym) r op = evalAstNode vars (Symbol sym) >>= \(l, newVariables) -> applyBinaryOpOnNodes newVariables l r op
