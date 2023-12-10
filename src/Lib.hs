@@ -1,6 +1,14 @@
-module Lib (
-  glados,
-) where
+module Lib
+  ( glados,
+  )
+where
+
+import ReadInput (getInput, processFile)
+import System.Environment (getArgs)
 
 glados :: IO ()
-glados = putStrLn "Hello, World"
+glados = do
+  args <- getArgs
+  case args of
+    [fileName] -> processFile fileName
+    _ -> getInput
