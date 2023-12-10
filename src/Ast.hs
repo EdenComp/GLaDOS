@@ -8,6 +8,7 @@ module Ast (
   evalAst,
 ) where
 
+import Data.Maybe (isNothing)
 import Data.Type.Coercion ()
 import qualified SExpr (SymbolicExpression (Float, Integer, List, Symbol))
 
@@ -17,6 +18,7 @@ data AstNode
   | Symbol String
   | Boolean Bool
   | Call String [AstNode]
+  | Void
   deriving (Show)
 
 data Variable = Variable
@@ -36,8 +38,12 @@ sexprToAst (SExpr.List []) = Just (Symbol "()")
 sexprToAst _ = Nothing
 
 getNewStateOfAst :: Maybe ([AstNode], [Variable]) -> AstNode -> Maybe ([AstNode], [Variable])
-getNewStateOfAst (Just (nodes, variables)) node = evalAstNode variables node >>= \(ast, newVariables) -> Just (nodes ++ [ast], newVariables)
+getNewStateOfAst (Just (nodes, variables)) node = evalAstNode variables node >>= uncurry (filterVoidValues nodes)
 getNewStateOfAst _ _ = Nothing
+
+filterVoidValues :: [AstNode] -> AstNode -> [Variable] -> Maybe ([AstNode], [Variable])
+filterVoidValues nodes Void variables = Just (nodes, variables)
+filterVoidValues nodes node variables = Just (nodes ++ [node], variables)
 
 evalAst :: [AstNode] -> Maybe [AstNode]
 evalAst = fmap fst . foldl getNewStateOfAst (Just ([], []))
@@ -46,24 +52,23 @@ evalAstNode :: [Variable] -> AstNode -> Maybe (AstNode, [Variable])
 evalAstNode variables (Call "+" [l, r]) = applyBinaryOpOnNodes variables l r (+) >>= \ast -> Just (ast, variables)
 evalAstNode variables (Call "*" [l, r]) = applyBinaryOpOnNodes variables l r (*) >>= \ast -> Just (ast, variables)
 evalAstNode variables (Call "-" [l, r]) = applyBinaryOpOnNodes variables l r (-) >>= \ast -> Just (ast, variables)
-evalAstNode variables (Call "define" [Symbol iden, r]) = Just (Call "defined" [Symbol iden, r], addVariable iden r variables)
+evalAstNode variables (Call "define" [Symbol iden, r]) =
+  evalAstNode variables r
+    >>= \(rResolved, newVariables) ->
+      addVariable iden rResolved newVariables
+        >>= \newNewVariables -> Just (Void, newNewVariables)
 evalAstNode variables (Symbol iden) = getVariableValue iden variables >>= \ast -> Just (ast, variables)
-evalAstNode _ _ = Nothing
+evalAstNode variables val = Just (val, variables)
 
 applyBinaryOpOnNodes :: [Variable] -> AstNode -> AstNode -> (forall b. (Num b) => b -> b -> b) -> Maybe AstNode
 applyBinaryOpOnNodes _ (Integer l) (Integer r) op = Just $ Integer (op l r)
 applyBinaryOpOnNodes _ (Integer l) (Float r) op = Just $ Float (op (fromIntegral l) r)
 applyBinaryOpOnNodes _ (Float l) (Float r) op = Just $ Float (op l r)
-applyBinaryOpOnNodes _ (Float l) (Integer r) op = Just $ Float (op l (fromIntegral r))
-applyBinaryOpOnNodes variables (Call name args) (Integer r) op = evalAstNode variables (Call name args) >>= \(l, newVariables) -> applyBinaryOpOnNodes newVariables l (Integer r) op
-applyBinaryOpOnNodes variables (Integer l) (Call name args) op = evalAstNode variables (Call name args) >>= \(r, newVariables) -> applyBinaryOpOnNodes newVariables (Integer l) r op
-applyBinaryOpOnNodes variables (Call name args) (Float r) op = evalAstNode variables (Call name args) >>= \(l, newVariables) -> applyBinaryOpOnNodes newVariables l (Float r) op
-applyBinaryOpOnNodes variables (Float l) (Call name args) op = evalAstNode variables (Call name args) >>= \(r, newVariables) -> applyBinaryOpOnNodes newVariables (Float l) r op
-applyBinaryOpOnNodes variables (Symbol sym) (Integer r) op = evalAstNode variables (Symbol sym) >>= \(l, newVariables) -> applyBinaryOpOnNodes newVariables l (Integer r) op
-applyBinaryOpOnNodes variables (Integer l) (Symbol sym) op = evalAstNode variables (Symbol sym) >>= \(r, newVariables) -> applyBinaryOpOnNodes newVariables (Integer l) r op
-applyBinaryOpOnNodes variables (Symbol sym) (Float r) op = evalAstNode variables (Symbol sym) >>= \(l, newVariables) -> applyBinaryOpOnNodes newVariables l (Float r) op
-applyBinaryOpOnNodes variables (Float l) (Symbol sym) op = evalAstNode variables (Symbol sym) >>= \(r, newVariables) -> applyBinaryOpOnNodes newVariables (Float l) r op
-applyBinaryOpOnNodes _ _ _ _ = Nothing
+applyBinaryOpOnNodes vars (Symbol l) (Symbol r) op = evalAstNode vars (Symbol l) >>= \(lResolved, newVariables) -> evalAstNode newVariables (Symbol r) >>= \(rResolved, newNewVariables) -> applyBinaryOpOnNodes newNewVariables lResolved rResolved op
+applyBinaryOpOnNodes vars (Call name args) r op = evalAstNode vars (Call name args) >>= \(l, newVariables) -> applyBinaryOpOnNodes newVariables l r op
+applyBinaryOpOnNodes vars (Symbol sym) r op = evalAstNode vars (Symbol sym) >>= \(l, newVariables) -> applyBinaryOpOnNodes newVariables l r op
+applyBinaryOpOnNodes _ (Boolean _) _ _ = Nothing
+applyBinaryOpOnNodes vars l r op = applyBinaryOpOnNodes vars r l op
 
 getVariableValue :: [Char] -> [Variable] -> Maybe AstNode
 getVariableValue searchIdentifier (x : xs)
@@ -71,5 +76,7 @@ getVariableValue searchIdentifier (x : xs)
   | otherwise = getVariableValue searchIdentifier xs
 getVariableValue _ [] = Nothing
 
-addVariable :: [Char] -> AstNode -> [Variable] -> [Variable]
-addVariable iden varValue variables = variables ++ [Variable{identifier = iden, value = varValue}]
+addVariable :: [Char] -> AstNode -> [Variable] -> Maybe [Variable]
+addVariable iden varValue variables
+  | isNothing $ getVariableValue iden variables = Just (variables ++ [Variable{identifier = iden, value = varValue}])
+  | otherwise = Nothing
