@@ -16,4 +16,3 @@ getInput :: IO ()
 getInput =
   putStrLn "Welcome to DreamBerd4-Interpreter!"
     >> getUserInput
-
