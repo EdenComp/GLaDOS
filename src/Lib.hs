@@ -11,4 +11,5 @@ glados =
   getArgs >>= \args ->
     case args of
       [fileName] -> processFile fileName
-      _           -> getInput
+      _ | null args -> getInput
+        | otherwise -> putStrLn "Exit 84" >> pure ()
