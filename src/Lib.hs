@@ -5,11 +5,12 @@ where
 
 import ReadInput (getInput, processFile)
 import System.Environment (getArgs)
+import System.Exit (exitWith, ExitCode(..))
 
 glados :: IO ()
 glados =
   getArgs >>= \args ->
     case args of
-      [fileName] -> processFile fileName
-      _ | null args -> getInput
-        | otherwise -> putStrLn "Exit 84" >> pure ()
+      []          -> getInput
+      [fileName]  -> processFile fileName
+      _           -> putStrLn "Exit 84" >> exitWith (ExitFailure 84)
