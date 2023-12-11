@@ -39,6 +39,7 @@ tests:
   testGlados:
     main:                Spec.hs
     source-dirs:         test
+    other-modules:       Parse
     ghc-options:
     - -threaded
     - -rtsopts
