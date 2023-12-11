@@ -111,6 +111,3 @@ parseInt = Parser f
 
 parsePair :: Parser a -> Parser (a, a)
 parsePair p = parseAndWith (,) p p
-
-parseList :: Parser a -> Parser [a]
-parseList l = parseAndWith (:) l (parseMany (parseAndWith (,) (parseChar ',') l))
