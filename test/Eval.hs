@@ -13,6 +13,7 @@ testEvaluation = TestList [
 
 testAstEvaluation :: Test
 testAstEvaluation = TestList [
+<<<<<<< HEAD
     TestCase (assertEqual "basic" (evalAst [Types.Number 1]) (Just [Types.Number 1])),
     TestCase (assertEqual "basic operation" (evalAst [Types.Call (Types.Symbol "*") [Types.Number 12, Types.Number 3]]) (Just [Types.Number 36])),
     TestCase (assertEqual "unknown symbol" (evalAst [Types.Call (Types.Symbol "*") [Types.Symbol "var", Types.Number 3]]) Nothing),
@@ -35,5 +36,4 @@ testAstEvaluation = TestList [
     -- TODO: Reassignment not working
     -- ,
     -- TestCase (assertEqual "reassignment" (evalAst [Types.Call (Types.Symbol "define") [Types.Symbol "let", Types.Number 4], Types.Call (Types.Symbol "define") [Types.Symbol "let", Types.Number 9], Types.Symbol("let")]) (Just [Types.Number 9])),
-    -- TestCase (assertEqual "reassignment with value" (evalAst [Types.Call (Types.Symbol "define") [Types.Symbol "let", Types.Number 4], Types.Call (Types.Symbol "define") [Types.Symbol "let", Types.Call (Types.Symbol "+") [Types.Symbol "let", Types.Number 6]], Types.Symbol("let")]) (Just [Types.Number 10]))
     ]
