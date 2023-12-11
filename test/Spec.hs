@@ -1,20 +1,17 @@
-{-
--- EPITECH PROJECT, 2022
--- GLaDOS
--- File description:
--- Unit tests
--}
-
-import Test.HUnit
-
-import Control.Monad (void)
-import Parse
-
-tests :: Test
-tests =
-    TestList
-        [ testParse
-        ]
+import Eval (testEvaluation)
+import System.Exit (exitWith, ExitCode(..))
+import Test.HUnit (Test(..), runTestTT, errors, failures)
 
 main :: IO ()
-main = void $ runTestTT tests
+main = do
+    results <- runTestTT listTests
+    if (errors results + failures results == 0)
+        then
+            exitWith ExitSuccess
+        else
+            exitWith (ExitFailure 1)
+
+listTests :: Test
+listTests = TestList [
+    testEvaluation
+    ]
