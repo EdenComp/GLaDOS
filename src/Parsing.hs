@@ -15,8 +15,7 @@ module Parsing (
     parseSome,
     parseUInt,
     parseInt,
-    parsePair,
-    parseList
+    parsePair
     ) where
 
 import Control.Applicative (Alternative(..), many, some)
