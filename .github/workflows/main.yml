@@ -5,21 +5,41 @@ on:
 
 env:
   EXECUTABLES: "glados"
+  GHC_VERSION: "9.8.1"
+  STACK_VERSION: "2.13.1"
+  HLINT_VERSION: "3.1.6"
+
 
 jobs:
+  hlint:
+    name: "HLint"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Repository checkout
+        uses: actions/checkout@v4
+
+      - name: 'Set up HLint'
+        uses: haskell-actions/hlint-setup@v2
+        with:
+          version: ${{ env.HLINT_VERSION }}
+
+      - name: 'Run HLint'
+        uses: haskell-actions/hlint-run@v2
+        with:
+          path: src/
+          fail-on: warning
+
   compilation:
     name: "Compilation"
     runs-on: ubuntu-latest
     steps:
       - uses: haskell-actions/setup@v2
         with:
-          ghc-version: '9.8.1'
+          ghc-version: ${{ env.GHC_VERSION }}
           enable-stack: true
-          stack-version: '2.13.1'
+          stack-version: ${{ env.STACK_VERSION }}
       - name: Repository checkout
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
       - name: Compilation
         timeout-minutes: 2
         run: make
@@ -29,18 +49,16 @@ jobs:
   tests:
     name: "Tests"
     runs-on: ubuntu-latest
-    needs:
-      - compilation
     steps:
       - uses: haskell-actions/setup@v2
         with:
-          ghc-version: '9.8.1'
+          ghc-version: ${{ env.GHC_VERSION }}
           enable-stack: true
-          stack-version: '2.13.1'
+          stack-version: ${{ env.STACK_VERSION }}
       - name: Repository checkout
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
       - name: Tests
         timeout-minutes: 2
         run: make tests_run
+    needs:
+      - compilation
