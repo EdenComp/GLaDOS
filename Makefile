@@ -1,10 +1,3 @@
-##
-## EPITECH PROJECT, 2022
-## GLaDOS
-## File description:
-## Makefile
-##
-
 SRC		=	app/Main.hs 		\
 
 NAME	=	glados

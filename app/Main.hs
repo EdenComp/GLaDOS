@@ -1,13 +1,6 @@
-{-
--- EPITECH PROJECT, 2023
--- GLaDOS
--- File description:
--- Main
--}
-
-module Main
-    ( main
-    ) where
+module Main (
+    main,
+) where
 
 import Lib
 
