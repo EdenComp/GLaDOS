@@ -1,8 +1,8 @@
-{-# LANGUAGE LambdaCase #-}
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 {-# HLINT ignore "Use newtype instead of data" #-}
 {-# OPTIONS_GHC -Wno-incomplete-patterns #-}
 {-# OPTIONS_GHC -Wno-overlapping-patterns #-}
+{-# OPTIONS_GHC -Wno-name-shadowing #-}
 module Parsing (
     parse,
     Parser,
@@ -15,11 +15,12 @@ module Parsing (
     parseSome,
     parseUInt,
     parseInt,
-    parsePair
+    parsePair,
+    parseList
     ) where
 
-import Control.Applicative (Alternative(..), many, some)
-import Data.Char (isDigit, isAlpha)
+import Control.Applicative (Alternative(..))
+import Data.Char (isDigit)
 
 data Parser a = Parser { parse :: String -> Maybe (a, String) }
 
@@ -76,6 +77,12 @@ parseAndWith f p1 p2 = f <$> p1 <*> p2
 
 parseMany :: Parser a -> Parser [a]
 parseMany p = Parser $ \input ->
+  case parse (parseSome p) input of
+    Just (results, rest) -> Just (results, rest)
+    Nothing -> Just ([], input)
+
+parseSome :: Parser a -> Parser [a]
+parseSome p = Parser $ \input ->
   case parse p input of
     Just (result, rest) ->
       case parse (parseMany p) rest of
@@ -83,30 +90,27 @@ parseMany p = Parser $ \input ->
         Nothing -> Just ([result], rest)
     Nothing -> Nothing
 
-parseSome :: Parser a -> Parser [a]
-parseSome p = Parser $ \input ->
-    case parse p input of
-        Just (result, rest)
-            | rest /= input -> Nothing
-            | otherwise -> Just ([], input)
-            | otherwise -> Nothing
-        Nothing -> Nothing
-
 
 
 parseUInt :: Parser Int
 parseUInt = Parser f
-  where f input = case parse (parseSome (parseChar '0' <|> parseChar '1' <|> parseChar '2' <|> parseChar '3' <|> parseChar '4' <|> parseChar '5' <|> parseChar '6' <|> parseChar '7' <|> parseChar '8' <|> parseChar '9')) input of
-          Just (result, rest) -> Just (read result, rest)
-          Nothing -> Nothing
+  where
+    f input = case span isDigit input of
+                ("", _) -> Nothing
+                (numStr, rest) -> Just (read numStr, rest)
+
 
 parseInt :: Parser Int
-parseInt = Parser f
-  where f input = case parse (parseChar '-') input of
-          Just (_, rest) -> case parse parseUInt rest of
-            Just (result, rest') -> Just (-result, rest')
-            Just (result, rest) -> Just (result, rest)
-            Nothing -> Nothing
+parseInt = parseNeg <|> parseUInt
+  where
+    parseNeg = parseChar '-' *> (negate <$> parseUInt)
+
 
 parsePair :: Parser a -> Parser (a, a)
-parsePair p = parseAndWith (,) p p
+parsePair p = parseChar '(' *> parseAndWith (,) p (parseChar ' ' *> p) <* parseChar ')'
+
+
+parseList :: Parser a -> Parser [a]
+parseList p = parseChar '(' *> parseList' p <* parseChar ')'
+  where
+    parseList' p = parseAndWith (:) p (parseChar ' ' *> parseList' p) <|> pure []

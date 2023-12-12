@@ -77,6 +77,33 @@ testParseInt = TestList [
     TestCase (assertEqual "parseInt \"\"" Nothing (parse parseInt ""))
     ]
 
+testParsePair :: Test
+testParsePair = TestList [
+    TestCase (assertEqual "parsePair parseInt \"(123 456) foo bar \"" 
+                          (Just ((123, 456), " foo bar ")) 
+                          (parse (parsePair parseInt) "(123 456) foo bar ")),
+    TestCase (assertEqual "parsePair parseInt \"(-123 456)\"" 
+                          (Just ((-123, 456), "")) 
+                          (parse (parsePair parseInt) "(-123 456)")),
+
+    TestCase (assertEqual "parsePair parseInt \"(abc 123)\"" 
+                          Nothing 
+                          (parse (parsePair parseInt) "(abc 123)")),
+
+    TestCase (assertEqual "parsePair parseInt \"(123 abc)\"" 
+                          Nothing 
+                          (parse (parsePair parseInt) "(123 abc)")),
+
+    TestCase (assertEqual "parsePair parseInt \"(123)\"" 
+                          Nothing 
+                          (parse (parsePair parseInt) "(123)")),
+
+    TestCase (assertEqual "parsePair parseInt \"(123 456 789)\"" 
+                          Nothing 
+                          (parse (parsePair parseInt) "(123 456 789)"))
+    ]
+
+
 
 
 
@@ -90,7 +117,6 @@ testParse = TestList [
     TestLabel "parseMany" testParseMany,
     TestLabel "parseSome" testParseSome,
     TestLabel "parseUInt" testParseUInt,
-    TestLabel "parseInt" testParseUInt,
-    TestLabel "parsePair" testParsePair,
-    TestLabel "parseList" testParseList,
+    TestLabel "parseInt" testParseInt,
+    TestLabel "parsePair" testParsePair
     ]
