@@ -8,6 +8,7 @@ env:
   GHC_VERSION: "9.8.1"
   STACK_VERSION: "2.13.1"
   HLINT_VERSION: "3.1.6"
+  FORMULU_VERSION: "0.14.1.0"
 
 
 jobs:
@@ -18,16 +19,27 @@ jobs:
       - name: Repository checkout
         uses: actions/checkout@v4
 
-      - name: 'Set up HLint'
+      - name: Set up HLint
         uses: haskell-actions/hlint-setup@v2
         with:
           version: ${{ env.HLINT_VERSION }}
 
-      - name: 'Run HLint'
+      - name: Run HLint
         uses: haskell-actions/hlint-run@v2
         with:
           path: src/
           fail-on: warning
+
+  format:
+    name: Formatting
+    runs-on: ubuntu-latest
+    steps:
+      - name: Repository checkout
+        uses: actions/checkout@v4
+      - name: Run formulu
+        uses: haskell-actions/run-fourmolu@v9
+        with:
+          version: ${{ env.FORMULU_VERSION }}
 
   compilation:
     name: "Compilation"
