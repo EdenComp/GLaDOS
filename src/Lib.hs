@@ -1,16 +1,15 @@
-module Lib
-  ( glados,
-  )
-where
+{-# LANGUAGE LambdaCase #-}
+
+module Lib (glados) where
 
 import ReadInput (getInput, processFile)
 import System.Environment (getArgs)
-import System.Exit (exitWith, ExitCode(..))
+import System.Exit (ExitCode (..), exitWith)
 
 glados :: IO ()
 glados =
-  getArgs >>= \args ->
-    case args of
-      []          -> getInput
-      [fileName]  -> processFile fileName
-      _           -> putStrLn "Exit 84" >> exitWith (ExitFailure 84)
+    getArgs
+        >>= \case
+            [] -> getInput
+            [fileName] -> processFile fileName
+            _ -> putStrLn "Exit 84" >> exitWith (ExitFailure 84)
