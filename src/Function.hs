@@ -2,6 +2,7 @@
 
 module Function (appendParametersToVariables, evalCall) where
 
+import Control.Applicative
 import Types (AstNode (..), BuiltinOperator, NodeEvaluator, Variable (..))
 import Variable (addVariable)
 
@@ -13,13 +14,29 @@ appendParametersToVariables vars parameters args
 evalCall :: [Variable] -> AstNode -> [AstNode] -> NodeEvaluator -> Maybe (AstNode, [Variable])
 evalCall vars (Symbol "lambda") [Call arg rest, body] _ = getLambdaParameters (arg : rest) >>= \parameters -> Just (Lambda parameters body, vars)
 evalCall vars (Lambda parameters body) args nodeEvaluator = appendParametersToVariables vars parameters args >>= \newVariables -> nodeEvaluator newVariables body >>= \(ast, newNewVariables) -> Just (ast, newNewVariables)
-evalCall vars (Symbol "define") [Symbol iden, val] nodeEvaluator =
+evalCall vars (Symbol "define") args nodeEvaluator = evalDefine vars args nodeEvaluator >>= \newVariables -> Just (Void, newVariables)
+evalCall vars func args nodeEvaluator = evalBinaryOperation vars func args nodeEvaluator <|> evalDefinedFunction vars func args nodeEvaluator
+
+evalBinaryOperation :: [Variable] -> AstNode -> [AstNode] -> NodeEvaluator -> Maybe (AstNode, [Variable])
+evalBinaryOperation vars (Symbol op) [l, r] nodeEvaluator = getOperatorForBinaryOpSymbol op >>= \resolvedOp -> applyBinaryOpOnNodes vars l r resolvedOp nodeEvaluator >>= \ast -> Just (ast, vars)
+evalBinaryOperation _ _ _ _ = Nothing
+
+evalDefinedFunction :: [Variable] -> AstNode -> [AstNode] -> NodeEvaluator -> Maybe (AstNode, [Variable])
+evalDefinedFunction vars (Symbol iden) args nodeEvaluator = nodeEvaluator vars (Symbol iden) >>= \(ast, newVariables) -> evalCall newVariables ast args nodeEvaluator
+evalDefinedFunction _ _ _ _ = Nothing
+
+evalDefine :: [Variable] -> [AstNode] -> NodeEvaluator -> Maybe [Variable]
+evalDefine vars [Symbol iden, val] nodeEvaluator =
     nodeEvaluator vars val
         >>= \(rResolved, newVariables) ->
             addVariable iden rResolved newVariables
-                >>= \newNewVariables -> Just (Void, newNewVariables)
-evalCall vars (Symbol op) [l, r] nodeEvaluator = getOperatorForBinaryOpSymbol op >>= \resolvedOp -> applyBinaryOpOnNodes vars l r resolvedOp nodeEvaluator >>= \ast -> Just (ast, vars)
-evalCall vars func args nodeEvaluator = nodeEvaluator vars func >>= \(resolvedFunc, newVariables) -> evalCall newVariables resolvedFunc args nodeEvaluator
+                >>= \newNewVariables -> Just newNewVariables
+evalDefine vars [Call (Symbol iden) (x : xs), body] nodeEvaluator =
+    nodeEvaluator vars (Call (Symbol "lambda") [Call x xs, body])
+        >>= \(rResolved, newVariables) ->
+            addVariable iden rResolved newVariables
+                >>= \newNewVariables -> Just newNewVariables
+evalDefine _ _ _ = Nothing
 
 getLambdaParameters :: [AstNode] -> Maybe [String]
 getLambdaParameters [] = Just []
