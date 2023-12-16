@@ -20,6 +20,7 @@ data AstNode
     | Call AstNode [AstNode]
     | Lambda [String] AstNode
     | Void
+    deriving (Eq)
 
 instance Show AstNode where
     show (Number val) = show val
