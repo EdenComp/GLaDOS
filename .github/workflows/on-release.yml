@@ -1,0 +1,52 @@
+name: Release actions
+
+on:
+  release:
+    types:
+      - published
+
+env:
+  GHC_VERSION: "9.8.1"
+  STACK_VERSION: "2.13.1"
+
+jobs:
+  build-apk-release:
+    runs-on: ubuntu-latest
+    name: Build binary & add it to the release
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Haskell
+        uses: haskell-actions/setup@v2
+        with:
+          ghc-version: ${{ env.GHC_VERSION }}
+          enable-stack: true
+          stack-version: ${{ env.STACK_VERSION }}
+      - name: Compile
+        timeout-minutes: 2
+        run: make
+      - name: Add binary to release
+        uses: shogo82148/actions-upload-release-asset@v1
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: glados
+          asset_name: glados
+
+  documentation-changelog:
+    runs-on: ubuntu-latest
+    name: Generate documentation changelog
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: rhysd/changelog-from-release/action@v3
+        with:
+          file: docs/CHANGELOG.md
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          pull_request: true
