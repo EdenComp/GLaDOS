@@ -1,29 +1,24 @@
-{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
-{-# HLINT ignore "Use newtype instead of data" #-}
-{-# OPTIONS_GHC -Wno-incomplete-patterns #-}
-{-# OPTIONS_GHC -Wno-overlapping-patterns #-}
-{-# OPTIONS_GHC -Wno-name-shadowing #-}
 module Parsing (
-    parse,
-    Parser,
-    parseChar,
-    parseAnyChar,
-    parseOr,
-    parseAnd,
-    parseAndWith,
-    parseMany,
-    parseSome,
-    parseUInt,
-    parseInt,
-    parsePair,
-    parseList
-    ) where
+  parse,
+  Parser,
+  parseChar,
+  parseAnyChar,
+  parseOr,
+  parseAnd,
+  parseAndWith,
+  parseMany,
+  parseSome,
+  parseUInt,
+  parseInt,
+  parsePair,
+  parseList,
+) where
 
-import Control.Applicative (Alternative(..))
+import Control.Applicative (Alternative (..))
 import Data.Char (isDigit)
 import SExpr (SymbolicExpression (Number))
 
-data Parser a = Parser { parse :: String -> Maybe (a, String) }
+newtype Parser a = Parser {parse :: String -> Maybe (a, String)}
 
 instance Functor Parser where
   fmap f (Parser p) = Parser $ \input ->
@@ -54,14 +49,13 @@ instance Monad Parser where
       Just (result, rest) -> parse (f result) rest
       Nothing -> Nothing
 
-
-
 parseChar :: Char -> Parser Char
 parseChar c = Parser f
-  where f (x:xs)
-          | x == c = Just (c, xs)
-          | otherwise = Nothing
-        f _ = Nothing
+ where
+  f (x : xs)
+    | x == c = Just (c, xs)
+    | otherwise = Nothing
+  f _ = Nothing
 
 parseAnyChar :: String -> Parser Char
 parseAnyChar = foldr ((<|>) . parseChar) empty
@@ -74,7 +68,6 @@ parseAnd p1 p2 = (,) <$> p1 <*> p2
 
 parseAndWith :: (a -> b -> c) -> Parser a -> Parser b -> Parser c
 parseAndWith f p1 p2 = f <$> p1 <*> p2
-
 
 parseMany :: Parser a -> Parser [a]
 parseMany p = Parser $ \input ->
@@ -91,21 +84,17 @@ parseSome p = Parser $ \input ->
         Nothing -> Just ([result], rest)
     Nothing -> Nothing
 
-
-
 parseUInt :: Parser Int
 parseUInt = Parser f
-  where
-    f input = case span isDigit input of
-                ("", _) -> Nothing
-                (numStr, rest) -> Just (read numStr, rest)
-
+ where
+  f input = case span isDigit input of
+    ("", _) -> Nothing
+    (numStr, rest) -> Just (read numStr, rest)
 
 parseInt :: Parser Int
 parseInt = parseNeg <|> parseUInt
-  where
-    parseNeg = parseChar '-' *> (negate <$> parseUInt)
-
+ where
+  parseNeg = parseChar '-' *> (negate <$> parseUInt)
 
 parsePair :: Parser a -> Parser (a, a)
 parsePair p = parseChar '(' *> parseAndWith (,) p (parseChar ' ' *> p) <* parseChar ')'
@@ -124,4 +113,3 @@ parseLispExpr = parseLispNumber <|> parseLispSymbol <|> parseLispList
 
 parseLisp :: String -> Maybe SymbolicExpression
 parseLisp input = fst <$> parse parseLispExpr input
-
