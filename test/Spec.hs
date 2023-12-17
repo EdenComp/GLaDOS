@@ -7,12 +7,14 @@
 
 import Test.HUnit
 
+import Control.Monad (void)
 import Parse
 
 tests :: Test
-tests = TestList [
-    testParse
-    ]
+tests =
+    TestList
+        [ testParse
+        ]
 
 main :: IO ()
-main = runTestTT tests >> return ()
+main = void $ runTestTT tests
