@@ -15,6 +15,7 @@ evalCall :: [Variable] -> AstNode -> [AstNode] -> NodeEvaluator -> Maybe (AstNod
 evalCall vars (Symbol "lambda") [Call arg rest, body] _ = getLambdaParameters (arg : rest) >>= \parameters -> Just (Lambda parameters body, vars)
 evalCall vars (Lambda parameters body) args nodeEvaluator = appendParametersToVariables vars parameters args >>= \newVariables -> nodeEvaluator newVariables body >>= \(ast, newNewVariables) -> Just (ast, newNewVariables)
 evalCall vars (Symbol "define") args nodeEvaluator = evalDefine vars args nodeEvaluator >>= \newVariables -> Just (Void, newVariables)
+evalCall vars (Call (Symbol "lambda") [Call arg rest, body]) args nodeEvaluator = evalCall vars (Symbol "lambda") [Call arg rest, body] nodeEvaluator >>= \(ast, newVariables) -> evalCall newVariables ast args nodeEvaluator
 evalCall vars func args nodeEvaluator = evalBinaryOperation vars func args nodeEvaluator <|> evalDefinedFunction vars func args nodeEvaluator
 
 evalBinaryOperation :: [Variable] -> AstNode -> [AstNode] -> NodeEvaluator -> Maybe (AstNode, [Variable])
