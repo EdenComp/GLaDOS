@@ -21,6 +21,7 @@ module Parsing (
 
 import Control.Applicative (Alternative(..))
 import Data.Char (isDigit)
+import SExpr (SymbolicExpression (Number))
 
 data Parser a = Parser { parse :: String -> Maybe (a, String) }
 
@@ -109,8 +110,18 @@ parseInt = parseNeg <|> parseUInt
 parsePair :: Parser a -> Parser (a, a)
 parsePair p = parseChar '(' *> parseAndWith (,) p (parseChar ' ' *> p) <* parseChar ')'
 
+parseLispNumber :: Parser SymbolicExpression
+parseLispNumber = Number . toInteger <$> parseInt
 
-parseList :: Parser a -> Parser [a]
-parseList p = parseChar '(' *> parseList' p <* parseChar ')'
-  where
-    parseList' p = parseAndWith (:) p (parseChar ' ' *> parseList' p) <|> pure []
+parseLispSymbol :: Parser SymbolicExpression
+parseLispSymbol = Symbol <$> parseSome (parseAnyChar (show ['a'..'z'] ++ show ['A'..'Z'] ++ "+-*/<>="))
+
+parseLispList :: Parser SymbolicExpression
+parseLispList = parseChar '(' *> (List <$> parseSome parseLispExpr) <* parseChar ')'
+
+parseLispExpr :: Parser SymbolicExpression
+parseLispExpr = parseLispNumber <|> parseLispSymbol <|> parseLispList
+
+parseLisp :: String -> Maybe SymbolicExpression
+parseLisp input = fst <$> parse parseLispExpr input
+
