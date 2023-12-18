@@ -24,6 +24,7 @@ testOperations =
         , TestCase (assertEqual "basic operation" (evalAst [Types.Call (Types.Symbol "*") [Types.Number 12, Types.Number 3]]) (Just [Types.Number 36]))
         , TestCase (assertEqual "unknown symbol" (evalAst [Types.Call (Types.Symbol "*") [Types.Symbol "var", Types.Number 3]]) Nothing)
         , TestCase (assertEqual "unknown call" (evalAst [Types.Call (Types.Symbol "_") [Types.Number 1, Types.Number 3]]) Nothing)
+        , TestCase (assertEqual "modulo" (evalAst [Types.Call (Types.Symbol "mod") [Types.Number 1, Types.Number 3]]) (Just [Types.Number 1]))
         , TestCase (assertEqual "wrong parameters" (evalAst [Types.Call (Types.Symbol "*") [Types.Call (Types.Symbol "+") [Types.Boolean True, Types.Number 1], Types.Number 3]]) Nothing)
         , TestCase (assertEqual "void" (evalAst [Types.Void]) (Just []))
         ]
@@ -36,7 +37,7 @@ testDeclarations =
         , TestCase (assertEqual "wrong define" (evalAst [Types.Call (Types.Symbol "define") [Types.Symbol "a", Types.Number 10, Types.Number 11], Types.Call (Types.Symbol "+") [Types.Number 3, Types.Symbol "a"]]) Nothing)
         , TestCase (assertEqual "two defined symbols" (evalAst [Types.Call (Types.Symbol "define") [Types.Symbol "a", Types.Number 10], Types.Call (Types.Symbol "define") [Types.Symbol "b", Types.Number 20], Types.Call (Types.Symbol "-") [Types.Symbol "a", Types.Symbol "b"]]) (Just [Types.Number (-10)]))
         , TestCase (assertEqual "combined operations" (evalAst [Types.Call (Types.Symbol "*") [Types.Call (Types.Symbol "/") [Types.Number 10, Types.Number 5], Types.Call (Types.Symbol "%") [Types.Number 19, Types.Number 10]]]) (Just [Types.Number 18]))
-        , TestCase (assertEqual "operation in symbol" (evalAst [Types.Call (Types.Symbol "define") [Types.Symbol "test", Types.Call (Types.Symbol "/") [Types.Number 10, Types.Number 5]], Types.Symbol "test"]) (Just [Types.Number 2]))
+        , TestCase (assertEqual "operation in symbol" (evalAst [Types.Call (Types.Symbol "define") [Types.Symbol "test", Types.Call (Types.Symbol "div") [Types.Number 10, Types.Number 5]], Types.Symbol "test"]) (Just [Types.Number 2]))
         , TestCase (assertEqual "define without operation" (evalAst [Types.Call (Types.Symbol "define") [Types.Symbol "const", Types.Number 10]]) (Just []))
         , TestCase (assertEqual "void with define" (evalAst [Types.Call (Types.Symbol "define") [Types.Symbol "a", Types.Number 10], Types.Void]) (Just []))
         ]
@@ -53,6 +54,11 @@ testConditions =
         , TestCase (assertEqual "if with define in condition but not defined" (evalAst [Types.Call (Types.Symbol "if") [Types.Call (Types.Symbol "define") [Types.Symbol "cond", Types.Number 10], Types.Symbol "aaaaa", Types.Symbol "cond"]]) Nothing)
         , TestCase (assertEqual "if with define in trueCondition" (evalAst [Types.Call (Types.Symbol "if") [Types.Boolean True, Types.Call (Types.Symbol "define") [Types.Symbol "a", Types.Number 10], Types.Number 3], Types.Symbol "a"]) (Just [Types.Number 10]))
         , TestCase (assertEqual "if with define in falseCondition" (evalAst [Types.Call (Types.Symbol "if") [Types.Boolean False, Types.Number 3, Types.Call (Types.Symbol "define") [Types.Symbol "a", Types.Number 15]], Types.Symbol "a"]) (Just [Types.Number 15]))
+        , TestCase (assertEqual "greater" (evalAst [Types.Call (Types.Symbol ">") [Types.Number 1, Types.Number 2]]) (Just [Types.Boolean False]))
+        , TestCase (assertEqual "eq with define" (evalAst [Types.Call (Types.Symbol "define") [Types.Symbol "b", Types.Number 7], Types.Call (Types.Symbol "eq?") [Types.Symbol "b", Types.Symbol "b"]]) (Just [Types.Boolean True]))
+        , TestCase (assertEqual "less with define" (evalAst [Types.Call (Types.Symbol "define") [Types.Symbol "b", Types.Number 7], Types.Call (Types.Symbol "<") [Types.Symbol "b", Types.Number 10]]) (Just [Types.Boolean True]))
+        , TestCase (assertEqual "less eq with operation" (evalAst [Types.Call (Types.Symbol "<=") [Types.Call (Types.Symbol "+") [Types.Number 6, Types.Number 4], Types.Number 10]]) (Just [Types.Boolean True]))
+        , TestCase (assertEqual "greater eq with operation" (evalAst [Types.Call (Types.Symbol ">=") [Types.Number 10, Types.Call (Types.Symbol "+") [Types.Number 6, Types.Number 3]]]) (Just [Types.Boolean False]))
         ]
 
 testLambdas :: Test

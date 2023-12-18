@@ -20,7 +20,8 @@ testSExprToAST =
         [ TestCase (assertEqual "basic" (sexprToAst (SExpr.Number 10)) (Just (Types.Number 10)))
         , TestCase (assertEqual "boolean true" (sexprToAst (SExpr.Symbol "#t")) (Just (Types.Boolean True)))
         , TestCase (assertEqual "boolean false" (sexprToAst (SExpr.Symbol "#f")) (Just (Types.Boolean False)))
-        , TestCase (assertEqual "list" (sexprToAst (SExpr.List [SExpr.Symbol "if", SExpr.Symbol "#t", SExpr.Number 1, SExpr.Number 2])) (Just (Types.Call (Types.Symbol "if") [Types.Boolean True, Types.Number 1, Types.Number 2])))
+        , TestCase (assertEqual "list" (sexprToAst (SExpr.List [SExpr.Symbol "if", SExpr.Symbol "true", SExpr.Number 1, SExpr.Number 2])) (Just (Types.Call (Types.Symbol "if") [Types.Boolean True, Types.Number 1, Types.Number 2])))
+        , TestCase (assertEqual "list" (sexprToAst (SExpr.List [SExpr.Symbol "if", SExpr.Symbol "false", SExpr.Symbol "a", SExpr.Number 2])) (Just (Types.Call (Types.Symbol "if") [Types.Boolean False, Types.Symbol "a", Types.Number 2])))
         , TestCase (assertEqual "empty" (sexprToAst (SExpr.List [])) (Just (Types.Symbol "()")))
         , TestCase (assertEqual "list with one element" (sexprToAst (SExpr.List [SExpr.Number 2])) (Just (Types.Call (Types.Number 2) [])))
         ]
