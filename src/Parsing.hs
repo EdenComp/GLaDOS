@@ -11,11 +11,13 @@ module Parsing (
   parseUInt,
   parseInt,
   parsePair,
+  parseLisp,
+  parseWhiteSpace,
 ) where
 
 import Control.Applicative (Alternative (..))
 import Data.Char (isDigit)
-import SExpr (SymbolicExpression (Number))
+import SExpr (SymbolicExpression (..))
 
 newtype Parser a = Parser {parse :: String -> Maybe (a, String)}
 
@@ -58,6 +60,9 @@ parseChar c = Parser f
 
 parseAnyChar :: String -> Parser Char
 parseAnyChar = foldr ((<|>) . parseChar) empty
+
+parseWhiteSpace :: Parser Char
+parseWhiteSpace = parseAnyChar "\t\n "
 
 parseOr :: Parser a -> Parser a -> Parser a
 parseOr = (<|>)
@@ -102,13 +107,13 @@ parseLispNumber :: Parser SymbolicExpression
 parseLispNumber = Number . toInteger <$> parseInt
 
 parseLispSymbol :: Parser SymbolicExpression
-parseLispSymbol = Symbol <$> parseSome (parseAnyChar (show ['a'..'z'] ++ show ['A'..'Z'] ++ "+-*/<>="))
+parseLispSymbol = Symbol <$> parseSome (parseAnyChar (show ['a' .. 'z'] ++ show ['A' .. 'Z'] ++ "+-*/<>="))
 
 parseLispList :: Parser SymbolicExpression
 parseLispList = parseChar '(' *> (List <$> parseSome parseLispExpr) <* parseChar ')'
 
 parseLispExpr :: Parser SymbolicExpression
-parseLispExpr = parseLispNumber <|> parseLispSymbol <|> parseLispList
+parseLispExpr = parseMany parseWhiteSpace *> (parseLispNumber <|> parseLispSymbol <|> parseLispList) <* parseMany parseWhiteSpace
 
 parseLisp :: String -> Maybe SymbolicExpression
 parseLisp input = fst <$> parse parseLispExpr input
