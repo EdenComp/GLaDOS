@@ -1,6 +1,5 @@
 module Variable (getVariableValue, addVariable) where
 
-import Data.Maybe (isNothing)
 import Types (AstNode, Variable (..))
 
 getVariableValue :: [Char] -> [Variable] -> Maybe AstNode
@@ -10,6 +9,7 @@ getVariableValue searchIdentifier (x : xs)
 getVariableValue _ [] = Nothing
 
 addVariable :: [Char] -> AstNode -> [Variable] -> Maybe [Variable]
-addVariable iden varValue variables
-    | isNothing $ getVariableValue iden variables = Just (variables ++ [Variable{identifier = iden, value = varValue}])
-    | otherwise = Nothing
+addVariable iden varValue (x : xs)
+    | identifier x == iden = Just (Variable{identifier = iden, value = varValue} : xs)
+    | otherwise = (x :) <$> addVariable iden varValue xs
+addVariable iden varValue [] = Just [Variable{identifier = iden, value = varValue}]
