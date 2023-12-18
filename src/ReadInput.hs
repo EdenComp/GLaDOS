@@ -7,12 +7,10 @@ where
 import GetFile (getFileContent)
 import GetInput (getUserInput)
 
-processFile :: FilePath -> IO ()
-processFile fileName =
-    getFileContent fileName
-        >>= \fileContent -> putStrLn ("Content of file " ++ fileName) >> putStrLn fileContent
+processFile :: (String -> IO ()) -> FilePath -> IO ()
+processFile lispInterpreter fileName = getFileContent fileName >>= lispInterpreter
 
-getInput :: IO ()
-getInput =
+getInput :: (String -> IO ()) -> IO ()
+getInput lispInterpreter =
     putStrLn "Welcome to DreamBerd4-Interpreter!"
-        >> getUserInput
+        >> getUserInput lispInterpreter
