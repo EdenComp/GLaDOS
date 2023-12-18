@@ -44,16 +44,16 @@ testDeclarations =
 testConditions :: Test
 testConditions =
     TestList
-      [ TestCase (assertEqual "basic if" (evalAst [Types.Call (Types.Symbol "if") [Types.Boolean True, Types.Number 10, Types.Number 12]]) (Just [Types.Number 10]))
-      , TestCase (assertEqual "basic if false" (evalAst [Types.Call (Types.Symbol "if") [Types.Boolean False, Types.Number 13, Types.Number 15]]) (Just [Types.Number 15]))
-      , TestCase (assertEqual "wrong if" (evalAst [Types.Call (Types.Symbol "if") [Types.Boolean False, Types.Number 13, Types.Number 15, Types.Number 17]]) Nothing)
-      , TestCase (assertEqual "if with non bool argument" (evalAst [Types.Call (Types.Symbol "if") [Types.Number 1, Types.Number 13, Types.Number 15]]) (Just [Types.Number 13]))
-      , TestCase (assertEqual "if with defines" (evalAst [Types.Call (Types.Symbol "define") [Types.Symbol "b", Types.Number 7], Types.Call (Types.Symbol "define") [Types.Symbol "a", Types.Number 6], Types.Call (Types.Symbol "if") [Types.Boolean True, Types.Symbol "a", Types.Symbol "b"]]) (Just [Types.Number 6]))
-      , TestCase (assertEqual "if with define in condition" (evalAst [Types.Call (Types.Symbol "if") [Types.Call (Types.Symbol "define") [Types.Symbol "cond", Types.Number 10], Types.Symbol "cond", Types.Symbol "aaaaa"]]) (Just [Types.Number 10]))
-      , TestCase (assertEqual "if with define in condition but not defined" (evalAst [Types.Call (Types.Symbol "if") [Types.Call (Types.Symbol "define") [Types.Symbol "cond", Types.Number 10], Types.Symbol "aaaaa", Types.Symbol "cond"]]) Nothing)
-      , TestCase (assertEqual "if with define in trueCondition" (evalAst [Types.Call (Types.Symbol "if") [Types.Boolean True, Types.Call (Types.Symbol "define") [Types.Symbol "a", Types.Number 10], Types.Number 3], Types.Symbol "a"]) (Just [Types.Number 10]))
-      , TestCase (assertEqual "if with define in falseCondition" (evalAst [Types.Call (Types.Symbol "if") [Types.Boolean False, Types.Number 3, Types.Call (Types.Symbol "define") [Types.Symbol "a", Types.Number 15]], Types.Symbol "a"]) (Just [Types.Number 15]))
-      ]
+        [ TestCase (assertEqual "basic if" (evalAst [Types.Call (Types.Symbol "if") [Types.Boolean True, Types.Number 10, Types.Number 12]]) (Just [Types.Number 10]))
+        , TestCase (assertEqual "basic if false" (evalAst [Types.Call (Types.Symbol "if") [Types.Boolean False, Types.Number 13, Types.Number 15]]) (Just [Types.Number 15]))
+        , TestCase (assertEqual "wrong if" (evalAst [Types.Call (Types.Symbol "if") [Types.Boolean False, Types.Number 13, Types.Number 15, Types.Number 17]]) Nothing)
+        , TestCase (assertEqual "if with non bool argument" (evalAst [Types.Call (Types.Symbol "if") [Types.Number 1, Types.Number 13, Types.Number 15]]) (Just [Types.Number 13]))
+        , TestCase (assertEqual "if with defines" (evalAst [Types.Call (Types.Symbol "define") [Types.Symbol "b", Types.Number 7], Types.Call (Types.Symbol "define") [Types.Symbol "a", Types.Number 6], Types.Call (Types.Symbol "if") [Types.Boolean True, Types.Symbol "a", Types.Symbol "b"]]) (Just [Types.Number 6]))
+        , TestCase (assertEqual "if with define in condition" (evalAst [Types.Call (Types.Symbol "if") [Types.Call (Types.Symbol "define") [Types.Symbol "cond", Types.Number 10], Types.Symbol "cond", Types.Symbol "aaaaa"]]) (Just [Types.Number 10]))
+        , TestCase (assertEqual "if with define in condition but not defined" (evalAst [Types.Call (Types.Symbol "if") [Types.Call (Types.Symbol "define") [Types.Symbol "cond", Types.Number 10], Types.Symbol "aaaaa", Types.Symbol "cond"]]) Nothing)
+        , TestCase (assertEqual "if with define in trueCondition" (evalAst [Types.Call (Types.Symbol "if") [Types.Boolean True, Types.Call (Types.Symbol "define") [Types.Symbol "a", Types.Number 10], Types.Number 3], Types.Symbol "a"]) (Just [Types.Number 10]))
+        , TestCase (assertEqual "if with define in falseCondition" (evalAst [Types.Call (Types.Symbol "if") [Types.Boolean False, Types.Number 3, Types.Call (Types.Symbol "define") [Types.Symbol "a", Types.Number 15]], Types.Symbol "a"]) (Just [Types.Number 15]))
+        ]
 
 testLambdas :: Test
 testLambdas =
