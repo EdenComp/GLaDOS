@@ -3,8 +3,8 @@ module GetInput (
 )
 where
 
+ import System.Exit (ExitCode (..), exitWith)
 import System.IO (isEOF)
-import System.Exit (exitWith, ExitCode (..))
 
 getUserInput :: (String -> IO ()) -> IO ()
 getUserInput lispInterpreter = getUserInput' lispInterpreter ""
