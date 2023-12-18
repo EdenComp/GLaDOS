@@ -107,7 +107,7 @@ parseLispNumber :: Parser SymbolicExpression
 parseLispNumber = Number . toInteger <$> parseInt
 
 parseLispSymbol :: Parser SymbolicExpression
-parseLispSymbol = Symbol <$> parseAndWith (++) (parseSome (parseAnyChar (show ['a' .. 'z'] ++ show ['A' .. 'Z'] ++ "+-*/<>="))) (parseMany (parseAnyChar (show ['a' .. 'z'] ++ show ['A' .. 'Z'] ++ "+-*/<>=" ++ show ['0' .. '9'])))
+parseLispSymbol = Symbol <$> parseAndWith (++) (parseSome (parseAnyChar (show ['a' .. 'z'] ++ show ['A' .. 'Z'] ++ "+-*/<>=#"))) (parseMany (parseAnyChar (show ['a' .. 'z'] ++ show ['A' .. 'Z'] ++ "+-*/<>=#" ++ show ['0' .. '9'])))
 
 parseLispList :: Parser SymbolicExpression
 parseLispList = parseChar '(' *> (List <$> parseSome parseLispExpr) <* parseChar ')'

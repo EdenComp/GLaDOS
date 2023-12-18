@@ -13,9 +13,10 @@ appendParametersToVariables vars parameters args
 
 evalCall :: [Variable] -> AstNode -> [AstNode] -> NodeEvaluator -> Maybe (AstNode, [Variable])
 evalCall vars (Symbol "lambda") [Call arg rest, body] _ = getLambdaParameters (arg : rest) >>= \parameters -> Just (Lambda parameters body, vars)
-evalCall vars (Lambda parameters body) args nodeEvaluator = mapM (nodeEvaluator vars) args >>= \resolvedArgs -> appendParametersToVariables vars parameters (map fst resolvedArgs) >>= \newVariables -> nodeEvaluator newVariables body >>= \(ast, newNewVariables) -> Just (ast, newNewVariables)
+evalCall vars (Lambda parameters body) args nodeEvaluator = mapM (nodeEvaluator vars) args >>= \resolvedArgs -> appendParametersToVariables vars parameters (map fst resolvedArgs) >>= \newVariables -> nodeEvaluator newVariables body
 evalCall vars (Symbol "define") args nodeEvaluator = evalDefine vars args nodeEvaluator >>= \newVariables -> Just (Void, newVariables)
 evalCall vars (Call (Symbol "lambda") [Call arg rest, body]) args nodeEvaluator = evalCall vars (Symbol "lambda") [Call arg rest, body] nodeEvaluator >>= \(ast, newVariables) -> evalCall newVariables ast args nodeEvaluator
+evalCall vars (Symbol "if") args nodeEvaluator = evalIf vars args nodeEvaluator
 evalCall vars func args nodeEvaluator = evalBinaryOperation vars func args nodeEvaluator <|> evalDefinedFunction vars func args nodeEvaluator
 
 evalBinaryOperation :: [Variable] -> AstNode -> [AstNode] -> NodeEvaluator -> Maybe (AstNode, [Variable])
@@ -38,6 +39,15 @@ evalDefine vars [Call (Symbol iden) (x : xs), body] nodeEvaluator =
             addVariable iden rResolved newVariables
                 >>= \newNewVariables -> Just newNewVariables
 evalDefine _ _ _ = Nothing
+
+evalIf :: [Variable] -> [AstNode] -> NodeEvaluator -> Maybe (AstNode, [Variable])
+evalIf vars [condition, thenBranch, elseBranch] nodeEvaluator =
+    nodeEvaluator vars condition
+        >>= \(rResolved, newVariables) ->
+            case rResolved of
+                Boolean False -> nodeEvaluator newVariables elseBranch >>= \(ast, newNewVariables) -> Just (ast, newNewVariables)
+                _ -> nodeEvaluator newVariables thenBranch >>= \(ast, newNewVariables) -> Just (ast, newNewVariables)
+evalIf _ _ _ = Nothing
 
 getLambdaParameters :: [AstNode] -> Maybe [String]
 getLambdaParameters [] = Just []
