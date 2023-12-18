@@ -3,7 +3,7 @@
 module Function (appendParametersToVariables, evalCall, applyBinaryOpOnNodes, getOperatorForBinaryOpSymbol, evalBinaryOperation) where
 
 import Control.Applicative (Alternative ((<|>)))
-import Types (AstNode (..), BuiltinOperator, BuiltinComparisonOperator, NodeEvaluator, Variable (..))
+import Types (AstNode (..), BuiltinComparisonOperator, BuiltinOperator, NodeEvaluator, Variable (..))
 import Variable (addVariable)
 
 appendParametersToVariables :: [Variable] -> [String] -> [AstNode] -> Maybe [Variable]
