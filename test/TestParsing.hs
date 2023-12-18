@@ -126,12 +126,13 @@ testParsePair =
         ]
 
 testParsingToSExpr :: Test
-testParsingToSExpr = TestList [
-    TestCase (assertEqual "basic" "Just [123]" (show (parseLisp "123"))),
-    TestCase (assertEqual "very basic" "Just [a]" (show (parseLisp "a"))),
-    TestCase (assertEqual "variable" "Just [(define a 10),a]" (show (parseLisp "(define a 10) a"))),
-    TestCase (assertEqual "function" "Just [(define sum (lambda (a b) (+ a b))),(sum 1 2)]" (show (parseLisp "(define sum (lambda (a b) (+ a b))) (sum 1 2)")))
-    ]
+testParsingToSExpr =
+    TestList
+        [ TestCase (assertEqual "basic" "Just [123]" (show (parseLisp "123")))
+        , TestCase (assertEqual "very basic" "Just [a]" (show (parseLisp "a")))
+        , TestCase (assertEqual "variable" "Just [(define a 10),a]" (show (parseLisp "(define a 10) a")))
+        , TestCase (assertEqual "function" "Just [(define sum (lambda (a b) (+ a b))),(sum 1 2)]" (show (parseLisp "(define sum (lambda (a b) (+ a b))) (sum 1 2)")))
+        ]
 
 testParsing :: Test
 testParsing =
