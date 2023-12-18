@@ -3,7 +3,7 @@ name: SonarQube
 on:
   push:
     branches:
-      - main
+      - none
 
 
 jobs:
