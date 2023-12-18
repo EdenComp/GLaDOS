@@ -58,8 +58,8 @@ jobs:
       - name: Test executables presence
         run: IFS=',' read -r -a array <<< ${{ env.EXECUTABLES }} ; for value in ${array[@]} ; do find . -executable -name "${value}" | grep -q . || exit 1 ; done
 
-  tests:
-    name: "Tests"
+  unit-tests:
+    name: "Tests: Unit"
     runs-on: ubuntu-latest
     steps:
       - uses: haskell-actions/setup@v2
@@ -69,8 +69,25 @@ jobs:
           stack-version: ${{ env.STACK_VERSION }}
       - name: Repository checkout
         uses: actions/checkout@v4
-      - name: Tests
+      - name: Run unit tests
         timeout-minutes: 2
         run: make tests_run
+    needs:
+      - compilation
+
+  functional-tests:
+    name: "Tests: Functional"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: haskell-actions/setup@v2
+        with:
+          ghc-version: ${{ env.GHC_VERSION }}
+          enable-stack: true
+          stack-version: ${{ env.STACK_VERSION }}
+      - name: Repository checkout
+        uses: actions/checkout@v4
+      - name: Run functional tests
+        timeout-minutes: 2
+        run: make func_tests
     needs:
       - compilation

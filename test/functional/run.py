@@ -13,7 +13,7 @@ def get_test_paths() -> list[str]:
 
 
 def run_command(test_path: str, binary: str) -> CompletedProcess[str]:
-    return run(f'{binary} < {test_path} ; echo Exit status:$?', shell=True, capture_output=True, text=True)
+    return run(f'{binary} {test_path}', shell=True, capture_output=True, text=True)
 
 
 def disp_err(output: CompletedProcess[str], expected_output: str, expected_error: str) -> None:
@@ -43,7 +43,7 @@ def run_test(test_path: str, is_debug: bool, is_full_log: bool, has_color: bool)
         with open(test_path.replace(".lsp", ".err")) as file:
             expected_error = file.read()
 
-    name = re.findall('/(\S+).lsp$', test_path)[0]
+    name = re.findall('[^/]*$', test_path)[0]
 
     if (output.stdout != expected_output) or (output.stderr != expected_error) or (expected_error != '' and output.returncode != 84):
         if is_debug:
