@@ -5,6 +5,7 @@ module Types (
     Variable (..),
     NodeEvaluator,
     BuiltinOperator,
+    BuiltinComparisonOperator,
 ) where
 
 data Variable = Variable
@@ -33,3 +34,4 @@ instance Show AstNode where
 
 type NodeEvaluator = [Variable] -> AstNode -> Maybe (AstNode, [Variable])
 type BuiltinOperator = forall b. (Integral b) => b -> b -> b
+type BuiltinComparisonOperator = forall b. (Integral b) => b -> b -> Bool
