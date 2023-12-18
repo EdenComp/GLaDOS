@@ -1,4 +1,4 @@
-module Parse (testParse) where
+module TestParsing (testParsing) where
 
 import Parsing
 import Test.HUnit
@@ -125,8 +125,8 @@ testParsePair =
             )
         ]
 
-testParse :: Test
-testParse =
+testParsing :: Test
+testParsing =
     TestList
         [ TestLabel "parseChar" testParseChar
         , TestLabel "parseAnyChar" testParseAnyChar

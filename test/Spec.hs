@@ -1,6 +1,8 @@
-import Eval (testEvaluation)
 import System.Exit (exitWith, ExitCode(..))
+import TestEval (testEvaluation)
 import Test.HUnit (Test(..), runTestTT, errors, failures)
+import TestParsing (testParsing)
+import TestSExpr (testSExpr)
 
 main :: IO ()
 main = do
@@ -13,5 +15,7 @@ main = do
 
 listTests :: Test
 listTests = TestList [
+    testParsing,
+    testSExpr,
     testEvaluation
     ]

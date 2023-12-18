@@ -1,7 +1,5 @@
 module SExpr (
     SymbolicExpression (..),
-    getSymbol,
-    printTree,
     sexprToAst,
     sexprsToAsts,
 ) where
@@ -18,13 +16,6 @@ instance Show SymbolicExpression where
     show (Symbol sym) = sym
     show (List []) = "()"
     show (List list) = "(" ++ unwords (map show list) ++ ")"
-
-getSymbol :: SymbolicExpression -> Maybe String
-getSymbol (Symbol sym) = Just sym
-getSymbol _ = Nothing
-
-printTree :: SymbolicExpression -> Maybe String
-printTree expr = Just (show expr)
 
 sexprToAst :: SExpr.SymbolicExpression -> Maybe Types.AstNode
 sexprToAst (Number val) = Just (Types.Number val)
