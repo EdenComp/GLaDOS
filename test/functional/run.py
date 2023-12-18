@@ -9,7 +9,7 @@ import re
 
 def get_test_paths() -> list[str]:
     folder = path.dirname(path.realpath(__file__))
-    return glob(folder + '/src/**/*.db4', recursive=True)
+    return glob(folder + '/src/**/*.lsp', recursive=True)
 
 
 def run_command(test_path: str, binary: str) -> CompletedProcess[str]:
@@ -35,15 +35,15 @@ def run_test(test_path: str, is_debug: bool, is_full_log: bool, has_color: bool)
     output = run_command(test_path, "./glados")
     expected_output, expected_error = '', ''
 
-    if path.exists(test_path.replace(".db4", ".out")):
-        with open(test_path.replace(".db4", ".out")) as file:
+    if path.exists(test_path.replace(".lsp", ".out")):
+        with open(test_path.replace(".lsp", ".out")) as file:
             expected_output = file.read()
 
-    if path.exists(test_path.replace(".db4", ".err")):
-        with open(test_path.replace(".db4", ".err")) as file:
+    if path.exists(test_path.replace(".lsp", ".err")):
+        with open(test_path.replace(".lsp", ".err")) as file:
             expected_error = file.read()
 
-    name = re.findall('/(\S+).db4$', test_path)[0]
+    name = re.findall('/(\S+).lsp$', test_path)[0]
 
     if (output.stdout != expected_output) or (output.stderr != expected_error) or (expected_error != '' and output.returncode != 84):
         if is_debug:
