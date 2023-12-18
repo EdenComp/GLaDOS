@@ -3,7 +3,7 @@ module GetInput (
 )
 where
 
- import System.Exit (ExitCode (..), exitWith)
+import System.Exit (ExitCode (..), exitWith)
 import System.IO (isEOF)
 
 getUserInput :: (String -> IO ()) -> IO ()
