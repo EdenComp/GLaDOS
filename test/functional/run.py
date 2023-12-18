@@ -45,7 +45,7 @@ def run_test(test_path: str, is_debug: bool, is_full_log: bool, has_color: bool)
 
     name = re.findall('/(\S+).db4$', test_path)[0]
 
-    if (output.stdout != expected_output) or (output.stderr != expected_error):
+    if (output.stdout != expected_output) or (output.stderr != expected_error) or (expected_error != '' and output.returncode != 84):
         if is_debug:
             disp_err(output, expected_output, expected_error)
         err = f'Test "{name}" failed.'

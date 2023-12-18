@@ -24,4 +24,10 @@ tests_run:
 	$(STACK) test --coverage
 	$(STACK) hpc report --all --destdir test/coverage
 
+func_tests:
+	@$(MAKE) re > /dev/null
+	@python3 -m pip install termcolor > /dev/null
+	python3 test/functional/run.py -adc
+
+
 .PHONY: all clean fclean re tests_run
