@@ -1,0 +1,14 @@
+repos:
+  - repo: local
+    hooks:
+      - id: hlint
+        name: HLint
+        entry: hlint
+        language: system
+        files: '\.l?hs$'
+
+      - id: fourmolu
+        name: Fourmolu
+        entry: fourmolu
+        language: system
+        files: '\.l?hs$'
