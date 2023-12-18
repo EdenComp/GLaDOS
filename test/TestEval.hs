@@ -67,6 +67,11 @@ testReassignments = TestList [
 
 testMisc :: Test
 testMisc = TestList [
-    TestCase (assertEqual "show variables" (show (Variable "a" (Types.Number 1))) ("Variable {identifier = \"a\", value = Number 1}")),
-    TestCase (assertEqual "show ast node" (show (Types.Number 1)) ("Number 1"))
+    TestCase (assertEqual "show variables" (show (Variable "a" (Types.Number 1))) ("Variable {identifier = \"a\", value = 1}")),
+    TestCase (assertEqual "show ast number" (show (Types.Number 1)) ("1")),
+    TestCase (assertEqual "show ast call" (show (Types.Call (Types.Symbol "+") [Types.Number 1, Types.Number 2])) ("#<procedure>")),
+    TestCase (assertEqual "show ast lambda" (show (Types.Lambda ["a", "b"] (Types.Call (Types.Symbol "+") [Types.Symbol "a", Types.Symbol "b"]))) ("#<procedure>")),
+    TestCase (assertEqual "show ast true" (show (Types.Boolean True)) ("#t")),
+    TestCase (assertEqual "show ast false" (show (Types.Boolean False)) ("#f")),
+    TestCase (assertEqual "show ast symbol" (show (Types.Symbol "False")) ("False"))
     ]
