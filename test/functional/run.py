@@ -7,7 +7,6 @@ from difflib import unified_diff as diff
 from glob import glob
 import re
 
-
 def get_test_paths() -> list[str]:
     folder = path.dirname(path.realpath(__file__))
     return glob(folder + '/src/**/*.db4', recursive=True)
@@ -34,10 +33,16 @@ def disp_err(output: CompletedProcess[str], expected_output: str, expected_error
 
 def run_test(test_path: str, is_debug: bool, is_full_log: bool, has_color: bool) -> bool:
     output = run_command(test_path, "./glados")
-    with open(test_path.replace(".db4", ".out")) as file:
-        expected_output = file.read()
-    with open(test_path.replace(".db4", ".err")) as file:
-        expected_error = file.read()
+    expected_output, expected_error = '', ''
+
+    if path.exists(test_path.replace(".db4", ".out")):
+        with open(test_path.replace(".db4", ".out")) as file:
+            expected_output = file.read()
+
+    if path.exists(test_path.replace(".db4", ".err")):
+        with open(test_path.replace(".db4", ".err")) as file:
+            expected_error = file.read()
+
     name = re.findall('/(\S+).db4$', test_path)[0]
 
     if (output.stdout != expected_output) or (output.stderr != expected_error):
