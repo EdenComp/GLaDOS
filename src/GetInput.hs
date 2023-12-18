@@ -3,7 +3,7 @@ module GetInput (
 )
 where
 
-import System.Exit (ExitCode (..), exitWith)
+import System.Exit (exitSuccess)
 import System.IO (isEOF)
 
 getUserInput :: (String -> IO ()) -> IO ()
@@ -13,7 +13,7 @@ getUserInput' :: (String -> IO ()) -> String -> IO ()
 getUserInput' lispInterpreter linesSoFar = do
     eof <- isEOF
     if eof
-        then exitWith ExitSuccess
+        then exitSuccess
         else do
             userInput <- getLine
             let updatedLines = linesSoFar ++ userInput
