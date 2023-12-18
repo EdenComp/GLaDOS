@@ -19,4 +19,3 @@ getUserInput' lispInterpreter linesSoFar = do
             let updatedLines = linesSoFar ++ userInput
             lispInterpreter updatedLines
             getUserInput' lispInterpreter updatedLines
-
