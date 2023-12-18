@@ -12,5 +12,4 @@ processFile lispInterpreter fileName = getFileContent fileName >>= lispInterpret
 
 getInput :: (String -> IO ()) -> IO ()
 getInput lispInterpreter =
-    putStrLn "Welcome to DreamBerd4-Interpreter!"
-        >> getUserInput lispInterpreter
+        getUserInput lispInterpreter
