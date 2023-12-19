@@ -9,7 +9,7 @@ import Variable (addVariable)
 appendParametersToVariables :: [Variable] -> [String] -> [AstNode] -> Maybe [Variable]
 appendParametersToVariables vars parameters args
     | length args /= length parameters = Nothing
-    | otherwise = Just $ vars ++ zipWith (\param arg -> Variable{identifier = param, value = arg}) parameters args
+    | otherwise = foldl (\acc (iden, val) -> acc >>= \newVariables -> addVariable iden val newVariables) (Just vars) $ zip parameters args
 
 evalCall :: [Variable] -> AstNode -> [AstNode] -> NodeEvaluator -> Maybe (AstNode, [Variable])
 evalCall vars (Symbol "lambda") [Call arg rest, body] _ = getLambdaParameters (arg : rest) >>= \parameters -> Just (Lambda parameters body, vars)
