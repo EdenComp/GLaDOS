@@ -1,6 +1,5 @@
 module Variable (getVariableValue, addVariable) where
 
-import Debug.Trace (trace)
 import Types (AstNode, Variable (..))
 
 getVariableValue :: [Char] -> [Variable] -> Maybe AstNode
@@ -11,6 +10,6 @@ getVariableValue _ [] = Nothing
 
 addVariable :: [Char] -> AstNode -> [Variable] -> Maybe [Variable]
 addVariable iden varValue (x : xs)
-    | identifier x == iden = trace ("Setting variable " ++ iden ++ " to " ++ show varValue) Just (Variable{identifier = iden, value = varValue} : xs)
+    | identifier x == iden = Just (Variable{identifier = iden, value = varValue} : xs)
     | otherwise = (x :) <$> addVariable iden varValue xs
-addVariable iden varValue [] = trace ("Setting (add) variable " ++ iden ++ " to " ++ show varValue) Just [Variable{identifier = iden, value = varValue}]
+addVariable iden varValue [] = Just [Variable{identifier = iden, value = varValue}]
