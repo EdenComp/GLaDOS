@@ -1,3 +1,32 @@
+<a name="v0.3.0"></a>
+# [v0.3.0 🌈](https://github.com/EdenComp/GLaDOS/releases/tag/v0.3.0) - 19 Dec 2023
+
+## Changes
+
+Functional tests, small bug fixes and last mandatory operators
+
+## 🚀 Features
+
+- New functional test for [@Tomi-Tom](https://github.com/Tomi-Tom) [@RezaRahemtola](https://github.com/RezaRahemtola) ([#25](https://github.com/EdenComp/GLaDOS/issues/25))
+- Basic functional tests [@RezaRahemtola](https://github.com/RezaRahemtola) ([#24](https://github.com/EdenComp/GLaDOS/issues/24))
+- Comparison operators [@EdenComp](https://github.com/EdenComp) ([#23](https://github.com/EdenComp/GLaDOS/issues/23))
+- Setup functional tests [@RezaRahemtola](https://github.com/RezaRahemtola) ([#16](https://github.com/EdenComp/GLaDOS/issues/16))
+- If statements, true and false in parsing, and tests on ifs [@EdenComp](https://github.com/EdenComp) ([#19](https://github.com/EdenComp/GLaDOS/issues/19))
+
+## 🐛 Bug Fixes
+
+- Remove all text in TTY [@Tomi-Tom](https://github.com/Tomi-Tom) ([#20](https://github.com/EdenComp/GLaDOS/issues/20))
+- Double function call bug [@Croos3r](https://github.com/Croos3r) ([#26](https://github.com/EdenComp/GLaDOS/issues/26))
+
+## 📄 Documentation
+
+- Docs: Sidebar with changelog [@RezaRahemtola](https://github.com/RezaRahemtola) ([#22](https://github.com/EdenComp/GLaDOS/issues/22))
+- Update changelog for "v0.2.0" [@github-actions](https://github.com/github-actions) ([#21](https://github.com/EdenComp/GLaDOS/issues/21))
+
+
+[Changes][v0.3.0]
+
+
 <a name="v0.2.0"></a>
 # [v0.2.0 🌈](https://github.com/EdenComp/GLaDOS/releases/tag/v0.2.0) - 18 Dec 2023
 
@@ -48,6 +77,7 @@ Project setup with CI, evaluation of SExpr and documentation
 [Changes][v0.1.0]
 
 
+[v0.3.0]: https://github.com/EdenComp/GLaDOS/compare/v0.2.0...v0.3.0
 [v0.2.0]: https://github.com/EdenComp/GLaDOS/compare/v0.1.0...v0.2.0
 [v0.1.0]: https://github.com/EdenComp/GLaDOS/tree/v0.1.0
 
