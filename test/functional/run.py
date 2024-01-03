@@ -32,7 +32,7 @@ def disp_err(output: CompletedProcess[str], expected_output: str, expected_error
 
 
 def run_test(test_path: str, is_debug: bool, is_full_log: bool, has_color: bool) -> bool:
-    output = run_command(test_path, "./glados")
+    output = run_command(test_path, "./glados -l")
     expected_output, expected_error = '', ''
 
     if path.exists(test_path.replace(".lsp", ".out")):
