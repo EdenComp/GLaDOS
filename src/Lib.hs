@@ -3,12 +3,14 @@
 module Lib (glados, evaluateAndPrintResult) where
 
 import Ast (evalAst)
+import NewParsing (parseDreamberd)
+import NewTypes
 import Parsing (parseLisp)
 import ReadInput (getInput, processFile)
 import SExpr (sexprsToAsts)
 import System.Environment (getArgs)
 import System.Exit (ExitCode (..), exitSuccess, exitWith)
-import Types (AstNode)
+import Types
 
 displayHelp :: IO ()
 displayHelp =
@@ -35,7 +37,7 @@ glados =
             ["--help"] -> displayHelp >> exitSuccess
             ["-v"] -> putStrLn "Glados v-1.0.0" >> exitSuccess
             ["--version"] -> putStrLn "Glados v-1.0.0" >> exitSuccess
-            ["-c", fileName] -> putStr "Launch Compile " >> putStr fileName >> putStrLn "..." >> exitSuccess
+            ["-c", fileName] -> processFile evaluateAndPrintNewResult fileName
             ["--compile", fileName] -> putStr "Launch Compile " >> putStr fileName >> putStrLn "..." >> exitSuccess
             ["-l", fileName] -> processFile evaluateAndPrintResult fileName
             ["--lisp", fileName] -> processFile evaluateAndPrintResult fileName
@@ -51,14 +53,26 @@ wrongArgumentHandler arg =
         >> putStrLn "Check -h or --help for help."
         >> exitWith (ExitFailure 84)
 
-getEvaluatedResult :: String -> Maybe [AstNode]
+getEvaluatedResult :: String -> Maybe [Types.AstNode]
 getEvaluatedResult sourceCode = parseLisp sourceCode >>= sexprsToAsts >>= evalAst
 
-printEvaluatedResult :: [AstNode] -> IO ()
+getNewEvaluatedResult :: String -> Maybe [NewTypes.AstNode]
+getNewEvaluatedResult sourceCode = parseDreamberd sourceCode []
+
+printEvaluatedResult :: [Types.AstNode] -> IO ()
 printEvaluatedResult = mapM_ print
+
+printNewEvaluatedResult :: [NewTypes.AstNode] -> IO ()
+printNewEvaluatedResult = mapM_ print
 
 evaluateAndPrintResult :: String -> IO ()
 evaluateAndPrintResult sourceCode =
     case getEvaluatedResult sourceCode of
         Just result -> printEvaluatedResult result
+        Nothing -> exitWith (ExitFailure 84)
+
+evaluateAndPrintNewResult :: String -> IO ()
+evaluateAndPrintNewResult sourceCode =
+    case getNewEvaluatedResult sourceCode of
+        Just result -> printNewEvaluatedResult result
         Nothing -> exitWith (ExitFailure 84)
