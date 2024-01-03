@@ -3,7 +3,7 @@ module Vm (
     Call (..),
     EnvValue (..),
     Insts (..),
-    Value (..)
+    Value (..),
 ) where
 
 data Value
@@ -64,7 +64,7 @@ exec env args stack (Call : insts) = case execCall env stack of
     Left err -> Left err
     Right newValues -> exec env args newValues insts
 exec _ _ [] (x : _) = Left ("Stack is empty for a " ++ show x ++ " instruction")
-exec env args (Bool x : xs) (JumpIfFalse num : insts) 
+exec env args (Bool x : xs) (JumpIfFalse num : insts)
     | num < 1 = Left "Invalid number of instructions"
     | num > length insts = Left "Cannot jump this amount of instructions"
     | not x = exec env args xs (drop num insts)
@@ -83,7 +83,7 @@ execCall _ _ = Left "Stack argument is not a symbol"
 
 execBuiltin :: [Value] -> Call -> Either String [Value]
 execBuiltin (Number 0 : Number 0 : _) Div = Left "Cannot divide by 0"
-execBuiltin (Number l : Number r : xs) op = case op of 
+execBuiltin (Number l : Number r : xs) op = case op of
     Add -> Right (Number (l + r) : xs)
     Sub -> Right (Number (l - r) : xs)
     Mul -> Right (Number (l * r) : xs)
