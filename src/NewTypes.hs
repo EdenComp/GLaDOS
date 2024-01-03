@@ -9,6 +9,7 @@ data AstNode
     | Call String [AstNode]
     | Operator String AstNode AstNode
     | If AstNode [AstNode] [AstNode]
+    | Return AstNode
     | List [AstNode]
 
 instance Show AstNode where
@@ -23,3 +24,4 @@ instance Show AstNode where
     show (List list) = "(" ++ unwords (map show list) ++ ")"
     show (Function name params body) = "function " ++ show name ++ "(" ++ unwords (map show params) ++ ") {" ++ show body
     show (Call _name _params) = "call"
+    show (Return element) = show element
