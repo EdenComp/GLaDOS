@@ -8,9 +8,10 @@ import Data.List (stripPrefix)
 
 parseElement :: String -> [AstNode] -> Maybe (String, [AstNode])
 parseElement (stripPrefix "var" -> Just restCode) ast = Just (restCode, ast ++ [Operator "=" (String "a") (Number 42)])
-parseElement _ _ = Nothing
+parseElement _ ast = Just ("", ast)
 
 parseDreamberd :: String -> [AstNode] -> Maybe [AstNode]
+parseDreamberd "" ast = Just ast
 parseDreamberd sourceCode ast = parseElement sourceCode ast >>= uncurry parseDreamberd
 
 -- TODO: add condition to stop when no more source code
