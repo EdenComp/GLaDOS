@@ -24,7 +24,7 @@ parseVar code ast = case parseNumber value of
     Left err -> Left err
   where
     scopedCode = words (takeWhile isNotSemiColon code)
-    restOfCode = dropWhile isSpace (drop 1 (drop 1 (dropWhile isNotSemiColon code)))
+    restOfCode = dropWhile isSpace (drop 1 (dropWhile isNotSemiColon code))
     name = head scopedCode
     value = removeSemi (last scopedCode)
 
