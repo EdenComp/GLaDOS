@@ -4,16 +4,41 @@ module NewParsing (parseDreamberd) where
 
 import NewTypes (AstNode (Number, Operator, String))
 
+import Data.Char (isDigit, isSpace)
 import Data.List (stripPrefix)
 
-parseElement :: String -> [AstNode] -> Maybe (String, [AstNode])
-parseElement (stripPrefix "var" -> Just restCode) ast = Just (restCode, ast ++ [Operator "=" (String "a") (Number 42)])
-parseElement _ ast = Just ("", ast)
+isNotSemiColon :: Char -> Bool
+isNotSemiColon = (/= ';')
 
-parseDreamberd :: String -> [AstNode] -> Maybe [AstNode]
-parseDreamberd "" ast = Just ast
-parseDreamberd sourceCode ast = parseElement sourceCode ast >>= uncurry parseDreamberd
+parseNumber :: String -> Either String AstNode
+parseNumber input = case span isDigit input of
+    ("", _) -> Left "No number found"
+    (numStr, _) -> Right (Number (read numStr))
 
--- TODO: add condition to stop when no more source code
--- donc le premier call a parseDreamberd sera avec tout le source code et une liste vide, il va se call lui même récursivement
--- et à la fin il va se stop quand y'a plus de source code (ou erreur, à gérer) et renvoyer l'AST complet
+removeSemi :: String -> String
+removeSemi xs = [x | x <- xs, x `notElem` ";"]
+
+parseVar :: String -> [AstNode] -> Either String (String, [AstNode])
+parseVar code ast = case parseNumber value of
+    Right number -> Right (restOfCode, ast ++ [Operator "=" (String name) number])
+    Left err -> Left err
+  where
+    scopedCode = words (takeWhile isNotSemiColon code)
+    restOfCode = dropWhile isSpace (drop 1 (drop 1 (dropWhile isNotSemiColon code)))
+    name = head scopedCode
+    value = removeSemi (last scopedCode)
+
+parseElement :: String -> [AstNode] -> Either String (String, [AstNode])
+parseElement (stripPrefix "var" -> Just restCode) ast =
+    case parseVar restCode ast of
+        Right (remainingCode, updatedAst) -> Right (remainingCode, updatedAst)
+        Left err -> Left err
+parseElement _ _ = Left "Unrecognized element"
+
+parseDreamberd :: String -> [AstNode] -> Either String [AstNode]
+parseDreamberd "\n" ast = Right ast
+parseDreamberd "" ast = Right ast
+parseDreamberd sourceCode ast =
+    case parseElement sourceCode ast of
+        Right (remainingCode, updatedAst) -> parseDreamberd remainingCode updatedAst
+        Left err -> Left err

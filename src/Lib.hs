@@ -56,7 +56,7 @@ wrongArgumentHandler arg =
 getEvaluatedResult :: String -> Maybe [Types.AstNode]
 getEvaluatedResult sourceCode = parseLisp sourceCode >>= sexprsToAsts >>= evalAst
 
-getNewEvaluatedResult :: String -> Maybe [NewTypes.AstNode]
+getNewEvaluatedResult :: String -> Either String [NewTypes.AstNode]
 getNewEvaluatedResult sourceCode = parseDreamberd sourceCode []
 
 printEvaluatedResult :: [Types.AstNode] -> IO ()
@@ -74,5 +74,5 @@ evaluateAndPrintResult sourceCode =
 evaluateAndPrintNewResult :: String -> IO ()
 evaluateAndPrintNewResult sourceCode =
     case getNewEvaluatedResult sourceCode of
-        Just result -> printNewEvaluatedResult result
-        Nothing -> exitWith (ExitFailure 84)
+        Right result -> printNewEvaluatedResult result
+        Left err -> putStrLn err >> exitWith (ExitFailure 84)
