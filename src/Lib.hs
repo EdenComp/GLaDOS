@@ -62,9 +62,6 @@ getNewEvaluatedResult sourceCode = parseDreamberd sourceCode []
 printEvaluatedResult :: [Types.AstNode] -> IO ()
 printEvaluatedResult = mapM_ print
 
-printNewEvaluatedResult :: [NewTypes.AstNode] -> IO ()
-printNewEvaluatedResult = mapM_ print
-
 evaluateAndPrintResult :: String -> IO ()
 evaluateAndPrintResult sourceCode =
     case getEvaluatedResult sourceCode of
@@ -74,5 +71,5 @@ evaluateAndPrintResult sourceCode =
 evaluateAndPrintNewResult :: String -> IO ()
 evaluateAndPrintNewResult sourceCode =
     case getNewEvaluatedResult sourceCode of
-        Right result -> printNewEvaluatedResult result
+        Right ast -> print ast
         Left err -> putStrLn err >> exitWith (ExitFailure 84)
