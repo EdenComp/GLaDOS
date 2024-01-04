@@ -6,9 +6,16 @@ import NewTypes (AstNode (Boolean, Number, Operator, String))
 
 import Data.Char (isDigit, isSpace)
 import Data.List (isPrefixOf, stripPrefix)
+import Text.Regex.Posix ((=~))
 
 isNotSemiColon :: Char -> Bool
 isNotSemiColon = (/= ';')
+
+extractQuotedStringAndRest :: String -> (String, String)
+extractQuotedStringAndRest str = (head matches, rest)
+  where
+    (before, match, _, matches) = str =~ "(\"[^\"]*\")" :: (String, String, String, [String])
+    rest = drop (length before + length match) str
 
 parseBool :: String -> Either String AstNode
 parseBool input
@@ -53,9 +60,8 @@ parseVar "str" code ast = case parseString value of
     Left err -> Left err
   where
     scopedCode = words (takeWhile isNotSemiColon code)
-    restOfCode = dropWhile isSpace (drop 1 (dropWhile isNotSemiColon code))
     name = head scopedCode
-    value = removeSemi (unwords (drop 2 scopedCode))
+    (value, dropWhile isSpace . drop 1 -> restOfCode) = extractQuotedStringAndRest code
 parseVar _ _ _ = Left "Unrecognized variable type"
 
 parseElement :: String -> [AstNode] -> Either String (String, [AstNode])
