@@ -22,6 +22,6 @@ instance Show AstNode where
     show (If test trueBody falseBody) = "if (" ++ show test ++ ") {" ++ show trueBody ++ "} else {" ++ show falseBody ++ "}"
     show (List []) = "()"
     show (List list) = "[" ++ unwords (map show list) ++ "]"
-    show (Function name params body) = "function " ++ show name ++ "(" ++ unwords (map show params) ++ ") {" ++ show body ++ "}"
+    show (Function name params body) = "Function " ++ show name ++ " " ++ show params ++ " " ++ show body
     show (Call name params) = show name ++ "(" ++ show params ++ ")"
     show (Return element) = show element
