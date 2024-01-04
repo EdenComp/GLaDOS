@@ -2,13 +2,19 @@
 
 module NewParsing (parseDreamberd) where
 
-import NewTypes (AstNode (Number, Operator, String))
+import NewTypes (AstNode (Boolean, Number, Operator, String))
 
 import Data.Char (isDigit, isSpace)
-import Data.List (stripPrefix)
+import Data.List (isPrefixOf, stripPrefix)
 
 isNotSemiColon :: Char -> Bool
 isNotSemiColon = (/= ';')
+
+parseBool :: String -> Either String AstNode
+parseBool input
+    | "true" `isPrefixOf` input = Right (Boolean True)
+    | "false" `isPrefixOf` input = Right (Boolean False)
+    | otherwise = Left "No boolean found"
 
 parseNumber :: String -> Either String AstNode
 parseNumber input = case span isDigit input of
@@ -18,8 +24,8 @@ parseNumber input = case span isDigit input of
 removeSemi :: String -> String
 removeSemi xs = [x | x <- xs, x `notElem` ";"]
 
-parseVar :: String -> [AstNode] -> Either String (String, [AstNode])
-parseVar code ast = case parseNumber value of
+parseVar :: String -> String -> [AstNode] -> Either String (String, [AstNode])
+parseVar "int" code ast = case parseNumber value of
     Right number -> Right (restOfCode, ast ++ [Operator "=" (String name) number])
     Left err -> Left err
   where
@@ -27,10 +33,23 @@ parseVar code ast = case parseNumber value of
     restOfCode = dropWhile isSpace (drop 1 (dropWhile isNotSemiColon code))
     name = head scopedCode
     value = removeSemi (last scopedCode)
+parseVar "bool" code ast = case parseBool value of
+    Right bool -> Right (restOfCode, ast ++ [Operator "=" (String name) bool])
+    Left err -> Left err
+  where
+    scopedCode = words (takeWhile isNotSemiColon code)
+    restOfCode = dropWhile isSpace (drop 1 (dropWhile isNotSemiColon code))
+    name = head scopedCode
+    value = removeSemi (last scopedCode)
+parseVar _ _ _ = Left "Unrecognized variable type"
 
 parseElement :: String -> [AstNode] -> Either String (String, [AstNode])
-parseElement (stripPrefix "var" -> Just restCode) ast =
-    case parseVar restCode ast of
+parseElement (stripPrefix "int" -> Just restCode) ast =
+    case parseVar "int" restCode ast of
+        Right (remainingCode, updatedAst) -> Right (remainingCode, updatedAst)
+        Left err -> Left err
+parseElement (stripPrefix "bool" -> Just restCode) ast =
+    case parseVar "bool" restCode ast of
         Right (remainingCode, updatedAst) -> Right (remainingCode, updatedAst)
         Left err -> Left err
 parseElement _ _ = Left "Unrecognized element"
