@@ -3,18 +3,18 @@
 module NewParsing (parseDreamberd) where
 
 import Data.Char (isDigit, isSpace)
-import Data.List (isInfixOf, isPrefixOf, stripPrefix)
-import NewTypes (AstNode (Boolean, Call, Function, Number, Operator, String))
+import Data.List (isPrefixOf, stripPrefix)
+import NewTypes (AstNode (Boolean, Call, Function, Identifier, Number, Operator, Return, String))
 import Text.Regex.Posix ((=~))
 
-isNotSemiColon :: Char -> Bool
-isNotSemiColon = (/= ';')
+bannedVariables :: [String]
+bannedVariables = ["if", "elif", "else", "true", "false", "return", "function", "int", "str", "bool"]
 
-extractQuotedStringAndRest :: String -> (String, String)
-extractQuotedStringAndRest str = (head matches, rest)
-  where
-    (before, match, _, matches) = str =~ "(\"[^\"]*\")" :: (String, String, String, [String])
-    rest = drop (length before + length match) str
+getVariableName :: String -> Either String String
+getVariableName str = case str =~ "^[a-zA-Z_-]+" :: (String, String, String) of
+    (_, match, _) | null match -> Left "No variable name found"
+    (_, match, _) | match `elem` bannedVariables -> Left $ "Variable name " ++ show match ++ " is banned"
+    (_, match, _) -> Right match
 
 extractFunctionBodyAndRest :: String -> Int -> String -> (String, String)
 extractFunctionBodyAndRest [] _ body = (body, [])
@@ -35,9 +35,6 @@ extractFunctionParts str = (name, params, body, restOfCode)
     params = words $ map (\c -> if c == ',' then ' ' else c) $ tail parameters
     (body, restOfCode) = extractFunctionBodyAndRest (drop 1 afterBrace) 1 []
 
-removeSemi :: String -> String
-removeSemi xs = [x | x <- xs, x `notElem` ";"]
-
 parseBool :: String -> Either String AstNode
 parseBool input
     | "true" `isPrefixOf` input = Right (Boolean True)
@@ -57,48 +54,16 @@ parseString input
         (str, _) -> Right (String str)
 
 parseVar :: String -> String -> [AstNode] -> Either String (String, [AstNode])
-parseVar "int" code ast =
-    let
-        scopedCode = words (takeWhile isNotSemiColon code)
-        name = head scopedCode
-        value = removeSemi (unwords (drop 2 scopedCode))
-        restOfCode = dropWhile isSpace (drop 1 (dropWhile isNotSemiColon code))
-     in
-        if "(" `isInfixOf` value
-            then case parseFunctionCall value of
-                Right (_, funcCall) -> Right (restOfCode, ast ++ [Operator "=" (String name) funcCall])
-                Left err -> Left err
-            else case parseNumber value of
-                Right number -> Right (restOfCode, ast ++ [Operator "=" (String name) number])
-                Left err -> Left err
-parseVar "bool" code ast =
-    let
-        scopedCode = words (takeWhile isNotSemiColon code)
-        name = head scopedCode
-        value = removeSemi (unwords (drop 2 scopedCode))
-        restOfCode = dropWhile isSpace (drop 1 (dropWhile isNotSemiColon code))
-     in
-        if "(" `isInfixOf` value
-            then case parseFunctionCall value of
-                Right (_, funcCall) -> Right (restOfCode, ast ++ [Operator "=" (String name) funcCall])
-                Left err -> Left err
-            else case parseBool value of
-                Right bool -> Right (restOfCode, ast ++ [Operator "=" (String name) bool])
-                Left err -> Left err
-parseVar "str" code ast =
-    let
-        scopedCode = words (takeWhile isNotSemiColon code)
-        name = head scopedCode
-        (value, dropWhile isSpace . drop 1 -> restOfCode) = extractQuotedStringAndRest code
-     in
-        if "(" `isInfixOf` value && head value /= '"'
-            then case parseFunctionCall value of
-                Right (_, funcCall) -> Right (restOfCode, ast ++ [Operator "=" (String name) funcCall])
-                Left err -> Left err
-            else case parseString value of
-                Right str -> Right (restOfCode, ast ++ [Operator "=" (String name) str])
-                Left err -> Left err
-parseVar _ _ _ = Left "Unrecognized variable type"
+parseVar _ code ast =
+    case getVariableName (head (words code)) of
+        Right name ->
+            let
+                (value, restOfCode) = extractValueAndRest (unwords (drop 2 (words code)))
+             in
+                case parseAnyValue value of
+                    Right node -> Right (restOfCode, ast ++ [Operator "=" (String name) node])
+                    Left err -> Left err
+        Left err -> Left err
 
 parseFunction :: String -> [AstNode] -> Either String (String, [AstNode])
 parseFunction code ast =
@@ -120,6 +85,35 @@ parseFunctionCall code =
                     paramList = words $ map (\c -> if c == ',' then ' ' else c) params
                  in Right (afterParams, Call strippedName (map String paramList))
 
+extractValueAndRest :: String -> (String, String)
+extractValueAndRest = go False []
+  where
+    go _ acc [] = (reverse acc, [])
+    go inQuotes acc (x : xs)
+        | x == '"' = go (not inQuotes) (x : acc) xs
+        | x == ';' && not inQuotes = (dropWhile isSpace (reverse acc), xs)
+        | otherwise = go inQuotes (x : acc) xs
+
+parseAnyValue :: String -> Either String AstNode
+parseAnyValue input = case parseString input of
+    Right result -> Right result
+    Left _ -> case parseNumber input of
+        Right result -> Right result
+        Left _ -> case parseBool input of
+            Right result -> Right result
+            Left _ -> case parseFunctionCall input of
+                Right (_, result) -> Right result
+                Left _ -> case getVariableName input of
+                    Right name -> Right (Identifier name)
+                    Left err -> Left ("Unable to parse value: " ++ err)
+
+parseReturn :: String -> Either String (String, AstNode)
+parseReturn code =
+    let (value, rest) = extractValueAndRest code
+     in case parseAnyValue value of
+            Right result -> Right (rest, Return result)
+            Left err -> Left err
+
 parseElement :: String -> [AstNode] -> Either String (String, [AstNode])
 parseElement (stripPrefix "int" -> Just restCode) ast =
     case parseVar "int" restCode ast of
@@ -136,6 +130,10 @@ parseElement (stripPrefix "str" -> Just restCode) ast =
 parseElement (stripPrefix "function" -> Just restCode) ast =
     case parseFunction restCode ast of
         Right (remainingCode, updatedAst) -> Right (remainingCode, updatedAst)
+        Left err -> Left err
+parseElement (stripPrefix "return" -> Just restCode) ast =
+    case parseReturn restCode of
+        Right (remainingCode, returnNode) -> Right (remainingCode, ast ++ [returnNode])
         Left err -> Left err
 parseElement code ast = case parseFunctionCall code of
     Right (remainingCode, call) -> Right (remainingCode, ast ++ [call])
