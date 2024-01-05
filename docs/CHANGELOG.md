@@ -1,3 +1,28 @@
+<a name="v0.4.0"></a>
+# [v0.4.0 🌈](https://github.com/EdenComp/GLaDOS/releases/tag/v0.4.0) - 05 Jan 2024
+
+## Changes
+
+Basics of AST content generation
+
+## 🚀 Features
+
+- Variables parsing: Fix useless dropped char \& adding strings, booleans, functions, function calls, return and identifiers [@RezaRahemtola](https://github.com/RezaRahemtola) ([#32](https://github.com/EdenComp/GLaDOS/issues/32))
+- Parsing: new AST types \& basic variables [@RezaRahemtola](https://github.com/RezaRahemtola) [@pablo0675](https://github.com/pablo0675)  ([#29](https://github.com/EdenComp/GLaDOS/issues/29))
+- Add flags -h -v -vm -c -l -lr [@Tomi-Tom](https://github.com/Tomi-Tom) ([#28](https://github.com/EdenComp/GLaDOS/issues/28))
+
+## 🐛 Bug Fixes
+
+- Variables parsing: Fix useless dropped char \& adding strings, booleans, functions, function calls, return and identifiers [@RezaRahemtola](https://github.com/RezaRahemtola) ([#32](https://github.com/EdenComp/GLaDOS/issues/32))
+
+## 📄 Documentation
+
+- Update changelog for "v0.3.0" [@github-actions](https://github.com/github-actions) ([#27](https://github.com/EdenComp/GLaDOS/issues/27))
+
+
+[Changes][v0.4.0]
+
+
 <a name="v0.3.0"></a>
 # [v0.3.0 🌈](https://github.com/EdenComp/GLaDOS/releases/tag/v0.3.0) - 19 Dec 2023
 
@@ -77,6 +102,7 @@ Project setup with CI, evaluation of SExpr and documentation
 [Changes][v0.1.0]
 
 
+[v0.4.0]: https://github.com/EdenComp/GLaDOS/compare/v0.3.0...v0.4.0
 [v0.3.0]: https://github.com/EdenComp/GLaDOS/compare/v0.2.0...v0.3.0
 [v0.2.0]: https://github.com/EdenComp/GLaDOS/compare/v0.1.0...v0.2.0
 [v0.1.0]: https://github.com/EdenComp/GLaDOS/tree/v0.1.0
