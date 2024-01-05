@@ -23,5 +23,5 @@ instance Show AstNode where
     show (List []) = "()"
     show (List list) = "[" ++ unwords (map show list) ++ "]"
     show (Function name params body) = "Function " ++ show name ++ " " ++ show params ++ " " ++ show body
-    show (Call name params) = show name ++ "(" ++ show params ++ ")"
+    show (Call name params) = "(Call " ++ name ++ " " ++ show params ++ ")"
     show (Return element) = show element
