@@ -3,8 +3,8 @@
 module Lib (glados, evaluateAndPrintResult) where
 
 import Ast (evalAst)
-import NewParsing (parseDreamberd)
-import NewTypes
+
+import Dreamberd.Lib (evaluateAndPrintDreamberdResult)
 import Parsing (parseLisp)
 import ReadInput (getInput, processFile)
 import SExpr (sexprsToAsts)
@@ -37,8 +37,8 @@ glados =
             ["--help"] -> displayHelp >> exitSuccess
             ["-v"] -> putStrLn "Glados v-1.0.0" >> exitSuccess
             ["--version"] -> putStrLn "Glados v-1.0.0" >> exitSuccess
-            ["-c", fileName] -> processFile evaluateAndPrintNewResult fileName
-            ["--compile", fileName] -> putStr "Launch Compile " >> putStr fileName >> putStrLn "..." >> exitSuccess
+            ["-c", fileName] -> processFile evaluateAndPrintDreamberdResult fileName
+            ["--compile", fileName] -> processFile evaluateAndPrintDreamberdResult fileName
             ["-l", fileName] -> processFile evaluateAndPrintResult fileName
             ["--lisp", fileName] -> processFile evaluateAndPrintResult fileName
             ["-lr"] -> getInput evaluateAndPrintResult
@@ -56,9 +56,6 @@ wrongArgumentHandler arg =
 getEvaluatedResult :: String -> Maybe [Types.AstNode]
 getEvaluatedResult sourceCode = parseLisp sourceCode >>= sexprsToAsts >>= evalAst
 
-getNewEvaluatedResult :: String -> Either String [NewTypes.AstNode]
-getNewEvaluatedResult sourceCode = parseDreamberd sourceCode []
-
 printEvaluatedResult :: [Types.AstNode] -> IO ()
 printEvaluatedResult = mapM_ print
 
@@ -67,9 +64,3 @@ evaluateAndPrintResult sourceCode =
     case getEvaluatedResult sourceCode of
         Just result -> printEvaluatedResult result
         Nothing -> exitWith (ExitFailure 84)
-
-evaluateAndPrintNewResult :: String -> IO ()
-evaluateAndPrintNewResult sourceCode =
-    case getNewEvaluatedResult sourceCode of
-        Right ast -> print ast
-        Left err -> putStrLn err >> exitWith (ExitFailure 84)
