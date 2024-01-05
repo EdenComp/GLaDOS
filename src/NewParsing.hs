@@ -3,8 +3,8 @@
 module NewParsing (parseDreamberd) where
 
 import Data.Char (isDigit, isSpace)
-import Data.List (isPrefixOf, stripPrefix)
-import NewTypes (AstNode (Boolean, Function, Number, Operator, String))
+import Data.List (isInfixOf, isPrefixOf, stripPrefix)
+import NewTypes (AstNode (Boolean, Call, Function, Number, Operator, String))
 import Text.Regex.Posix ((=~))
 
 isNotSemiColon :: Char -> Bool
@@ -57,29 +57,47 @@ parseString input
         (str, _) -> Right (String str)
 
 parseVar :: String -> String -> [AstNode] -> Either String (String, [AstNode])
-parseVar "int" code ast = case parseNumber value of
-    Right number -> Right (restOfCode, ast ++ [Operator "=" (String name) number])
-    Left err -> Left err
-  where
-    scopedCode = words (takeWhile isNotSemiColon code)
-    restOfCode = dropWhile isSpace (drop 1 (dropWhile isNotSemiColon code))
-    name = head scopedCode
-    value = removeSemi (unwords (drop 2 scopedCode))
-parseVar "bool" code ast = case parseBool value of
-    Right bool -> Right (restOfCode, ast ++ [Operator "=" (String name) bool])
-    Left err -> Left err
-  where
-    scopedCode = words (takeWhile isNotSemiColon code)
-    restOfCode = dropWhile isSpace (drop 1 (dropWhile isNotSemiColon code))
-    name = head scopedCode
-    value = removeSemi (unwords (drop 2 scopedCode))
-parseVar "str" code ast = case parseString value of
-    Right str -> Right (restOfCode, ast ++ [Operator "=" (String name) str])
-    Left err -> Left err
-  where
-    scopedCode = words (takeWhile isNotSemiColon code)
-    name = head scopedCode
-    (value, dropWhile isSpace . drop 1 -> restOfCode) = extractQuotedStringAndRest code
+parseVar "int" code ast =
+    let
+        scopedCode = words (takeWhile isNotSemiColon code)
+        name = head scopedCode
+        value = removeSemi (unwords (drop 2 scopedCode))
+        restOfCode = dropWhile isSpace (drop 1 (dropWhile isNotSemiColon code))
+     in
+        if "(" `isInfixOf` value
+            then case parseFunctionCall value of
+                Right (_, funcCall) -> Right (restOfCode, ast ++ [Operator "=" (String name) funcCall])
+                Left err -> Left err
+            else case parseNumber value of
+                Right number -> Right (restOfCode, ast ++ [Operator "=" (String name) number])
+                Left err -> Left err
+parseVar "bool" code ast =
+    let
+        scopedCode = words (takeWhile isNotSemiColon code)
+        name = head scopedCode
+        value = removeSemi (unwords (drop 2 scopedCode))
+        restOfCode = dropWhile isSpace (drop 1 (dropWhile isNotSemiColon code))
+     in
+        if "(" `isInfixOf` value
+            then case parseFunctionCall value of
+                Right (_, funcCall) -> Right (restOfCode, ast ++ [Operator "=" (String name) funcCall])
+                Left err -> Left err
+            else case parseBool value of
+                Right bool -> Right (restOfCode, ast ++ [Operator "=" (String name) bool])
+                Left err -> Left err
+parseVar "str" code ast =
+    let
+        scopedCode = words (takeWhile isNotSemiColon code)
+        name = head scopedCode
+        (value, dropWhile isSpace . drop 1 -> restOfCode) = extractQuotedStringAndRest code
+     in
+        if "(" `isInfixOf` value && head value /= '"'
+            then case parseFunctionCall value of
+                Right (_, funcCall) -> Right (restOfCode, ast ++ [Operator "=" (String name) funcCall])
+                Left err -> Left err
+            else case parseString value of
+                Right str -> Right (restOfCode, ast ++ [Operator "=" (String name) str])
+                Left err -> Left err
 parseVar _ _ _ = Left "Unrecognized variable type"
 
 parseFunction :: String -> [AstNode] -> Either String (String, [AstNode])
@@ -88,6 +106,19 @@ parseFunction code ast =
      in case parseDreamberd body [] of
             Right outputAst -> Right (restOfCode, ast ++ [Function name params outputAst])
             Left err -> Left err
+
+parseFunctionCall :: String -> Either String (String, AstNode)
+parseFunctionCall code =
+    let (name, rest) = break (== '(') code
+        strippedName = filter (not . isSpace) name
+     in if null rest
+            then Left "Invalid function call"
+            else
+                let paramsAndRest = init $ tail rest
+                    (params, remaining) = span (/= ')') paramsAndRest
+                    afterParams = dropWhile (\c -> c == ';' || isSpace c) $ tail remaining
+                    paramList = words $ map (\c -> if c == ',' then ' ' else c) params
+                 in Right (afterParams, Call strippedName (map String paramList))
 
 parseElement :: String -> [AstNode] -> Either String (String, [AstNode])
 parseElement (stripPrefix "int" -> Just restCode) ast =
@@ -106,7 +137,9 @@ parseElement (stripPrefix "function" -> Just restCode) ast =
     case parseFunction restCode ast of
         Right (remainingCode, updatedAst) -> Right (remainingCode, updatedAst)
         Left err -> Left err
-parseElement _ _ = Left "Unrecognized element"
+parseElement code ast = case parseFunctionCall code of
+    Right (remainingCode, call) -> Right (remainingCode, ast ++ [call])
+    Left _ -> Left "Unrecognized element"
 
 parseDreamberd :: String -> [AstNode] -> Either String [AstNode]
 parseDreamberd "\n" ast = Right ast
