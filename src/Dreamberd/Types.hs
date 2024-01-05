@@ -1,4 +1,4 @@
-module NewTypes (AstNode (..)) where
+module Dreamberd.Types (AstNode (..)) where
 
 data AstNode
     = Number Integer
