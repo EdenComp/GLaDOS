@@ -1,3 +1,5 @@
+{-# LANGUAGE ViewPatterns #-}
+
 module Dreamberd.Parsing.Elements.Function (parseReturn, extractFunctionParts) where
 
 import Data.Char (isSpace)
@@ -20,7 +22,7 @@ extractFunctionParts str = (name, params, body, restOfCode)
   where
     (beforeBrace, afterBrace) = break (== '{') str
     (nameAndParams, _) = break (== ')') beforeBrace
-    (name, parameters) = break (== '(') (dropWhile isSpace nameAndParams)
+    (filter (not . isSpace) -> name, parameters) = break (== '(') (dropWhile isSpace nameAndParams)
     params = words $ map (\c -> if c == ',' then ' ' else c) $ tail parameters
     (body, restOfCode) = extractFunctionBodyAndRest (drop 1 afterBrace) 1 []
 
