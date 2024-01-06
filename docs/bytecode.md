@@ -2,7 +2,7 @@
 
 Here are all the definitions of the bytecode:
 
-# Instructions
+## Instructions
 
 `0x01`: Push (+ Value)
 `0x02`: PushArg (+ Int)
@@ -11,7 +11,7 @@ Here are all the definitions of the bytecode:
 `0x05`: DefineEnv (+ String and EnvValue)
 `0x06`: JumpIfFalse (+ Int)
 
-# Values
+## Values
 
 `0x11` + 4 bytes: Int
 `0x12` + 1 byte: Bool
@@ -20,13 +20,13 @@ Strings: 4 bytes for length + string content
 
 > :warn: Strings are not a value type in the language.
 
-# Symbols
+## Symbols
 `0x20`: Add
 `0x21`: Sub
 ... and so on for the builtins, until:
 `0x2A`: Function Name
 
-# DefineEnv
+## DefineEnv
 
 This instructions uses 1 byte to determine the type of the definition:
 `0x30`: Function (+ 4 bytes instructions length)
