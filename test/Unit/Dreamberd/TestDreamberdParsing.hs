@@ -1,12 +1,12 @@
 module Unit.Dreamberd.TestDreamberdParsing (testDreamberdParsing) where
 
-import Dreamberd.Parsing.Main (parseFunction)
+import Dreamberd.Parsing.Main (parseCondition, parseFunction)
 import Dreamberd.Parsing.Values (parseFunctionCall)
-import Dreamberd.Types (AstNode (Boolean, Call, Function, Identifier, Number, Operator, Return, String))
+import Dreamberd.Types (AstNode (Boolean, Call, Function, Identifier, If, Number, Operator, Return, String))
 import Test.HUnit (Test (..), assertEqual)
 
 testDreamberdParsing :: Test
-testDreamberdParsing = TestList [testParseFunction, testParseFunctionCall]
+testDreamberdParsing = TestList [testParseFunction, testParseFunctionCall, testParseCondition]
 
 testParseFunction :: Test
 testParseFunction =
@@ -27,4 +27,15 @@ testParseFunctionCall =
         , TestCase (assertEqual "parseFunctionCall with params Number" (Right ("", Call "foo" [Number 1])) (parseFunctionCall "foo ( 1 );"))
         , TestCase (assertEqual "parseFunctionCall with params Boolean" (Right ("", Call "foo" [Boolean True])) (parseFunctionCall "foo ( true )\n;"))
         , TestCase (assertEqual "parseFunctionCall with multi-params" (Right ("", Call "foo" [Number 1, Number 2])) (parseFunctionCall "foo ( 1 , 2 );"))
+        ]
+
+testParseCondition :: Test
+testParseCondition =
+    TestList
+        [ TestCase (assertEqual "parseCondition basic" (Right ("", [If (Boolean True) [Return (Number 1)] []])) (parseCondition "if (true) {return 1;}" []))
+        , TestCase (assertEqual "parseCondition with else" (Right ("", [If (Boolean True) [Return (Number 1)] [Return (Number 2)]])) (parseCondition "if (true) {return 1;} else {return 2;}" []))
+        , TestCase (assertEqual "parseCondition with elif" (Right ("", [If (Boolean True) [Return (Number 1)] [If (Boolean True) [Return (Number 2)] []]])) (parseCondition "if (true) {return 1;} elif (true) {return 2;}" []))
+        , TestCase (assertEqual "parseCondition with elif and else" (Right ("", [If (Boolean True) [Return (Number 1)] [If (Boolean True) [Return (Number 2)] [Return (Number 3)]]])) (parseCondition "if (true) {return 1;} elif (true) {return 2;} else {return 3;}" []))
+        , TestCase (assertEqual "parseCondition with elif, else and spaces" (Right ("", [If (Boolean True) [Return (Number 1)] [If (Boolean True) [Return (Number 2)] [Return (Number 3)]]])) (parseCondition "if (true) {return 1;} elif (true) {return 2;} else {return 3;}" []))
+        , TestCase (assertEqual "parseCondition with elif, else, spaces and newlines" (Right ("", [If (Boolean True) [Return (Number 1)] [If (Boolean True) [Return (Number 2)] [Return (Number 3)]]])) (parseCondition "if (true) {\nreturn 1;\n} elif (true) {\nreturn 2;\n} else {\nreturn 3;\n}" []))
         ]

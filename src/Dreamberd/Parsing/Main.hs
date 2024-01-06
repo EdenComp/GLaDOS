@@ -1,6 +1,6 @@
 {-# LANGUAGE ViewPatterns #-}
 
-module Dreamberd.Parsing.Main (parseDreamberd, parseFunction) where
+module Dreamberd.Parsing.Main (parseDreamberd, parseFunction, parseCondition) where
 
 import Data.Char (isSpace)
 import Data.List (isPrefixOf, stripPrefix)
@@ -8,7 +8,7 @@ import Dreamberd.Parsing.Elements.Condition (parseConditionParts)
 import Dreamberd.Parsing.Elements.Function (extractFunctionParts, parseReturn)
 import Dreamberd.Parsing.Elements.Variable (parseVar)
 import Dreamberd.Parsing.Values (parseFunctionCall)
-import Dreamberd.Types (AstNode (Function, If, Number))
+import Dreamberd.Types (AstNode (Boolean, Function, If))
 
 parseDreamberd :: String -> [AstNode] -> Either String [AstNode]
 parseDreamberd sourceCode ast
@@ -68,12 +68,12 @@ parseCondition str ast =
 buildConditionNodes :: String -> String -> [(String, String)] -> Maybe (String, String) -> Either String [AstNode]
 buildConditionNodes _ ifBody [] Nothing = do
     ifBodyAst <- parseDreamberd ifBody []
-    return [If (Number 42) ifBodyAst []]
+    return [If (Boolean True) ifBodyAst []]
 buildConditionNodes _ ifBody ((elifCondition, elifBody) : elifs) elsePart = do
     ifBodyAst <- parseDreamberd ifBody []
     elifNodes <- buildConditionNodes elifCondition elifBody elifs elsePart
-    return [If (Number 42) ifBodyAst elifNodes]
+    return [If (Boolean True) ifBodyAst elifNodes]
 buildConditionNodes _ ifBody [] (Just (_, elseBody)) = do
     ifBodyAst <- parseDreamberd ifBody []
     elseBodyAst <- parseDreamberd elseBody []
-    return [If (Number 42) ifBodyAst elseBodyAst]
+    return [If (Boolean True) ifBodyAst elseBodyAst]
