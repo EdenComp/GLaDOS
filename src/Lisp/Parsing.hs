@@ -1,4 +1,4 @@
-module Parsing (
+module Lisp.Parsing (
     parse,
     Parser,
     parseChar,
@@ -17,7 +17,7 @@ module Parsing (
 
 import Control.Applicative (Alternative (..))
 import Data.Char (isDigit)
-import SExpr (SymbolicExpression (..))
+import Lisp.SExpr (SymbolicExpression (..))
 
 newtype Parser a = Parser {parse :: String -> Maybe (a, String)}
 

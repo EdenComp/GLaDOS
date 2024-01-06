@@ -1,7 +1,20 @@
-module TestParsing (testParsing) where
+module Unit.Lisp.TestLispParsing (testLispParsing) where
 
-import Parsing
-import Test.HUnit
+import Lisp.Parsing (
+    Parser (parse),
+    parseAnd,
+    parseAndWith,
+    parseAnyChar,
+    parseChar,
+    parseInt,
+    parseLisp,
+    parseMany,
+    parseOr,
+    parsePair,
+    parseSome,
+    parseUInt,
+ )
+import Test.HUnit (Test (..), assertEqual)
 
 testParseChar :: Test
 testParseChar =
@@ -134,8 +147,8 @@ testParsingToSExpr =
         , TestCase (assertEqual "function" "Just [(define sum (lambda (a b) (+ a b))),(sum 1 2)]" (show (parseLisp "(define sum (lambda (a b) (+ a b))) (sum 1 2)")))
         ]
 
-testParsing :: Test
-testParsing =
+testLispParsing :: Test
+testLispParsing =
     TestList
         [ TestLabel "parseChar" testParseChar
         , TestLabel "parseAnyChar" testParseAnyChar

@@ -1,6 +1,6 @@
-module Variable (getVariableValue, addVariable) where
+module Lisp.Variable (getVariableValue, addVariable) where
 
-import Types (AstNode, Variable (..))
+import Lisp.Types (AstNode, Variable (..))
 
 getVariableValue :: [Char] -> [Variable] -> Maybe AstNode
 getVariableValue searchIdentifier (x : xs)

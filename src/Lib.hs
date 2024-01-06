@@ -1,16 +1,12 @@
 {-# LANGUAGE LambdaCase #-}
 
-module Lib (glados, evaluateAndPrintResult) where
-
-import Ast (evalAst)
+module Lib (glados) where
 
 import Dreamberd.Lib (evaluateAndPrintDreamberdResult)
-import Parsing (parseLisp)
+import Lisp.Lib (evaluateAndPrintLispResult)
 import ReadInput (getInput, processFile)
-import SExpr (sexprsToAsts)
 import System.Environment (getArgs)
 import System.Exit (ExitCode (..), exitSuccess, exitWith)
-import Types
 
 displayHelp :: IO ()
 displayHelp =
@@ -39,10 +35,10 @@ glados =
             ["--version"] -> putStrLn "Glados v-1.0.0" >> exitSuccess
             ["-c", fileName] -> processFile evaluateAndPrintDreamberdResult fileName
             ["--compile", fileName] -> processFile evaluateAndPrintDreamberdResult fileName
-            ["-l", fileName] -> processFile evaluateAndPrintResult fileName
-            ["--lisp", fileName] -> processFile evaluateAndPrintResult fileName
-            ["-lr"] -> getInput evaluateAndPrintResult
-            ["--lisp-repl"] -> getInput evaluateAndPrintResult
+            ["-l", fileName] -> processFile evaluateAndPrintLispResult fileName
+            ["--lisp", fileName] -> processFile evaluateAndPrintLispResult fileName
+            ["-lr"] -> getInput evaluateAndPrintLispResult
+            ["--lisp-repl"] -> getInput evaluateAndPrintLispResult
             arg -> wrongArgumentHandler arg
 
 wrongArgumentHandler :: [String] -> IO ()
@@ -52,15 +48,3 @@ wrongArgumentHandler arg =
         >> putStrLn "\"] not Valid Flag."
         >> putStrLn "Check -h or --help for help."
         >> exitWith (ExitFailure 84)
-
-getEvaluatedResult :: String -> Maybe [Types.AstNode]
-getEvaluatedResult sourceCode = parseLisp sourceCode >>= sexprsToAsts >>= evalAst
-
-printEvaluatedResult :: [Types.AstNode] -> IO ()
-printEvaluatedResult = mapM_ print
-
-evaluateAndPrintResult :: String -> IO ()
-evaluateAndPrintResult sourceCode =
-    case getEvaluatedResult sourceCode of
-        Just result -> printEvaluatedResult result
-        Nothing -> exitWith (ExitFailure 84)

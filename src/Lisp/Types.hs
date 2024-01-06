@@ -1,6 +1,6 @@
 {-# LANGUAGE RankNTypes #-}
 
-module Types (
+module Lisp.Types (
     AstNode (..),
     Variable (..),
     NodeEvaluator,
