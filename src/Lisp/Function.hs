@@ -1,10 +1,10 @@
 {-# LANGUAGE ImpredicativeTypes #-}
 
-module Function (appendParametersToVariables, evalCall, applyBinaryOpOnNodes, getOperatorForBinaryOpSymbol, evalBinaryOperation) where
+module Lisp.Function (appendParametersToVariables, evalCall, applyBinaryOpOnNodes, getOperatorForBinaryOpSymbol, evalBinaryOperation) where
 
 import Control.Applicative (Alternative ((<|>)))
-import Types (AstNode (..), BuiltinComparisonOperator, BuiltinOperator, NodeEvaluator, Variable (..))
-import Variable (addVariable)
+import Lisp.Types (AstNode (..), BuiltinComparisonOperator, BuiltinOperator, NodeEvaluator, Variable (..))
+import Lisp.Variable (addVariable)
 
 appendParametersToVariables :: [Variable] -> [String] -> [AstNode] -> Maybe [Variable]
 appendParametersToVariables vars parameters args

@@ -7,9 +7,11 @@ from difflib import unified_diff as diff
 from glob import glob
 import re
 
-def get_test_paths() -> list[str]:
+LANGUAGES = [("Lisp", ".lsp", "lisp", "-l"), ("Dreamberd", ".db4", "dreamberd", "-c")]
+
+def get_test_paths(folder_name: str, extension: str) -> list[str]:
     folder = path.dirname(path.realpath(__file__))
-    return glob(folder + '/src/**/*.lsp', recursive=True)
+    return glob(folder + f'/src/{folder_name}/*{extension}', recursive=True)
 
 
 def run_command(test_path: str, binary: str) -> CompletedProcess[str]:
@@ -31,16 +33,16 @@ def disp_err(output: CompletedProcess[str], expected_output: str, expected_error
         print()
 
 
-def run_test(test_path: str, is_debug: bool, is_full_log: bool, has_color: bool) -> bool:
-    output = run_command(test_path, "./glados -l")
+def run_test(test_path: str, extension: str, flag: str, is_debug: bool, is_full_log: bool, has_color: bool) -> bool:
+    output = run_command(test_path, f"./glados {flag}")
     expected_output, expected_error = '', ''
 
-    if path.exists(test_path.replace(".lsp", ".out")):
-        with open(test_path.replace(".lsp", ".out")) as file:
+    if path.exists(test_path.replace(extension, ".out")):
+        with open(test_path.replace(extension, ".out")) as file:
             expected_output = file.read()
 
-    if path.exists(test_path.replace(".lsp", ".err")):
-        with open(test_path.replace(".lsp", ".err")) as file:
+    if path.exists(test_path.replace(extension, ".err")):
+        with open(test_path.replace(extension, ".err")) as file:
             expected_error = file.read()
 
     name = re.findall('[^/]*$', test_path)[0]
@@ -58,16 +60,24 @@ def run_test(test_path: str, is_debug: bool, is_full_log: bool, has_color: bool)
 
 
 if __name__ == "__main__":
-    nb_passed, nb_failed = 0, 0
-    tests = get_test_paths()
-    nb_tests = len(tests)
     is_full_log = (len(argv) == 2 and "a" in argv[1])
     is_debug = (len(argv) == 2 and "d" in argv[1])
     has_color = (len(argv) == 2 and "c" in argv[1])
 
-    for test in tests:
-        passed = run_test(test, is_debug, is_full_log, has_color)
-        nb_passed += 1 if passed else 0
-        nb_failed += 1 if not passed else 0
-    print(f"Ran {nb_tests} tests ({nb_passed} passed and {nb_failed} failed).")
+    total_tests, total_passed = 0, 0
+
+    for name, extension, folder, flag in LANGUAGES:
+        print(f"Running {name} tests:")
+        nb_passed, nb_failed = 0, 0
+        tests = get_test_paths(folder_name=folder, extension=extension)
+        nb_tests = len(tests)
+
+        for test in tests:
+            passed = run_test(test, extension, flag, is_debug, is_full_log, has_color)
+            nb_passed += 1 if passed else 0
+            nb_failed += 1 if not passed else 0
+        print(f"Ran {nb_tests} tests ({nb_passed} passed and {nb_failed} failed).\n")
+        total_tests += nb_tests
+        total_passed += nb_passed
+
     exit(nb_tests - nb_passed)
