@@ -53,7 +53,7 @@ parseValue (c : bytes) = case fromEnum c of
 
 parseEnvValue :: [Char] -> Either String (EnvValue, [Char])
 parseEnvValue [] = Left "No value provided"
-parseEnvValue (c : bytes) 
+parseEnvValue (c : bytes)
     | fromEnum c == 0x30 = case parseInt bytes of
         Left err -> Left err
         Right (len, rest) -> case parseInstructions insts of
