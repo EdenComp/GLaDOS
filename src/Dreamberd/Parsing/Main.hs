@@ -58,10 +58,12 @@ parseFunction code ast =
 
 parseCondition :: String -> [AstNode] -> Either String (String, [AstNode])
 parseCondition str ast =
-    let (condition, ifBody, elifs, elsePart, restOfCode) = parseConditionParts str
-     in case buildConditionNodes condition ifBody elifs elsePart of
-            Right ifNodes -> Right (restOfCode, ast ++ ifNodes)
-            Left err -> Left err
+    case parseConditionParts str of
+        Left err -> Left err
+        Right (condition, ifBody, elifs, elsePart, restOfCode) ->
+            case buildConditionNodes condition ifBody elifs elsePart of
+                Right ifNodes -> Right (restOfCode, ast ++ ifNodes)
+                Left err -> Left err
 
 buildConditionNodes :: String -> String -> [(String, String)] -> Maybe (String, String) -> Either String [AstNode]
 buildConditionNodes _ ifBody [] Nothing = do
