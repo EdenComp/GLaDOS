@@ -1,4 +1,4 @@
-module Vm (
+module Dreamberd.Vm (
     exec,
     Call (..),
     EnvValue (..),
@@ -7,7 +7,7 @@ module Vm (
 ) where
 
 data Value
-    = Number Integer
+    = Number Int
     | Bool Bool
     | Symbol Call
     | Void
