@@ -4,8 +4,8 @@ module Dreamberd.Bytecode.Encode (
 
 import Data.Bits (shiftR)
 import Data.Char (chr)
-import Dreamberd.Vm (Call(..), EnvValue(..), Insts(..), Value(..))
-import System.Endian (getSystemEndianness, Endianness(..))
+import Dreamberd.Vm (Call (..), EnvValue (..), Insts (..), Value (..))
+import System.Endian (getSystemEndianness, Endianness (..))
 
 transpileInt :: Int -> [Char]
 transpileInt nb = case getSystemEndianness of
@@ -39,10 +39,12 @@ transpileInstruction (Push v) = toEnum 0x01 : transpileValue v
 transpileInstruction (PushArg idx) = toEnum 0x02 : transpileInt idx
 transpileInstruction (PushEnv env) = toEnum 0x03 : transpileString env
 transpileInstruction Call = [toEnum 0x04]
-transpileInstruction (DefineEnv name value) = toEnum 0x05 : transpileString name ++ case value of
-    (Function insts) -> toEnum 0x30 : transpileInt (length nested) ++ nested
-        where nested = foldMap transpileInstruction insts
-    (Variable val) -> toEnum 0x31 : transpileValue val
+transpileInstruction (DefineEnv name value) =
+    toEnum 0x05 : transpileString name ++ case value of
+        (Function insts) -> toEnum 0x30 : transpileInt (length nested) ++ nested
+          where
+            nested = foldMap transpileInstruction insts
+        (Variable val) -> toEnum 0x31 : transpileValue val
 transpileInstruction (JumpIfFalse nb) = toEnum 0x06 : transpileInt nb
 transpileInstruction Ret = [toEnum 0x07]
 

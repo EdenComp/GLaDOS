@@ -1,3 +1,5 @@
+# Bytecode definitions
+
 Here are all the definitions of the bytecode:
 
 # Instructions
