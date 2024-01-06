@@ -1,6 +1,6 @@
 {-# LANGUAGE ViewPatterns #-}
 
-module Dreamberd.Parsing.Main (parseDreamberd) where
+module Dreamberd.Parsing.Main (parseDreamberd, parseFunction) where
 
 import Data.Char (isSpace)
 import Data.List (stripPrefix)
@@ -10,12 +10,12 @@ import Dreamberd.Parsing.Values (parseFunctionCall)
 import Dreamberd.Types (AstNode (Function))
 
 parseDreamberd :: String -> [AstNode] -> Either String [AstNode]
-parseDreamberd "\n" ast = Right ast
-parseDreamberd "" ast = Right ast
-parseDreamberd sourceCode ast =
-    case parseElement (dropWhile isSpace sourceCode) ast of
-        Right (remainingCode, updatedAst) -> parseDreamberd remainingCode updatedAst
-        Left err -> Left err
+parseDreamberd sourceCode ast
+    | all isSpace sourceCode = Right ast
+    | otherwise =
+        case parseElement (dropWhile isSpace sourceCode) ast of
+            Right (remainingCode, updatedAst) -> parseDreamberd remainingCode updatedAst
+            Left err -> Left err
 
 parseElement :: String -> [AstNode] -> Either String (String, [AstNode])
 parseElement (stripPrefix "int" -> Just restCode) ast =

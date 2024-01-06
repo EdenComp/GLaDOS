@@ -4,6 +4,7 @@ module Dreamberd.Parsing.Values (
 ) where
 
 import Data.Char (isDigit, isSpace)
+import Data.Either (lefts, rights)
 import Data.List (isPrefixOf)
 import Dreamberd.Parsing.Utils (getVariableName)
 import Dreamberd.Types (AstNode (Boolean, Call, Identifier, Number, String))
@@ -36,8 +37,11 @@ parseFunctionCall code =
                 let paramsAndRest = init $ tail rest
                     (params, remaining) = span (/= ')') paramsAndRest
                     afterParams = dropWhile (\c -> c == ';' || isSpace c) $ tail remaining
-                    paramList = words $ map (\c -> if c == ',' then ' ' else c) params
-                 in Right (afterParams, Call strippedName (map String paramList))
+                    paramList = map parseAnyValue (words $ map (\c -> if c == ',' then ' ' else c) params)
+                    errors = lefts paramList
+                 in if not (null errors)
+                        then Left (head errors)
+                        else Right (afterParams, Call strippedName (rights paramList))
 
 parseAnyValue :: String -> Either String AstNode
 parseAnyValue input = case parseString input of

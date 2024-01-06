@@ -1,5 +1,6 @@
 import System.Exit (exitFailure, exitSuccess)
 import Test.HUnit (Test (..), errors, failures, runTestTT)
+import Unit.Dreamberd.TestDreamberdParsing (testDreamberdParsing)
 import Unit.Lisp.TestLispEval (testLispEvaluation)
 import Unit.Lisp.TestLispParsing (testLispParsing)
 import Unit.Lisp.TestLispSExpr (testLispSExpr)
@@ -17,4 +18,5 @@ listTests =
         [ testLispParsing
         , testLispSExpr
         , testLispEvaluation
+        , testDreamberdParsing
         ]

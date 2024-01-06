@@ -11,6 +11,7 @@ data AstNode
     | If AstNode [AstNode] [AstNode]
     | Return AstNode
     | List [AstNode]
+    deriving (Eq)
 
 instance Show AstNode where
     show (Number val) = show val
