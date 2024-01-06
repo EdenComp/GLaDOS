@@ -1,6 +1,5 @@
-module Dreamberd.Bytecode (
-    getFromBytecode,
-    transpileIntoBytecode
+module Dreamberd.Bytecode.Encode (
+    transpileIntoBytecode,
 ) where
 
 import Data.Bits (shiftR)
@@ -41,14 +40,11 @@ transpileInstruction (PushArg idx) = toEnum 0x02 : transpileInt idx
 transpileInstruction (PushEnv env) = toEnum 0x03 : transpileString env
 transpileInstruction Call = [toEnum 0x04]
 transpileInstruction (DefineEnv name value) = toEnum 0x05 : transpileString name ++ case value of
-    (Function insts) -> toEnum 0x30 : transpileInt (length insts) ++ foldMap transpileInstruction insts
+    (Function insts) -> toEnum 0x30 : transpileInt (length nested) ++ nested
+        where nested = foldMap transpileInstruction insts
     (Variable val) -> toEnum 0x31 : transpileValue val
 transpileInstruction (JumpIfFalse nb) = toEnum 0x06 : transpileInt nb
 transpileInstruction Ret = [toEnum 0x07]
 
 transpileIntoBytecode :: [Insts] -> [Char]
 transpileIntoBytecode insts = "db4\n" ++ foldMap transpileInstruction insts
-
-getFromBytecode :: [Char] -> Either String [Insts]
-getFromBytecode ('d':'b':'4':'\n':_) = Left "Not implemented yet"
-getFromBytecode _ = Left "Exec format error"
