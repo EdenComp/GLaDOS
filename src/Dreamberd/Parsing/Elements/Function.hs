@@ -1,6 +1,6 @@
 {-# LANGUAGE ViewPatterns #-}
 
-module Dreamberd.Parsing.Elements.Function (parseReturn, extractFunctionParts) where
+module Dreamberd.Parsing.Elements.Function (parseReturn, extractFunctionParts, extractFunctionBodyAndRest) where
 
 import Data.Char (isSpace)
 import Dreamberd.Parsing.Utils (extractValueAndRest)
