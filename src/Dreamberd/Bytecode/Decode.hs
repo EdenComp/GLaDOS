@@ -53,14 +53,14 @@ parseValue (c : bytes) = case fromEnum c of
 
 parseEnvValue :: [Char] -> Either String (EnvValue, [Char])
 parseEnvValue [] = Left "No value provided"
-parseEnvValue (c:bytes) 
+parseEnvValue (c : bytes) 
     | fromEnum c == 0x30 = case parseInt bytes of
-    Left err -> Left err
-    Right (len, rest) -> case parseInstructions insts of
         Left err -> Left err
-        Right func -> if length rest < len then Left "Wrong function body length" else Right (Function func, rest')
-      where
-        (insts, rest') = splitAt len rest
+        Right (len, rest) -> case parseInstructions insts of
+            Left err -> Left err
+            Right func -> if length rest < len then Left "Wrong function body length" else Right (Function func, rest')
+          where
+            (insts, rest') = splitAt len rest
     | fromEnum c == 0x31 = case parseValue bytes of
         Left err -> Left err
         Right (val, rest) -> Right (Variable val, rest)

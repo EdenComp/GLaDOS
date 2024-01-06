@@ -5,7 +5,7 @@ module Dreamberd.Bytecode.Encode (
 import Data.Bits (shiftR)
 import Data.Char (chr)
 import Dreamberd.Vm (Call (..), EnvValue (..), Insts (..), Value (..))
-import System.Endian (getSystemEndianness, Endianness (..))
+import System.Endian (Endianness (..), getSystemEndianness)
 
 transpileInt :: Int -> [Char]
 transpileInt nb = case getSystemEndianness of
