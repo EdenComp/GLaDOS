@@ -3,6 +3,7 @@ module Dreamberd.Parsing.Elements.Operator (parseOperator) where
 
 import Dreamberd.Parsing.Values (parseAnyValue)
 import Dreamberd.Types (AstNode (Operator, String))
+import Data.List (isPrefixOf)
 
 parseOperator :: String -> Either String (String, String)
 parseOperator str =

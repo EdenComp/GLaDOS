@@ -4,6 +4,9 @@ module Dreamberd.Parsing.Elements.Condition (parseConditionParts) where
 
 import Data.Char (isSpace)
 import Dreamberd.Parsing.Elements.Function (extractFunctionBodyAndRest)
+import Dreamberd.Parsing.Elements.Operator (parseOperator)
+import Dreamberd.Parsing.Values (parseAnyValue)
+import Dreamberd.Types (AstNode (Boolean, Operator))
 
 parseConditionExpression :: String -> Either String AstNode
 parseConditionExpression input = 
