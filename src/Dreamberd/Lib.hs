@@ -1,21 +1,21 @@
 module Dreamberd.Lib (
-    evaluateAndPrintDreamberdResult,
+    compileDreamberdCode,
     executeDreamberdBytecode,
 ) where
 
 import Dreamberd.Bytecode.Decode (getFromBytecode)
+import Dreamberd.Bytecode.Encode (transpileIntoBytecode)
+import Dreamberd.Compile (compileAst)
 import Dreamberd.Parsing.Main (parseDreamberd)
-import Dreamberd.Types (AstNode)
 import Dreamberd.Vm (Insts (..), exec)
 import System.Exit (ExitCode (ExitFailure), exitWith)
 
-getDreamberdEvaluatedResult :: String -> Either String [AstNode]
-getDreamberdEvaluatedResult sourceCode = parseDreamberd sourceCode []
-
-evaluateAndPrintDreamberdResult :: String -> IO ()
-evaluateAndPrintDreamberdResult sourceCode =
-    case getDreamberdEvaluatedResult sourceCode of
-        Right ast -> print ast
+compileDreamberdCode :: String -> IO ()
+compileDreamberdCode sourceCode =
+    case parseDreamberd sourceCode [] of
+        Right ast -> case compileAst ast of
+            Right insts -> writeFile "a.out" (transpileIntoBytecode insts)
+            Left err -> putStrLn err >> exitWith (ExitFailure 84)
         Left err -> putStrLn err >> exitWith (ExitFailure 84)
 
 executeDreamberdBytecode :: [Char] -> IO ()
