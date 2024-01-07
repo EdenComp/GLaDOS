@@ -2,7 +2,7 @@
 
 module Lib (glados) where
 
-import Dreamberd.Lib (evaluateAndPrintDreamberdResult, executeDreamberdBytecode)
+import Dreamberd.Lib (compileDreamberdCode, executeDreamberdBytecode)
 import Lisp.Lib (evaluateAndPrintLispResult)
 import ReadInput (getInput, processFile)
 import System.Environment (getArgs)
@@ -31,8 +31,8 @@ glados =
             ["--help"] -> displayHelp >> exitSuccess
             ["-v"] -> putStrLn "Glados v-1.0.0" >> exitSuccess
             ["--version"] -> putStrLn "Glados v-1.0.0" >> exitSuccess
-            ["-c", fileName] -> processFile evaluateAndPrintDreamberdResult fileName
-            ["--compile", fileName] -> processFile evaluateAndPrintDreamberdResult fileName
+            ["-c", fileName] -> processFile compileDreamberdCode fileName
+            ["--compile", fileName] -> processFile compileDreamberdCode fileName
             ["-vm", fileName] -> processFile executeDreamberdBytecode fileName
             ["--virtual-machine", fileName] -> processFile executeDreamberdBytecode fileName
             ["-l", fileName] -> processFile evaluateAndPrintLispResult fileName
