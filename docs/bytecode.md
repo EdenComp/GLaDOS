@@ -16,8 +16,9 @@ Here are all the definitions of the bytecode:
 
 `0x11` + 4 bytes: Int
 `0x12` + 1 byte: Bool
-`0x13` + (Symbol or function name): Symbol
-`0x14`: Void
+`0x13`: String
+`0x14` + (Symbol or function name): Symbol
+`0x15`: Void
 
 Strings: 4 bytes for length + string content
 
