@@ -5,6 +5,18 @@ module Dreamberd.Parsing.Elements.Condition (parseConditionParts) where
 import Data.Char (isSpace)
 import Dreamberd.Parsing.Elements.Function (extractFunctionBodyAndRest)
 
+parseConditionExpression :: String -> Either String AstNode
+parseConditionExpression input = 
+    case parseAnyValue input of
+        Right lhsValue -> 
+            case parseOperator (dropWhile isSpace . snd . span isSpace $ input) of
+                Right (op, rest) -> 
+                    case parseAnyValue rest of
+                        Right rhsValue -> Right (Operator op lhsValue rhsValue)
+                        Left err -> Left err
+                Left err -> Left err
+        Left err -> Left err
+
 parseConditionParts :: String -> Either String (String, String, [(String, String)], Maybe (String, String), String)
 parseConditionParts str =
     let (beforeIf, afterIf) = break (== '{') str
