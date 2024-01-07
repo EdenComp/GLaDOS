@@ -15,10 +15,10 @@ processInput func = getUserInput func ""
 getUserInput :: (String -> IO ()) -> String -> IO ()
 getUserInput func linesSoFar = do
     eof <- isEOF
-    if eof 
+    if eof
         then exitSuccess
-    else do
-        userInput <- getLine
-        let updatedLines = linesSoFar ++ userInput
-        func updatedLines
-        getUserInput func updatedLines
+        else do
+            userInput <- getLine
+            let updatedLines = linesSoFar ++ userInput
+            func updatedLines
+            getUserInput func updatedLines
