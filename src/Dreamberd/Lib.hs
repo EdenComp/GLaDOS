@@ -10,11 +10,11 @@ import Dreamberd.Parsing.Main (parseDreamberd)
 import Dreamberd.Vm (Insts (..), exec)
 import System.Exit (ExitCode (ExitFailure), exitWith)
 
-compileDreamberdCode :: String -> IO ()
-compileDreamberdCode sourceCode =
+compileDreamberdCode :: String -> String -> IO ()
+compileDreamberdCode sourceCode outputFile =
     case parseDreamberd sourceCode [] of
         Right ast -> case compileAst ast of
-            Right insts -> writeFile "a.out" (transpileIntoBytecode insts)
+            Right insts -> writeFile outputFile (transpileIntoBytecode insts)
             Left err -> putStrLn err >> exitWith (ExitFailure 84)
         Left err -> putStrLn err >> exitWith (ExitFailure 84)
 

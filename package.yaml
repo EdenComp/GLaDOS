@@ -9,8 +9,9 @@ description:         DreamBerd 4
 
 dependencies:
 - base >= 4.7 && < 5
-- regex-posix
 - cpu
+- optparse-applicative
+- regex-posix
 
 ghc-options:
 - -Wall
