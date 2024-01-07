@@ -6,7 +6,7 @@ module Dreamberd.Lib (
 import Dreamberd.Bytecode.Decode (getFromBytecode)
 import Dreamberd.Parsing.Main (parseDreamberd)
 import Dreamberd.Types (AstNode)
-import Dreamberd.Vm (exec, Insts (..))
+import Dreamberd.Vm (Insts (..), exec)
 import System.Exit (ExitCode (ExitFailure), exitWith)
 
 getDreamberdEvaluatedResult :: String -> Either String [AstNode]
