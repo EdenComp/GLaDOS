@@ -9,9 +9,16 @@ module Dreamberd.Vm (
 data Value
     = Number Int
     | Bool Bool
+    | String String
     | Symbol Call
     | Void
-    deriving (Show)
+
+instance Show Value where
+    show (Number nbr) = show nbr
+    show (Bool b) = show b
+    show (String str) = str
+    show (Symbol sym) = show sym
+    show Void = ""
 
 data EnvValue
     = Function [Insts]
@@ -99,6 +106,15 @@ execBuiltin (Bool l : Bool r : xs) op = case op of
     Eq -> Right (Bool (l == r) : xs)
     Neq -> Right (Bool (l /= r) : xs)
     _ -> Left ("Wrong data types in stack: " ++ show op ++ " with 2 booleans")
+execBuiltin (String str : Number nb : xs) op = case op of
+    Add -> Right (String (str ++ show nb) : xs)
+    Mul -> Right (String (concat $ replicate nb str) : xs)
+    _ -> Left ("Wrong data types in stack: " ++ show op ++ " with a string and a number")
+execBuiltin (String str : r : xs) op = case op of
+    Add -> Right (String (str ++ show r) : xs)
+    Eq -> Right (Bool (str == show r) : xs)
+    Neq -> Right (Bool (str == show r) : xs)
+    _ -> Left ("Wrong data types in stack: " ++ show op ++ " with a string and " ++ show r)
 execBuiltin _ op = Left ("Wrong stack variables for builtin " ++ show op)
 
 findEnvValue :: String -> [Env] -> Maybe EnvValue
