@@ -8,12 +8,13 @@ import Options.Applicative
 data Command
     = Compile String String
     | Execute String
+    | Run String
     | Lisp (Maybe String)
     | Version
     deriving (Show)
 
 commandsParser :: ParserInfo Command
-commandsParser = (info (helper <*> hsubparser (compileCommand <> executeCommand <> lispCommand <> versionCommand)) (fullDesc <> progDesc "GLaDOS - Compile & Execute Dreamberd, Interpret LISP" <> header "GLaDOS")){infoFailureCode = 84}
+commandsParser = (info (helper <*> hsubparser (compileCommand <> executeCommand <> runCommand <> lispCommand <> versionCommand)) (fullDesc <> progDesc "GLaDOS - Compile & Execute Dreamberd, Interpret LISP" <> header "GLaDOS")){infoFailureCode = 84}
 
 compileCommand :: Mod CommandFields Command
 compileCommand = command "compile" (info compileOptions (progDesc "Compile DreamBerd source code"))
@@ -29,6 +30,12 @@ executeCommand = command "execute" (info executeOptions (progDesc "Execute compi
 
 executeOptions :: Parser Command
 executeOptions = Execute <$> strArgument (metavar "FILE" <> help "File to execute")
+
+runCommand :: Mod CommandFields Command
+runCommand = command "run" (info runOptions (progDesc "Run Dreamberd code"))
+
+runOptions :: Parser Command
+runOptions = Run <$> strArgument (metavar "FILE" <> help "File to run")
 
 lispCommand :: Mod CommandFields Command
 lispCommand = command "lisp" (info lispOptions (progDesc "Interpret LISP code"))
