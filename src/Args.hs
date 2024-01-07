@@ -1,5 +1,5 @@
 module Args (
-    Command(..),
+    Command (..),
     commandsParser,
 ) where
 
@@ -13,15 +13,16 @@ data Command
     deriving (Show)
 
 commandsParser :: ParserInfo Command
-commandsParser = (info (helper <*> hsubparser (compileCommand <> executeCommand <> lispCommand <> versionCommand)) (fullDesc <> progDesc "GLaDOS - Compile & Execute Dreamberd, Interpret LISP" <> header "GLaDOS"))  { infoFailureCode = 84 }
+commandsParser = (info (helper <*> hsubparser (compileCommand <> executeCommand <> lispCommand <> versionCommand)) (fullDesc <> progDesc "GLaDOS - Compile & Execute Dreamberd, Interpret LISP" <> header "GLaDOS")){ infoFailureCode = 84 }
 
 compileCommand :: Mod CommandFields Command
 compileCommand = command "compile" (info compileOptions (progDesc "Compile DreamBerd source code"))
 
 compileOptions :: Parser Command
-compileOptions = Compile
-    <$> strArgument (metavar "FILE" <> help "File to compile")
-    <*> strOption (short 'o' <> long "output" <> value "a.out" <> metavar "OUTPUT" <> help "Output file")
+compileOptions =
+    Compile
+        <$> strArgument (metavar "FILE" <> help "File to compile")
+        <*> strOption (short 'o' <> long "output" <> value "a.out" <> metavar "OUTPUT" <> help "Output file")
 
 executeCommand :: Mod CommandFields Command
 executeCommand = command "execute" (info executeOptions (progDesc "Execute compiled Dreamberd code"))
