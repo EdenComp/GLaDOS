@@ -22,7 +22,7 @@ Here are all the definitions of the bytecode:
 
 Strings: 4 bytes for length + string content
 
-> :warn: Strings are not a value type in the language.
+> :warning: Strings are not a value type in the language.
 
 ## Symbols
 `0x21`: Add
