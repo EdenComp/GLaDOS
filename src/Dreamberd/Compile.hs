@@ -1,5 +1,5 @@
 module Dreamberd.Compile (
-    compileAst
+    compileAst,
 ) where
 
 import Dreamberd.Types (AstNode (..))
