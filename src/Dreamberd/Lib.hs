@@ -1,6 +1,7 @@
 module Dreamberd.Lib (
     compileDreamberdCode,
     executeDreamberdBytecode,
+    runDreamberdCode,
 ) where
 
 import Dreamberd.Bytecode.Decode (getFromBytecode)
@@ -28,4 +29,12 @@ executeDreamberdInsts :: [Insts] -> IO ()
 executeDreamberdInsts insts =
     case exec [] [] [] insts of
         Right res -> print res
+        Left err -> putStrLn err >> exitWith (ExitFailure 84)
+
+runDreamberdCode :: String -> IO ()
+runDreamberdCode sourceCode =
+    case parseDreamberd sourceCode [] of
+        Right ast -> case compileAst ast of
+            Right insts -> executeDreamberdInsts insts
+            Left err -> putStrLn err >> exitWith (ExitFailure 84)
         Left err -> putStrLn err >> exitWith (ExitFailure 84)
