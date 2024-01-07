@@ -4,11 +4,10 @@ module ReadInput (
 )
 where
 
-import GetFile (getFileContent)
 import GetInput (getUserInput)
 
 processFile :: (String -> IO ()) -> FilePath -> IO ()
-processFile lispInterpreter fileName = getFileContent fileName >>= lispInterpreter
+processFile lispInterpreter fileName = readFile fileName >>= lispInterpreter
 
 getInput :: (String -> IO ()) -> IO ()
 getInput = getUserInput

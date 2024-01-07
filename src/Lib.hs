@@ -2,7 +2,7 @@
 
 module Lib (glados) where
 
-import Dreamberd.Lib (evaluateAndPrintDreamberdResult)
+import Dreamberd.Lib (evaluateAndPrintDreamberdResult, executeDreamberdBytecode)
 import Lisp.Lib (evaluateAndPrintLispResult)
 import ReadInput (getInput, processFile)
 import System.Environment (getArgs)
@@ -27,14 +27,14 @@ glados =
     getArgs
         >>= \case
             [] -> putStrLn "No arguments, -h or --help for help" >> exitWith (ExitFailure 84)
-            ["-vm", fileName] -> putStr "Launch VM " >> putStr fileName >> putStrLn "..." >> exitSuccess
-            ["--virtual-machine", fileName] -> putStr "Launch VM " >> putStr fileName >> putStrLn "..." >> exitSuccess
             ["-h"] -> displayHelp >> exitSuccess
             ["--help"] -> displayHelp >> exitSuccess
             ["-v"] -> putStrLn "Glados v-1.0.0" >> exitSuccess
             ["--version"] -> putStrLn "Glados v-1.0.0" >> exitSuccess
             ["-c", fileName] -> processFile evaluateAndPrintDreamberdResult fileName
             ["--compile", fileName] -> processFile evaluateAndPrintDreamberdResult fileName
+            ["-vm", fileName] -> processFile executeDreamberdBytecode fileName
+            ["--virtual-machine", fileName] -> processFile executeDreamberdBytecode fileName
             ["-l", fileName] -> processFile evaluateAndPrintLispResult fileName
             ["--lisp", fileName] -> processFile evaluateAndPrintLispResult fileName
             ["-lr"] -> getInput evaluateAndPrintLispResult
