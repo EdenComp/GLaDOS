@@ -7,7 +7,7 @@ execVM :: [Insts] -> IO (Either String Value)
 execVM = exec [] [] []
 
 testDreamberdVm :: Test
-testDreamberdVm = 
+testDreamberdVm =
     TestList
         [ testBasicExecution
         , testStackPushes
@@ -31,7 +31,7 @@ testBasicExecution =
 
 testStackPushes :: Test
 testStackPushes =
-    TestList 
+    TestList
         [ TestCase $ execVM [PushArg 0] >>= assertEqual "PushArg without args" (Left "Argument index out of bounds")
         , TestCase $ exec [] [Number 1] [] [PushArg 0, Ret] >>= assertEqual "push from arg" (Right (Number 1))
         , TestCase $ exec [] [Number 1] [] [PushArg (-1), Ret] >>= assertEqual "push negative" (Left "Argument index out of bounds")
@@ -42,7 +42,7 @@ testStackPushes =
 
 testCalls :: Test
 testCalls =
-    TestList 
+    TestList
         [ TestCase $ execVM [Push (Number 0), Call] >>= assertEqual "not a symbol" (Left "Stack argument is not a symbol")
         , TestCase $ execVM [Call] >>= assertEqual "empty stack" (Left "Stack is empty for a Call instruction")
         , TestCase $ execVM [Push (Symbol (FunctionName "test")), Call] >>= assertEqual "unknown function" (Left "Environment test does not exist")
@@ -53,7 +53,7 @@ testCalls =
 
 testEnvDefines :: Test
 testEnvDefines =
-    TestList 
+    TestList
         [ TestCase $ execVM [Push (Number (-26)), DefineEnv "opp" (Function [PushArg 0, Push (Number (-1)), Push (Symbol Mul), Call, Ret]), PushEnv "opp", Call, Ret] >>= assertEqual "basic function" (Right (Number 26))
         , TestCase $ execVM [DefineEnv "inc" (Function [PushArg 0, DefineEnv "val" (Variable (Number 2)), PushEnv "val", Push (Symbol Add), Call, Ret]), Push (Number 2), PushEnv "inc", Call, Ret] >>= assertEqual "define inside define" (Right (Number 4))
         , TestCase $ execVM [DefineEnv "inc" (Function [PushArg 0, DefineEnv "val" (Variable (Number 2)), PushEnv "val", Push (Symbol Add), Call, Ret]), PushEnv "val", Call, Ret] >>= assertEqual "private scopes" (Left "Environment val does not exist")
