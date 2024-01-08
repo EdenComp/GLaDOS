@@ -44,16 +44,16 @@ testParseOperator =
 testParseConditionExpression :: Test
 testParseConditionExpression =
     TestList
-        [ TestCase (assertEqual "parseConditionExpression basic" (Right (Operator "<" (Number 1) (Number 2))) (parseConditionExpression "1 < 2"))
-        , TestCase (assertEqual "parseConditionExpression with spaces" (Right (Operator ">" (Number 1) (Number 2))) (parseConditionExpression "1 > 2"))
-        , TestCase (assertEqual "parseConditionExpression with spaces" (Right (Operator ">=" (Number 1) (Number 2))) (parseConditionExpression "1 >= 2"))
-        , TestCase (assertEqual "parseConditionExpression with spaces" (Right (Operator "<=" (Number 1) (Number 2))) (parseConditionExpression "1 <= 2"))
-        , TestCase (assertEqual "parseConditionExpression with spaces" (Right (Operator "==" (Number 1) (Number 2))) (parseConditionExpression "1 == 2"))
-        , TestCase (assertEqual "parseConditionExpression with spaces" (Right (Operator "!=" (Number 1) (Number 2))) (parseConditionExpression "1 != 2"))
-        , TestCase (assertEqual "parseConditionExpression with spaces" (Left "Invalid expression") (parseConditionExpression " 1 2 "))
-        , TestCase (assertEqual "parseConditionExpression with spaces" (Left "Invalid expression") (parseConditionExpression "1 "))
-        , TestCase (assertEqual "parseConditionExpression with spaces" (Left "Invalid expression") (parseConditionExpression " "))
-        , TestCase (assertEqual "parseConditionExpression with spaces" (Left "Invalid expression") (parseConditionExpression "1 a 1"))
+        [TestCase (assertEqual "parseConditionExpression basic" (Right (Operator "<" (Number 1) (Number 2))) (parseConditionExpression "1 < 2"))
+        ,TestCase (assertEqual "parseConditionExpression with spaces" (Right (Operator ">" (Number 1) (Number 2))) (parseConditionExpression "1 > 2"))
+        ,TestCase (assertEqual "parseConditionExpression with spaces" (Right (Operator ">=" (Number 1) (Number 2))) (parseConditionExpression "1 >= 2"))
+        ,TestCase (assertEqual "parseConditionExpression with spaces" (Right (Operator "<=" (Number 1) (Number 2))) (parseConditionExpression "1 <= 2"))
+        ,TestCase (assertEqual "parseConditionExpression with spaces" (Right (Operator "==" (Number 1) (Number 2))) (parseConditionExpression "1 == 2"))
+        ,TestCase (assertEqual "parseConditionExpression with spaces" (Right (Operator "!=" (Number 1) (Number 2))) (parseConditionExpression "1 != 2"))
+        ,TestCase (assertEqual "parseConditionExpression with spaces" (Left "Invalid expression") (parseConditionExpression " 1 2 "))
+        ,TestCase (assertEqual "parseConditionExpression with spaces" (Left "Invalid expression") (parseConditionExpression "1 "))
+        ,TestCase (assertEqual "parseConditionExpression with spaces" (Left "Invalid expression") (parseConditionExpression " "))
+        ,TestCase (assertEqual "parseConditionExpression with spaces" (Left "Invalid expression") (parseConditionExpression "1 a 1"))
         ]
 
 testParseFunctionCall :: Test
