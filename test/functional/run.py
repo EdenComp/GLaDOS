@@ -7,7 +7,7 @@ from difflib import unified_diff as diff
 from glob import glob
 import re
 
-LANGUAGES = [("Lisp", ".lsp", "lisp", "-l"), ("Dreamberd", ".db4", "dreamberd", "-c")]
+LANGUAGES = [("Lisp", ".lsp", "lisp", "lisp"), ("Dreamberd", ".db4", "dreamberd", "-c")]
 
 def get_test_paths(folder_name: str, extension: str) -> list[str]:
     folder = path.dirname(path.realpath(__file__))
