@@ -55,38 +55,44 @@ data Insts
     | Ret
     deriving (Show)
 
-exec :: [Env] -> [Value] -> [Value] -> [Insts] -> Either String Value
-exec _ _ _ [] = Right Void
-exec _ _ [] (Ret : _) = Right Void
-exec _ _ (val : _) (Ret : _) = Right val
+exec :: [Env] -> [Value] -> [Value] -> [Insts] -> IO (Either String Value)
+exec _ _ _ [] = return (Right Void)
+exec _ _ [] (Ret : _) = return (Right Void)
+exec _ _ (val : _) (Ret : _) = return (Right val)
 exec env args stack (Push val : insts) = exec env args (val : stack) insts
 exec env args stack (PushArg idx : insts)
-    | idx >= length args = Left "Argument index out of bounds"
+    | idx >= length args = return (Left "Argument index out of bounds")
     | otherwise = exec env args ((args !! idx) : stack) insts
 exec env args stack (PushEnv name : insts) = case findEnvValue name env of
     Just _ -> exec env args (Symbol (FunctionName name) : stack) insts
-    Nothing -> Left ("Environment " ++ name ++ "does not exist")
+    Nothing -> return (Left ("Environment " ++ name ++ "does not exist"))
 exec env args stack (DefineEnv name var : insts) = exec (addEnvValue name var env) args stack insts
-exec env args stack (Call : insts) = case execCall env stack of
-    Left err -> Left err
-    Right newValues -> exec env args newValues insts
-exec _ _ [] (x : _) = Left ("Stack is empty for a " ++ show x ++ " instruction")
+exec env args stack (Call : insts) = do
+    ret <- execCall env stack
+    case ret of
+        Left err -> return (Left err)
+        Right newValues -> exec env args newValues insts
+exec _ _ [] (x : _) = return (Left ("Stack is empty for a " ++ show x ++ " instruction"))
 exec env args (Bool x : xs) (JumpIfFalse num : insts)
-    | num < 1 = Left "Invalid number of instructions"
-    | num > length insts = Left "Cannot jump this amount of instructions"
+    | num < 1 = return (Left "Invalid number of instructions")
+    | num > length insts = return (Left "Cannot jump this amount of instructions")
     | not x = exec env args xs (drop num insts)
     | otherwise = exec env args xs insts
-exec _ _ _ (JumpIfFalse _ : _) = Left "Wrong data types in stack: JumpIfFalse needs a Bool"
+exec _ _ _ (JumpIfFalse _ : _) = return (Left "Wrong data types in stack: JumpIfFalse needs a Bool")
 
-execCall :: [Env] -> [Value] -> Either String [Value]
-execCall _ [] = Left "Stack is empty for Call instruction"
+execCall :: [Env] -> [Value] ->  IO (Either String [Value])
+execCall _ [] = return (Left "Stack is empty for Call instruction")
+execCall _ (Symbol (FunctionName "print") : val : xs) = putStr (show val) >> return (Right xs)
+execCall _ (Symbol (FunctionName "print") : _) = return (Left "Stack is empty for print instruction")
 execCall env (Symbol (FunctionName fct) : xs) = case findEnvValue fct env of
-    Just (Function insts) -> case exec env xs [] insts of
-        Left err -> Left err
-        Right val -> Right (val : xs)
-    _ -> Left ("Environment " ++ fct ++ "does not exist")
-execCall _ (Symbol sym : xs) = execBuiltin xs sym
-execCall _ _ = Left "Stack argument is not a symbol"
+    Just (Function insts) -> do
+        ret <- exec env xs [] insts
+        case ret of
+            Left err -> return (Left err)
+            Right val -> return (Right (val : xs))
+    _ -> return (Left ("Environment " ++ fct ++ "does not exist"))
+execCall _ (Symbol sym : xs) = return (execBuiltin xs sym)
+execCall _ _ = return (Left "Stack argument is not a symbol")
 
 execBuiltin :: [Value] -> Call -> Either String [Value]
 execBuiltin (Number 0 : Number 0 : _) Div = Left "Cannot divide by 0"
