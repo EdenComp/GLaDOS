@@ -9,18 +9,29 @@ import Dreamberd.Parsing.Utils (parseScope)
 import Dreamberd.Parsing.Values (parseAnyValue)
 import Dreamberd.Types (AstNode (Operator))
 
+import Data.Char (isSpace)
+import Data.List (isPrefixOf, stripPrefix, findIndex, find)
+
+import Data.Char (isSpace)
+
 parseConditionExpression :: String -> Either String AstNode
-parseConditionExpression input =
-    case parseAnyValue (dropWhile isSpace input) of
-        Right lhsValue ->
-            let restInput = dropWhile isSpace (dropWhile (not . isSpace) input)
-             in case parseOperator restInput of
-                    Right (op, rest) ->
-                        case parseAnyValue rest of
-                            Right rhsValue -> Right (Operator op lhsValue rhsValue)
-                            Left err -> Left err
-                    Left err -> Left err
-        Left err -> Left err
+parseConditionExpression input = 
+    let trimmedInput = dropWhile isSpace input
+        operators = ["<=", ">=", "==", "!=", "<", ">", "="]
+        findOperator str = find (`isPrefixOf` str) operators
+        extractComponents [] acc = reverse acc
+        extractComponents s acc = 
+            let (word, rest) = break isSpace s
+                newAcc = if null word then acc else word : acc
+            in extractComponents (dropWhile isSpace rest) newAcc
+        components = extractComponents trimmedInput []
+    in case components of
+        [lhs, op, rhs] | op `elem` operators ->
+            case (parseAnyValue lhs, parseAnyValue rhs) of
+                (Right lhsValue, Right rhsValue) -> Right (Operator op lhsValue rhsValue)
+                _ -> Left "Invalid expression"
+        [single] -> parseAnyValue single
+        _ -> Left "Invalid expression"
 
 parseConditionParts :: String -> Either String (String, String, [(String, String)], Maybe String, String)
 parseConditionParts str =
