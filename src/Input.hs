@@ -3,7 +3,6 @@ module Input (
     processInput,
 ) where
 
-import System.Exit (exitSuccess)
 import System.IO (isEOF)
 
 processFile :: (String -> IO ()) -> FilePath -> IO ()
@@ -16,7 +15,7 @@ getUserInput :: (String -> IO ()) -> String -> IO ()
 getUserInput func linesSoFar = do
     eof <- isEOF
     if eof
-        then exitSuccess
+        then pure ()
         else do
             userInput <- getLine
             let updatedLines = linesSoFar ++ userInput
