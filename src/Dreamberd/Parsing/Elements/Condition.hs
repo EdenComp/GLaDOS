@@ -11,8 +11,6 @@ import Dreamberd.Types (AstNode (Operator))
 import Data.Char (isSpace)
 import Data.List (isPrefixOf, stripPrefix, findIndex, find)
 
-import Data.Char (isSpace)
-
 parseConditionExpression :: String -> Either String AstNode
 parseConditionExpression input = 
     let trimmedInput = dropWhile isSpace input
