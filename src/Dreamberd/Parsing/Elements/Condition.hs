@@ -12,7 +12,7 @@ parseConditionExpression :: String -> Either String AstNode
 parseConditionExpression input = 
     case parseAnyValue (dropWhile isSpace input) of
         Right lhsValue ->
-            let restInput = dropWhile isSpace . snd $ span (not . isSpace) input
+            let restInput = dropWhile isSpace (dropWhile (not . isSpace) input)
             in case parseOperator restInput of
                 Right (op, rest) -> 
                     case parseAnyValue rest of
