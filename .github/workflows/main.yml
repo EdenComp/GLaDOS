@@ -53,7 +53,7 @@ jobs:
       - name: Repository checkout
         uses: actions/checkout@v4
       - name: Compilation
-        timeout-minutes: 2
+        timeout-minutes: 5
         run: make
       - name: Test executables presence
         run: IFS=',' read -r -a array <<< ${{ env.EXECUTABLES }} ; for value in ${array[@]} ; do find . -executable -name "${value}" | grep -q . || exit 1 ; done
@@ -70,7 +70,7 @@ jobs:
       - name: Repository checkout
         uses: actions/checkout@v4
       - name: Run unit tests
-        timeout-minutes: 2
+        timeout-minutes: 10
         run: make tests_run
     needs:
       - compilation
@@ -87,7 +87,7 @@ jobs:
       - name: Repository checkout
         uses: actions/checkout@v4
       - name: Run functional tests
-        timeout-minutes: 2
+        timeout-minutes: 10
         run: make func_tests
     needs:
       - compilation

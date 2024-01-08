@@ -2,16 +2,20 @@ module Dreamberd.Parsing.Elements.Variable (parseVar) where
 
 import Dreamberd.Parsing.Utils (extractValueAndRest, getVariableName)
 import Dreamberd.Parsing.Values (parseAnyValue)
-import Dreamberd.Types (AstNode (Operator, String))
+import Dreamberd.Types (AstNode (AssignVariable, Identifier, Operator))
 
-parseVar :: String -> String -> [AstNode] -> Either String (String, [AstNode])
-parseVar _ code ast =
-    case getVariableName (head (words code)) of
-        Right name ->
-            let
-                (value, restOfCode) = extractValueAndRest (unwords (drop 2 (words code)))
-             in
-                case parseAnyValue value of
-                    Right node -> Right (restOfCode, ast ++ [Operator "=" (String name) node])
-                    Left err -> Left err
-        Left err -> Left err
+parseVar :: Maybe String -> String -> [AstNode] -> Either String (String, [AstNode])
+parseVar varType code ast =
+    let
+        wordsInCode = words code
+     in
+        if length wordsInCode < 2 || (wordsInCode !! 1) /= "="
+            then Left "Expected '=' after variable name"
+            else
+                getVariableName (head wordsInCode) >>= \name ->
+                    let
+                        (value, restOfCode) = extractValueAndRest (unwords (drop 2 wordsInCode))
+                     in
+                        parseAnyValue value >>= \node -> case varType of
+                            Just vt -> Right (restOfCode, ast ++ [AssignVariable vt name node])
+                            Nothing -> Right (restOfCode, ast ++ [Operator "=" (Identifier name) node])

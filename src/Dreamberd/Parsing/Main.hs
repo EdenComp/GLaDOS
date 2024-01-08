@@ -3,73 +3,66 @@
 module Dreamberd.Parsing.Main (parseDreamberd, parseFunction, parseCondition) where
 
 import Data.Char (isSpace)
-import Data.List (isPrefixOf, stripPrefix)
-import Dreamberd.Parsing.Elements.Condition (parseConditionParts)
+import Data.List (stripPrefix)
+import Dreamberd.Parsing.Elements.Condition (
+    parseConditionExpression,
+    parseConditionParts,
+ )
 import Dreamberd.Parsing.Elements.Function (extractFunctionParts, parseReturn)
+import Dreamberd.Parsing.Elements.Loop (extractLoopParts)
 import Dreamberd.Parsing.Elements.Variable (parseVar)
 import Dreamberd.Parsing.Values (parseFunctionCall)
-import Dreamberd.Types (AstNode (Boolean, Function, If))
-import Dreamberd.Parsing.Elements.Condition (parseConditionExpression)
+import Dreamberd.Types (AstNode (Boolean, Function, If, Loop))
 
 parseDreamberd :: String -> [AstNode] -> Either String [AstNode]
 parseDreamberd sourceCode ast
     | all isSpace sourceCode = Right ast
     | otherwise =
-        case parseElement (dropWhile isSpace sourceCode) ast of
-            Right (remainingCode, updatedAst) -> parseDreamberd remainingCode updatedAst
-            Left err -> Left err
+        parseElement (dropWhile isSpace sourceCode) ast >>= uncurry parseDreamberd
 
 parseElement :: String -> [AstNode] -> Either String (String, [AstNode])
 parseElement (stripPrefix "int" -> Just restCode) ast =
-    case parseVar "int" restCode ast of
-        Right (remainingCode, updatedAst) -> Right (remainingCode, updatedAst)
-        Left err -> Left err
+    parseVar (Just "int") restCode ast >>= \(remainingCode, updatedAst) -> Right (remainingCode, updatedAst)
 parseElement (stripPrefix "bool" -> Just restCode) ast =
-    case parseVar "bool" restCode ast of
-        Right (remainingCode, updatedAst) -> Right (remainingCode, updatedAst)
-        Left err -> Left err
+    parseVar (Just "bool") restCode ast >>= \(remainingCode, updatedAst) -> Right (remainingCode, updatedAst)
 parseElement (stripPrefix "str" -> Just restCode) ast =
-    case parseVar "str" restCode ast of
-        Right (remainingCode, updatedAst) -> Right (remainingCode, updatedAst)
-        Left err -> Left err
+    parseVar (Just "str") restCode ast >>= \(remainingCode, updatedAst) -> Right (remainingCode, updatedAst)
 parseElement (stripPrefix "function" -> Just restCode) ast =
-    case parseFunction restCode ast of
-        Right (remainingCode, updatedAst) -> Right (remainingCode, updatedAst)
-        Left err -> Left err
+    parseFunction restCode ast >>= \(remainingCode, updatedAst) -> Right (remainingCode, updatedAst)
 parseElement (stripPrefix "return" -> Just restCode) ast =
-    case parseReturn restCode of
-        Right (remainingCode, returnNode) -> Right (remainingCode, ast ++ [returnNode])
-        Left err -> Left err
-parseElement code ast
-    | "if" `isPrefixOf` code =
-        case parseCondition code ast of
+    parseReturn restCode ast >>= \(remainingCode, updatedAst) -> Right (remainingCode, updatedAst)
+parseElement (stripPrefix "while" -> Just restCode) ast =
+    parseLoop "while" restCode ast >>= \(remainingCode, updatedAst) -> Right (remainingCode, updatedAst)
+parseElement (stripPrefix "if" -> Just restCode) ast =
+    parseCondition restCode ast >>= \(remainingCode, updatedAst) -> Right (remainingCode, updatedAst)
+parseElement code ast =
+    case parseFunctionCall code of
+        Right (remainingCode, call) -> Right (remainingCode, ast ++ [call])
+        Left _ -> case parseVar Nothing code ast of
             Right (remainingCode, updatedAst) -> Right (remainingCode, updatedAst)
-            Left err -> Left err
-    | otherwise =
-        case parseFunctionCall code of
-            Right (remainingCode, call) -> Right (remainingCode, ast ++ [call])
             Left _ -> Left "Unrecognized element"
 
 parseFunction :: String -> [AstNode] -> Either String (String, [AstNode])
 parseFunction code ast =
-    let (name, params, body, restOfCode) = extractFunctionParts code
-     in case parseDreamberd body [] of
-            Right outputAst -> Right (restOfCode, ast ++ [Function name params outputAst])
-            Left err -> Left err
+    extractFunctionParts code >>= \(name, params, body, restOfCode) ->
+        parseDreamberd body [] >>= \outputAst -> Right (restOfCode, ast ++ [Function name params outputAst])
+
+parseLoop :: String -> String -> [AstNode] -> Either String (String, [AstNode])
+parseLoop "while" code ast =
+    extractLoopParts code >>= \(_loopTest, body, restOfCode) ->
+        parseDreamberd body [] >>= \outputAst -> Right (restOfCode, ast ++ [Loop (Boolean True) outputAst Nothing Nothing])
+parseLoop _ _ _ = Left "Unrecognized loop type"
 
 parseCondition :: String -> [AstNode] -> Either String (String, [AstNode])
 parseCondition str ast =
-    case parseConditionParts str of
-        Left err -> Left err
-        Right (condition, ifBody, elifs, elsePart, restOfCode) ->
-            case buildConditionNodes condition ifBody elifs elsePart of
-                Right ifNodes -> Right (restOfCode, ast ++ ifNodes)
-                Left err -> Left err
+    parseConditionParts (dropWhile isSpace str)
+        >>= \(condition, ifBody, elifs, elsePart, restOfCode) ->
+            buildConditionNodes condition ifBody elifs elsePart >>= \ifNodes -> Right (restOfCode, ast ++ ifNodes)
 
-buildConditionNodes :: String -> String -> [(String, String)] -> Maybe (String, String) -> Either String [AstNode]
+buildConditionNodes :: String -> String -> [(String, String)] -> Maybe String -> Either String [AstNode]
 buildConditionNodes cond ifBody [] Nothing = do
     ifCondAst <- parseConditionExpression cond
-    ifBodyAst <- parseDreamberd ifBody []    
+    ifBodyAst <- parseDreamberd ifBody []
     return [If ifCondAst ifBodyAst []]
 buildConditionNodes cond ifBody ((elifCondition, elifBody) : elifs) elsePart = do
     ifCondAst <- parseConditionExpression cond
@@ -78,10 +71,8 @@ buildConditionNodes cond ifBody ((elifCondition, elifBody) : elifs) elsePart = d
     elifBodyAst <- parseDreamberd elifBody []
     elifNodes <- buildConditionNodes elifCondition elifBody elifs elsePart
     return [If ifCondAst ifBodyAst (elifNodes ++ [If elifCondAst elifBodyAst []])]
-buildConditionNodes cond ifBody [] (Just (elseCond, elseBody)) = do
+buildConditionNodes cond ifBody [] (Just elseBody) = do
     ifCondAst <- parseConditionExpression cond
     ifBodyAst <- parseDreamberd ifBody []
-    elseCondAst <- parseConditionExpression elseCond
     elseBodyAst <- parseDreamberd elseBody []
-    return [If ifCondAst ifBodyAst [], If elseCondAst elseBodyAst []]
-
+    return [If ifCondAst ifBodyAst elseBodyAst]

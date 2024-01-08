@@ -1,3 +1,31 @@
+<a name="v0.5.0"></a>
+# [v0.5.0 🌈](https://github.com/EdenComp/GLaDOS/releases/tag/v0.5.0) - 08 Jan 2024
+
+## Changes
+
+VM addition, parsing improvements and code hierarchy split
+
+## 🚀 Features
+
+- VM print builtin [@EdenComp](https://github.com/EdenComp) ([#46](https://github.com/EdenComp/GLaDOS/issues/46))
+- Compiler options to print AST or Vm instructions [@EdenComp](https://github.com/EdenComp) ([#45](https://github.com/EdenComp/GLaDOS/issues/45))
+- Small improvements on program flow [@EdenComp](https://github.com/EdenComp) ([#43](https://github.com/EdenComp/GLaDOS/issues/43))
+- Parsing: While loop [@RezaRahemtola](https://github.com/RezaRahemtola) ([#42](https://github.com/EdenComp/GLaDOS/issues/42))
+- Arguments handling revamp [@EdenComp](https://github.com/EdenComp) ([#41](https://github.com/EdenComp/GLaDOS/issues/41))
+- Strings in Bytecode and VM [@EdenComp](https://github.com/EdenComp) ([#39](https://github.com/EdenComp/GLaDOS/issues/39))
+- feat: simplified IO on files and added the whole vm flow [@EdenComp](https://github.com/EdenComp) ([#38](https://github.com/EdenComp/GLaDOS/issues/38))
+- feat: Bytecode encoding and decoding [@EdenComp](https://github.com/EdenComp) ([#36](https://github.com/EdenComp/GLaDOS/issues/36))
+- Parsing: If, elif and else [@RezaRahemtola](https://github.com/RezaRahemtola) ([#35](https://github.com/EdenComp/GLaDOS/issues/35))
+- VM Bootstrap [@EdenComp](https://github.com/EdenComp) ([#30](https://github.com/EdenComp/GLaDOS/issues/30))
+
+## 🧰 Maintenance
+
+- Hierarchy: Lisp and Dreamberd separation \& basic Dreamberd parsing tests [@RezaRahemtola](https://github.com/RezaRahemtola) ([#34](https://github.com/EdenComp/GLaDOS/issues/34))
+
+
+[Changes][v0.5.0]
+
+
 <a name="v0.4.0"></a>
 # [v0.4.0 🌈](https://github.com/EdenComp/GLaDOS/releases/tag/v0.4.0) - 05 Jan 2024
 
@@ -102,6 +130,7 @@ Project setup with CI, evaluation of SExpr and documentation
 [Changes][v0.1.0]
 
 
+[v0.5.0]: https://github.com/EdenComp/GLaDOS/compare/v0.4.0...v0.5.0
 [v0.4.0]: https://github.com/EdenComp/GLaDOS/compare/v0.3.0...v0.4.0
 [v0.3.0]: https://github.com/EdenComp/GLaDOS/compare/v0.2.0...v0.3.0
 [v0.2.0]: https://github.com/EdenComp/GLaDOS/compare/v0.1.0...v0.2.0
