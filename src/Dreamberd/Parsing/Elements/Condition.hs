@@ -15,24 +15,18 @@ parseConditionParts str =
                 (dropWhile isSpace -> beforeCondition, dropWhile isSpace . drop 1 -> condition) = break (== '(') (dropWhile isSpace rawCondition)
              in if not (null beforeCondition) || null condition
                     then Left "Missing condition in if statement"
-                    else case parseScope (drop 1 afterCondition) of
-                        Left err -> Left err
-                        Right (ifBody, restAfterIf) ->
-                            case extractElifsAndElse restAfterIf of
-                                Left err -> Left err
-                                Right (elifs, elsePart, restOfCode) -> Right (condition, ifBody, elifs, elsePart, restOfCode)
+                    else
+                        parseScope (drop 1 afterCondition) >>= \(ifBody, restAfterIf) ->
+                            extractElifsAndElse restAfterIf >>= \(elifs, elsePart, restOfCode) ->
+                                Right (condition, ifBody, elifs, elsePart, restOfCode)
 
 extractElifsAndElse :: String -> Either String ([(String, String)], Maybe String, String)
 extractElifsAndElse str
     | take 4 str == "elif" =
-        case parseConditionParts (dropWhile isSpace (drop 4 str)) of
-            Left err -> Left err
-            Right (elifCondition, elifBody, elifs, elsePart, rest) ->
-                if null elifCondition
-                    then Left "Missing condition in elif statement"
-                    else Right ((elifCondition, elifBody) : elifs, elsePart, rest)
+        parseConditionParts (dropWhile isSpace (drop 4 str)) >>= \(elifCondition, elifBody, elifs, elsePart, rest) ->
+            if null elifCondition
+                then Left "Missing condition in elif statement"
+                else Right ((elifCondition, elifBody) : elifs, elsePart, rest)
     | take 4 str == "else" =
-        case parseScope (drop 4 str) of
-            Left err -> Left err
-            Right (elseBody, restOfCode) -> Right ([], Just elseBody, restOfCode)
+        parseScope (drop 4 str) >>= \(elseBody, restOfCode) -> Right ([], Just elseBody, restOfCode)
     | otherwise = Right ([], Nothing, str)

@@ -11,14 +11,11 @@ parseVar varType code ast =
      in
         if length wordsInCode < 2 || (wordsInCode !! 1) /= "="
             then Left "Expected '=' after variable name"
-            else case getVariableName (head wordsInCode) of
-                Right name ->
+            else
+                getVariableName (head wordsInCode) >>= \name ->
                     let
                         (value, restOfCode) = extractValueAndRest (unwords (drop 2 wordsInCode))
                      in
-                        case parseAnyValue value of
-                            Right node -> case varType of
-                                Just vt -> Right (restOfCode, ast ++ [AssignVariable vt name node])
-                                Nothing -> Right (restOfCode, ast ++ [Operator "=" (Identifier name) node])
-                            Left err -> Left err
-                Left err -> Left err
+                        parseAnyValue value >>= \node -> case varType of
+                            Just vt -> Right (restOfCode, ast ++ [AssignVariable vt name node])
+                            Nothing -> Right (restOfCode, ast ++ [Operator "=" (Identifier name) node])

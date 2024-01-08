@@ -11,6 +11,4 @@ extractLoopParts str =
         (filter (not . isSpace) -> loopTest, _) = break (== ')') beforeLoopScope
      in if null loopTest
             then Left "Missing test in loop"
-            else case parseScope (drop 1 afterLoopScope) of
-                Left err -> Left err
-                Right (loopBody, restOfCode) -> Right (loopTest, loopBody, restOfCode)
+            else parseScope (drop 1 afterLoopScope) >>= \(loopBody, restOfCode) -> Right (loopTest, loopBody, restOfCode)

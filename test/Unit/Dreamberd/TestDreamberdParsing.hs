@@ -57,4 +57,5 @@ testParseDreamberd =
         , TestCase (assertEqual "parseDreamberd reasign var" (Right [AssignVariable "int" "a" (Number 1), Operator "=" (Identifier "a") (Number 2)]) (parseDreamberd "int a = 1;a = 2;" []))
         , TestCase (assertEqual "parseDreamberd wrong assign var value" (Left "Expected '=' after variable name") (parseDreamberd "int a 1; " []))
         , TestCase (assertEqual "parseDreamberd empty code" (Right []) (parseDreamberd "     " []))
+        , TestCase (assertEqual "parseDreamberd invalid variable name" (Left "No variable name found") (parseDreamberd "int * = 4;" []))
         ]
