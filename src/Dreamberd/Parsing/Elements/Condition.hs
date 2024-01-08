@@ -1,7 +1,9 @@
 {-# LANGUAGE ViewPatterns #-}
 
-module Dreamberd.Parsing.Elements.Condition (parseConditionParts, 
-parseConditionExpression) where
+module Dreamberd.Parsing.Elements.Condition (
+    parseConditionParts,
+    parseConditionExpression,
+) where
 
 import Dreamberd.Parsing.Utils (parseScope)
 import Dreamberd.Parsing.Values (parseAnyValue)
@@ -11,22 +13,22 @@ import Data.Char (isSpace)
 import Data.List (isPrefixOf)
 
 parseConditionExpression :: String -> Either String AstNode
-parseConditionExpression input = 
+parseConditionExpression input =
     let trimmedInput = dropWhile isSpace input
         operators = ["<=", ">=", "==", "!=", "<", ">", "="]
         extractComponents [] acc = reverse acc
-        extractComponents s acc = 
+        extractComponents s acc =
             let (word, rest) = break isSpace s
                 newAcc = if null word then acc else word : acc
-            in extractComponents (dropWhile isSpace rest) newAcc
+             in extractComponents (dropWhile isSpace rest) newAcc
         components = extractComponents trimmedInput []
-    in case components of
-        [lhs, op, rhs] | op `elem` operators ->
-            case (parseAnyValue lhs, parseAnyValue rhs) of
-                (Right lhsValue, Right rhsValue) -> Right (Operator op lhsValue rhsValue)
-                _ -> Left "Invalid expression"
-        [single] -> parseAnyValue single
-        _ -> Left "Invalid expression"
+     in case components of
+            [lhs, op, rhs] | op `elem` operators ->
+                case (parseAnyValue lhs, parseAnyValue rhs) of
+                    (Right lhsValue, Right rhsValue) -> Right (Operator op lhsValue rhsValue)
+                    _ -> Left "Invalid expression"
+            [single] -> parseAnyValue single
+            _ -> Left "Invalid expression"
 
 parseConditionParts :: String -> Either String (String, String, [(String, String)], Maybe String, String)
 parseConditionParts str =

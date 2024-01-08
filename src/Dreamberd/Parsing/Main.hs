@@ -67,10 +67,8 @@ buildConditionNodes cond ifBody [] Nothing = do
 buildConditionNodes cond ifBody ((elifCondition, elifBody) : elifs) elsePart = do
     ifCondAst <- parseConditionExpression cond
     ifBodyAst <- parseDreamberd ifBody []
-    elifCondAst <- parseConditionExpression elifCondition
-    elifBodyAst <- parseDreamberd elifBody []
     elifNodes <- buildConditionNodes elifCondition elifBody elifs elsePart
-    return [If ifCondAst ifBodyAst (elifNodes ++ [If elifCondAst elifBodyAst []])]
+    return [If ifCondAst ifBodyAst elifNodes]
 buildConditionNodes cond ifBody [] (Just elseBody) = do
     ifCondAst <- parseConditionExpression cond
     ifBodyAst <- parseDreamberd ifBody []
