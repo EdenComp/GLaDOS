@@ -1,7 +1,7 @@
 module Dreamberd.Types (AstNode (..)) where
 
 data AstNode
-    = Number Integer
+    = Number Int
     | Boolean Bool
     | String String
     | Identifier String
