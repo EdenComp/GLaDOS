@@ -9,6 +9,7 @@ import Dreamberd.Parsing.Elements.Function (extractFunctionParts, parseReturn)
 import Dreamberd.Parsing.Elements.Variable (parseVar)
 import Dreamberd.Parsing.Values (parseFunctionCall)
 import Dreamberd.Types (AstNode (Boolean, Function, If))
+import Dreamberd.Parsing.Elements.Condition (parseConditionExpression)
 
 parseDreamberd :: String -> [AstNode] -> Either String [AstNode]
 parseDreamberd sourceCode ast
@@ -66,14 +67,21 @@ parseCondition str ast =
                 Left err -> Left err
 
 buildConditionNodes :: String -> String -> [(String, String)] -> Maybe (String, String) -> Either String [AstNode]
-buildConditionNodes _ ifBody [] Nothing = do
+buildConditionNodes cond ifBody [] Nothing = do
+    ifCondAst <- parseConditionExpression cond
+    ifBodyAst <- parseDreamberd ifBody []    
+    return [If ifCondAst ifBodyAst []]
+buildConditionNodes cond ifBody ((elifCondition, elifBody) : elifs) elsePart = do
+    ifCondAst <- parseConditionExpression cond
     ifBodyAst <- parseDreamberd ifBody []
-    return [If (Boolean True) ifBodyAst []]
-buildConditionNodes _ ifBody ((elifCondition, elifBody) : elifs) elsePart = do
-    ifBodyAst <- parseDreamberd ifBody []
+    elifCondAst <- parseConditionExpression elifCondition
+    elifBodyAst <- parseDreamberd elifBody []
     elifNodes <- buildConditionNodes elifCondition elifBody elifs elsePart
-    return [If (Boolean True) ifBodyAst elifNodes]
-buildConditionNodes _ ifBody [] (Just (_, elseBody)) = do
+    return [If ifCondAst ifBodyAst (elifNodes ++ [If elifCondAst elifBodyAst []])]
+buildConditionNodes cond ifBody [] (Just (elseCond, elseBody)) = do
+    ifCondAst <- parseConditionExpression cond
     ifBodyAst <- parseDreamberd ifBody []
+    elseCondAst <- parseConditionExpression elseCond
     elseBodyAst <- parseDreamberd elseBody []
-    return [If (Boolean True) ifBodyAst elseBodyAst]
+    return [If ifCondAst ifBodyAst [], If elseCondAst elseBodyAst []]
+

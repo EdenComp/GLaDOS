@@ -63,8 +63,8 @@ testParseFunctionCall =
 testParseCondition :: Test
 testParseCondition =
     TestList
-        [ TestCase (assertEqual "parseCondition basic" (Right ("", [If (Boolean True) [Return (Number 1)] []])) (parseCondition "if (true) {return 1;}" []))
-        , TestCase (assertEqual "parseCondition with else" (Right ("", [If (Boolean True) [Return (Number 1)] [Return (Number 2)]])) (parseCondition "if (true) {return 1;} else {return 2;}" []))
+        [ TestCase (assertEqual "parseCondition basic" (Right ("", [If (Number 1) [Return (Number 1)] []])) (parseCondition "if (i = 2) {return 1;}" []))
+        , TestCase (assertEqual "parseCondition with else" (Right ("", [If (Boolean True) [Return (Number 1)] [Return (Number 2)]])) (parseCondition "if (2 <= 3) {return 1;} else {return 2;}" []))
         , TestCase (assertEqual "parseCondition with elif" (Right ("", [If (Boolean True) [Return (Number 1)] [If (Boolean True) [Return (Number 2)] []]])) (parseCondition "if (true) {return 1;} elif (true) {return 2;}" []))
         , TestCase (assertEqual "parseCondition with elif and else" (Right ("", [If (Boolean True) [Return (Number 1)] [If (Boolean True) [Return (Number 2)] [Return (Number 3)]]])) (parseCondition "if (true) {return 1;} elif (true) {return 2;} else {return 3;}" []))
         , TestCase (assertEqual "parseCondition with elif, else and spaces" (Right ("", [If (Boolean True) [Return (Number 1)] [If (Boolean True) [Return (Number 2)] [Return (Number 3)]]])) (parseCondition "if (true) {return 1;} elif (true) {return 2;} else {return 3;}" []))
