@@ -56,10 +56,12 @@ parseElement code ast
 
 parseFunction :: String -> [AstNode] -> Either String (String, [AstNode])
 parseFunction code ast =
-    let (name, params, body, restOfCode) = extractFunctionParts code
-     in case parseDreamberd body [] of
-            Right outputAst -> Right (restOfCode, ast ++ [Function name params outputAst])
-            Left err -> Left err
+    case extractFunctionParts code of
+        Left err -> Left err
+        Right (name, params, body, restOfCode) ->
+            case parseDreamberd body [] of
+                Right outputAst -> Right (restOfCode, ast ++ [Function name params outputAst])
+                Left err -> Left err
 
 parseLoop :: String -> String -> [AstNode] -> Either String (String, [AstNode])
 parseLoop "while" code ast =
