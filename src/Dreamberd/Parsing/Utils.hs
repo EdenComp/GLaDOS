@@ -1,4 +1,4 @@
-module Dreamberd.Parsing.Utils (getVariableName, extractValueAndRest) where
+module Dreamberd.Parsing.Utils (getVariableName, extractValueAndRest, extractScopeAndRest) where
 
 import Data.Char (isSpace)
 import Text.Regex.Posix ((=~))
@@ -20,3 +20,13 @@ extractValueAndRest = go False []
         | x == '"' = go (not inQuotes) (x : acc) xs
         | x == ';' && not inQuotes = (dropWhile isSpace (reverse acc), xs)
         | otherwise = go inQuotes (x : acc) xs
+
+extractScopeAndRest :: String -> Int -> String -> (String, String)
+extractScopeAndRest [] _ body = (body, [])
+extractScopeAndRest (x : xs) openBraces body
+    | x == '{' = extractScopeAndRest xs (openBraces + 1) (body ++ [x])
+    | x == '}' =
+        if openBraces - 1 == 0
+            then (body, dropWhile isSpace xs)
+            else extractScopeAndRest xs (openBraces - 1) (body ++ [x])
+    | otherwise = extractScopeAndRest xs openBraces (body ++ [x])
