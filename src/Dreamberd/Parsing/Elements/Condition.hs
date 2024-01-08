@@ -24,9 +24,7 @@ extractElifsAndElse :: String -> Either String ([(String, String)], Maybe String
 extractElifsAndElse str
     | take 4 str == "elif" =
         parseConditionParts (dropWhile isSpace (drop 4 str)) >>= \(elifCondition, elifBody, elifs, elsePart, rest) ->
-            if null elifCondition
-                then Left "Missing condition in elif statement"
-                else Right ((elifCondition, elifBody) : elifs, elsePart, rest)
+            Right ((elifCondition, elifBody) : elifs, elsePart, rest)
     | take 4 str == "else" =
         parseScope (drop 4 str) >>= \(elseBody, restOfCode) -> Right ([], Just elseBody, restOfCode)
     | otherwise = Right ([], Nothing, str)
