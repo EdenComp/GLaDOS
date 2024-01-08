@@ -6,7 +6,7 @@ module Args (
 import Options.Applicative
 
 data Command
-    = Compile String String
+    = Compile String String Bool Bool
     | Execute String
     | Run String
     | Lisp (Maybe String)
@@ -24,6 +24,8 @@ compileOptions =
     Compile
         <$> strArgument (metavar "FILE" <> help "File to compile")
         <*> strOption (short 'o' <> long "output" <> value "a.out" <> metavar "OUTPUT" <> help "Output file")
+        <*> switch (short 'a' <> long "ast" <> help "Get the program Abstract Syntax Tree")
+        <*> switch (short 'i' <> long "vm-insts" <> help "Get the program compiled instructions")
 
 executeCommand :: Mod CommandFields Command
 executeCommand = command "execute" (info executeOptions (progDesc "Execute compiled Dreamberd code"))
