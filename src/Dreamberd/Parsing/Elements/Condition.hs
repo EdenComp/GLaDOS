@@ -3,19 +3,17 @@
 module Dreamberd.Parsing.Elements.Condition (parseConditionParts, 
 parseConditionExpression) where
 
-import Dreamberd.Parsing.Elements.Operator (parseOperator)
 import Dreamberd.Parsing.Utils (parseScope)
 import Dreamberd.Parsing.Values (parseAnyValue)
 import Dreamberd.Types (AstNode (Operator))
 
 import Data.Char (isSpace)
-import Data.List (isPrefixOf, stripPrefix, findIndex, find)
+import Data.List (isPrefixOf)
 
 parseConditionExpression :: String -> Either String AstNode
 parseConditionExpression input = 
     let trimmedInput = dropWhile isSpace input
         operators = ["<=", ">=", "==", "!=", "<", ">", "="]
-        findOperator str = find (`isPrefixOf` str) operators
         extractComponents [] acc = reverse acc
         extractComponents s acc = 
             let (word, rest) = break isSpace s
