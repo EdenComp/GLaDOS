@@ -39,8 +39,7 @@ checkStartsWithOpenBracket (x : xs)
 
 parseScope :: String -> Either String (String, String)
 parseScope code =
-    case checkStartsWithOpenBracket (dropWhile isSpace code) of
-        Left err -> Left err
-        Right validCode ->
+    checkStartsWithOpenBracket (dropWhile isSpace code)
+        >>= \validCode ->
             let (scope, rest) = extractScopeAndRest validCode 0 []
              in Right (drop 1 scope, rest)
