@@ -3,7 +3,7 @@
 module Dreamberd.Parsing.Main (parseDreamberd, parseFunction, parseCondition) where
 
 import Data.Char (isSpace)
-import Data.List (isPrefixOf, stripPrefix)
+import Data.List (stripPrefix)
 import Dreamberd.Parsing.Elements.Condition (parseConditionParts)
 import Dreamberd.Parsing.Elements.Function (extractFunctionParts, parseReturn)
 import Dreamberd.Parsing.Elements.Loop (extractLoopParts)
@@ -44,17 +44,16 @@ parseElement (stripPrefix "while" -> Just restCode) ast =
     case parseLoop "while" restCode ast of
         Right (remainingCode, updatedAst) -> Right (remainingCode, updatedAst)
         Left err -> Left err
-parseElement code ast
-    | "if" `isPrefixOf` code =
-        case parseCondition code ast of
+parseElement (stripPrefix "if" -> Just restCode) ast =
+    case parseCondition restCode ast of
+        Right (remainingCode, updatedAst) -> Right (remainingCode, updatedAst)
+        Left err -> Left err
+parseElement code ast =
+    case parseFunctionCall code of
+        Right (remainingCode, call) -> Right (remainingCode, ast ++ [call])
+        Left _ -> case parseVar Nothing code ast of
             Right (remainingCode, updatedAst) -> Right (remainingCode, updatedAst)
-            Left err -> Left err
-    | otherwise =
-        case parseFunctionCall code of
-            Right (remainingCode, call) -> Right (remainingCode, ast ++ [call])
-            Left _ -> case parseVar Nothing code ast of
-                Right (remainingCode, updatedAst) -> Right (remainingCode, updatedAst)
-                Left _ -> Left "Unrecognized element"
+            Left _ -> Left "Unrecognized element"
 
 parseFunction :: String -> [AstNode] -> Either String (String, [AstNode])
 parseFunction code ast =
@@ -77,7 +76,7 @@ parseLoop _ _ _ = Left "Unrecognized loop type"
 
 parseCondition :: String -> [AstNode] -> Either String (String, [AstNode])
 parseCondition str ast =
-    case parseConditionParts str of
+    case parseConditionParts (dropWhile isSpace str) of
         Left err -> Left err
         Right (condition, ifBody, elifs, elsePart, restOfCode) ->
             case buildConditionNodes condition ifBody elifs elsePart of
