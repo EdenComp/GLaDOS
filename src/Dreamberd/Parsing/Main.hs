@@ -82,7 +82,7 @@ parseCondition str ast =
                 Right ifNodes -> Right (restOfCode, ast ++ ifNodes)
                 Left err -> Left err
 
-buildConditionNodes :: String -> String -> [(String, String)] -> Maybe (String, String) -> Either String [AstNode]
+buildConditionNodes :: String -> String -> [(String, String)] -> Maybe String -> Either String [AstNode]
 buildConditionNodes _ ifBody [] Nothing = do
     ifBodyAst <- parseDreamberd ifBody []
     return [If (Boolean True) ifBodyAst []]
@@ -90,7 +90,7 @@ buildConditionNodes _ ifBody ((elifCondition, elifBody) : elifs) elsePart = do
     ifBodyAst <- parseDreamberd ifBody []
     elifNodes <- buildConditionNodes elifCondition elifBody elifs elsePart
     return [If (Boolean True) ifBodyAst elifNodes]
-buildConditionNodes _ ifBody [] (Just (_, elseBody)) = do
+buildConditionNodes _ ifBody [] (Just elseBody) = do
     ifBodyAst <- parseDreamberd ifBody []
     elseBodyAst <- parseDreamberd elseBody []
     return [If (Boolean True) ifBodyAst elseBodyAst]
