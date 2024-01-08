@@ -51,6 +51,7 @@ data Insts
     | PushEnv String
     | Call
     | DefineEnv String EnvValue
+    | DefineEnvFromStack String
     | JumpIfFalse Int
     | Ret
     deriving (Show)
@@ -64,9 +65,11 @@ exec env args stack (PushArg idx : insts)
     | idx >= length args = return (Left "Argument index out of bounds")
     | otherwise = exec env args ((args !! idx) : stack) insts
 exec env args stack (PushEnv name : insts) = case findEnvValue name env of
-    Just _ -> exec env args (Symbol (FunctionName name) : stack) insts
-    Nothing -> return (Left ("Environment " ++ name ++ "does not exist"))
+    Just (Function _) -> exec env args (Symbol (FunctionName name) : stack) insts
+    Just (Variable v) -> exec env args (v:stack) insts
+    Nothing -> return (Left ("Environment " ++ name ++ " does not exist"))
 exec env args stack (DefineEnv name var : insts) = exec (addEnvValue name var env) args stack insts
+exec env args (x:xs) (DefineEnvFromStack name : insts) = exec (addEnvValue name (Variable x) env) args xs insts
 exec env args stack (Call : insts) = do
     ret <- execCall env stack
     case ret of
@@ -90,7 +93,7 @@ execCall env (Symbol (FunctionName fct) : xs) = case findEnvValue fct env of
         case ret of
             Left err -> return (Left err)
             Right val -> return (Right (val : xs))
-    _ -> return (Left ("Environment " ++ fct ++ "does not exist"))
+    _ -> return (Left ("Environment " ++ fct ++ " does not exist"))
 execCall _ (Symbol sym : xs) = return (execBuiltin xs sym)
 execCall _ _ = return (Left "Stack argument is not a symbol")
 

@@ -46,8 +46,9 @@ transpileInstruction (DefineEnv name value) =
           where
             nested = foldMap transpileInstruction insts
         (Variable val) -> toEnum 0x32 : transpileValue val
-transpileInstruction (JumpIfFalse nb) = toEnum 0x06 : transpileInt nb
-transpileInstruction Ret = [toEnum 0x07]
+transpileInstruction (DefineEnvFromStack name) = toEnum 0x06 : transpileString name
+transpileInstruction (JumpIfFalse nb) = toEnum 0x07 : transpileInt nb
+transpileInstruction Ret = [toEnum 0x08]
 
 transpileIntoBytecode :: [Insts] -> [Char]
 transpileIntoBytecode insts = "db4\n" ++ foldMap transpileInstruction insts ++ "\n"

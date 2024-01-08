@@ -87,10 +87,13 @@ parseInstructions (c : bytes) = case fromEnum c of
         Right (name, rest) -> case parseEnvValue rest of
             Left err -> Left err
             Right (val, rest') -> pursueParsing (DefineEnv name val) rest'
-    0x06 -> case parseInt bytes of
+    0x06 -> case parseString bytes of
+        Left err -> Left err
+        Right (name, rest) -> pursueParsing (DefineEnvFromStack name) rest
+    0x07 -> case parseInt bytes of
         Left err -> Left err
         Right (val, rest) -> pursueParsing (JumpIfFalse val) rest
-    0x07 -> pursueParsing Ret bytes
+    0x08 -> pursueParsing Ret bytes
     _ -> Left "Unknown instruction"
 
 pursueParsing :: Insts -> [Char] -> Either String [Insts]
