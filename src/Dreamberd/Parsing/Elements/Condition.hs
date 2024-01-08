@@ -1,24 +1,27 @@
 {-# LANGUAGE ViewPatterns #-}
 
-module Dreamberd.Parsing.Elements.Condition (parseConditionParts) where
-
+module Dreamberd.Parsing.Elements.Condition (parseConditionParts, parseConditionExpression) where
+    
 import Data.Char (isSpace)
 import Dreamberd.Parsing.Elements.Function (extractFunctionBodyAndRest)
 import Dreamberd.Parsing.Elements.Operator (parseOperator)
 import Dreamberd.Parsing.Values (parseAnyValue)
-import Dreamberd.Types (AstNode (Boolean, Operator))
+import Dreamberd.Types (AstNode ( Operator))
 
 parseConditionExpression :: String -> Either String AstNode
 parseConditionExpression input = 
-    case parseAnyValue input of
-        Right lhsValue -> 
-            case parseOperator (dropWhile isSpace . snd . span isSpace $ input) of
+    case parseAnyValue (dropWhile isSpace input) of
+        Right lhsValue ->
+            let restInput = dropWhile isSpace . snd $ span (not . isSpace) input
+            in case parseOperator restInput of
                 Right (op, rest) -> 
                     case parseAnyValue rest of
                         Right rhsValue -> Right (Operator op lhsValue rhsValue)
                         Left err -> Left err
                 Left err -> Left err
         Left err -> Left err
+
+
 
 parseConditionParts :: String -> Either String (String, String, [(String, String)], Maybe (String, String), String)
 parseConditionParts str =

@@ -1,13 +1,15 @@
-{-# OPTIONS_GHC -Wno-deferred-out-of-scope-variables #-}
 module Dreamberd.Parsing.Elements.Operator (parseOperator) where
 
 
-import Dreamberd.Types (AstNode(..))
+import Data.List (isPrefixOf)
+import Data.Char (isSpace)
 
-parseOperator :: String -> Either String (AstNode -> AstNode -> AstNode, String)
-parseOperator ('<':'=':xs) = Right (\x y -> AstNodeBool (x <= y), xs)
-parseOperator ('>':'=':xs) = Right (\x y -> AstNodeBool (x >= y), xs)
-parseOperator ('<':xs)     = Right (\x y -> AstNodeBool (x < y), xs)
-parseOperator ('>':xs)     = Right (\x y -> AstNodeBool (x > y), xs)
-parseOperator ('=':'=':xs) = Right (\x y -> AstNodeBool (x == y), xs)
-parseOperator xs           = Left $ "Unknown operator: " ++ take 10 xs
+parseOperator :: String -> Either String (String, String)
+parseOperator str =
+    let operators = ["<=", ">=", "==", "!=", "<", ">", "="]
+        findOperator [] = Nothing
+        findOperator (op:ops) = if op `isPrefixOf` noSpaceStr then Just op else findOperator ops
+        noSpaceStr = filter (not . isSpace) str
+    in case findOperator operators of
+        Just op -> Right (op, dropWhile isSpace . drop (length op) $ str)
+        Nothing -> Left "No operator found"

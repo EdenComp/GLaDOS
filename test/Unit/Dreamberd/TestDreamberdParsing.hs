@@ -4,12 +4,11 @@ import Dreamberd.Parsing.Main (parseCondition, parseFunction)
 import Dreamberd.Parsing.Values (parseFunctionCall)
 import Dreamberd.Types (AstNode (Boolean, Call, Function, Identifier, If, Number, Operator, Return, String))
 import Test.HUnit (Test (..), assertEqual)
-import Dreamberd.Parsing.Elements.Operator
 import Dreamberd.Parsing.Elements.Operator (parseOperator)
-
+import Dreamberd.Parsing.Elements.Condition (parseConditionExpression)
 
 testDreamberdParsing :: Test
-testDreamberdParsing = TestList [testParseFunction, testParseFunctionCall, testParseCondition]
+testDreamberdParsing = TestList [testParseFunction, testParseFunctionCall, testParseCondition, testParseOperator, testParseConditionExpression]
 
 testParseFunction :: Test
 testParseFunction =
@@ -25,11 +24,30 @@ testParseFunction =
 testParseOperator :: Test
 testParseOperator =
     TestList
-        [ TestCase (assertEqual "parseOperator <" (Right (Operator "<" (Number 1) (Number 2), "")) (parseOperator "<1 2"))
-        , TestCase (assertEqual "parseOperator <=" (Right (Operator "<=" (Number 1) (Number 2), "")) (parseOperator "<=1 2"))
-        , TestCase (assertEqual "parseOperator >" (Right (Operator ">" (Number 1) (Number 2), "")) (parseOperator ">1 2"))
-        , TestCase (assertEqual "parseOperator >=" (Right (Operator ">=" (Number 1) (Number 2), "")) (parseOperator ">=1 2"))
-        , TestCase (assertEqual "parseOperator ==" (Right (Operator "==" (Number 1) (Number 2), "")) (parseOperator "==1 2"))
+        [ TestCase (assertEqual "parseOperator <" (Right ("<", "1")) (parseOperator "< 1"))
+        , TestCase (assertEqual "parseOperator <=" (Right ("<=", "1")) (parseOperator "<= 1"))
+        , TestCase (assertEqual "parseOperator >" (Right (">", "1")) (parseOperator "> 1"))
+        , TestCase (assertEqual "parseOperator >=" (Right (">=", "1")) (parseOperator ">= 1"))
+        , TestCase (assertEqual "parseOperator ==" (Right ("==", "1")) (parseOperator "== 1"))
+        , TestCase (assertEqual "parseOperator !=" (Right ("!=", "1")) (parseOperator "!= 1"))
+        , TestCase (assertEqual "parseOperator =" (Right ("=", "1")) (parseOperator "= 1"))
+        , TestCase (assertEqual "parseOperator with spaces" (Left "No operator found") (parseOperator " a 1"))
+        , TestCase (assertEqual "parseOperator with spaces" (Left "No operator found") (parseOperator " 1"))
+        ]
+
+testParseConditionExpression :: Test
+testParseConditionExpression =
+    TestList
+        [TestCase (assertEqual "parseConditionExpression basic" (Right (Operator "<" (Number 1) (Number 2))) (parseConditionExpression "1 < 2"))
+        ,TestCase (assertEqual "parseConditionExpression with spaces" (Right (Operator ">" (Number 1) (Number 2))) (parseConditionExpression "1 > 2"))
+        ,TestCase (assertEqual "parseConditionExpression with spaces" (Right (Operator ">=" (Number 1) (Number 2))) (parseConditionExpression "1 >= 2"))
+        ,TestCase (assertEqual "parseConditionExpression with spaces" (Right (Operator "<=" (Number 1) (Number 2))) (parseConditionExpression "1 <= 2"))
+        ,TestCase (assertEqual "parseConditionExpression with spaces" (Right (Operator "==" (Number 1) (Number 2))) (parseConditionExpression "1 == 2"))
+        ,TestCase (assertEqual "parseConditionExpression with spaces" (Right (Operator "!=" (Number 1) (Number 2))) (parseConditionExpression "1 != 2"))
+        ,TestCase (assertEqual "parseConditionExpression with spaces" (Left "No operator found") (parseConditionExpression " 1 2 "))
+        ,TestCase (assertEqual "parseConditionExpression with spaces" (Left "No operator found") (parseConditionExpression "1 "))
+        ,TestCase (assertEqual "parseConditionExpression with spaces" (Left "No value found") (parseConditionExpression " "))
+        ,TestCase (assertEqual "parseConditionExpression with spaces" (Left "No operator found") (parseConditionExpression "1 a 1"))
         ]
 
 testParseFunctionCall :: Test
