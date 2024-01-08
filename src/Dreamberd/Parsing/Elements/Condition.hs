@@ -1,9 +1,8 @@
 {-# LANGUAGE ViewPatterns #-}
 
-module Dreamberd.Parsing.Elements.Condition (parseConditionParts, parseConditionExpression) where
+module Dreamberd.Parsing.Elements.Condition (parseConditionParts, 
+parseConditionExpression) where
 
-import Data.Char (isSpace)
-import Data.List (isPrefixOf)
 import Dreamberd.Parsing.Elements.Operator (parseOperator)
 import Dreamberd.Parsing.Utils (parseScope)
 import Dreamberd.Parsing.Values (parseAnyValue)
