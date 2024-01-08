@@ -1,6 +1,7 @@
 module Dreamberd.Vm (
     exec,
     Call (..),
+    Env (..),
     EnvValue (..),
     Insts (..),
     Value (..),
@@ -12,6 +13,7 @@ data Value
     | String String
     | Symbol Call
     | Void
+    deriving (Eq)
 
 instance Show Value where
     show (Number nbr) = show nbr
@@ -43,7 +45,7 @@ data Call
     | Greater
     | GreaterOrEqual
     | FunctionName String
-    deriving (Show)
+    deriving (Eq, Show)
 
 data Insts
     = Push Value
@@ -62,7 +64,7 @@ exec _ _ [] (Ret : _) = return (Right Void)
 exec _ _ (val : _) (Ret : _) = return (Right val)
 exec env args stack (Push val : insts) = exec env args (val : stack) insts
 exec env args stack (PushArg idx : insts)
-    | idx >= length args = return (Left "Argument index out of bounds")
+    | idx >= length args || idx < 0 = return (Left "Argument index out of bounds")
     | otherwise = exec env args ((args !! idx) : stack) insts
 exec env args stack (PushEnv name : insts) = case findEnvValue name env of
     Just (Function _) -> exec env args (Symbol (FunctionName name) : stack) insts
@@ -77,14 +79,13 @@ exec env args stack (Call : insts) = do
         Right newValues -> exec env args newValues insts
 exec _ _ [] (x : _) = return (Left ("Stack is empty for a " ++ show x ++ " instruction"))
 exec env args (Bool x : xs) (JumpIfFalse num : insts)
-    | num < 1 = return (Left "Invalid number of instructions")
-    | num > length insts = return (Left "Cannot jump this amount of instructions")
+    | num < 1 || num > length insts = return (Left "Invalid number of instructions")
     | not x = exec env args xs (drop num insts)
     | otherwise = exec env args xs insts
 exec _ _ _ (JumpIfFalse _ : _) = return (Left "Wrong data types in stack: JumpIfFalse needs a Bool")
 
 execCall :: [Env] -> [Value] -> IO (Either String [Value])
-execCall _ [] = return (Left "Stack is empty for Call instruction")
+execCall _ [] = return (Left "Stack is empty for a Call instruction")
 execCall _ (Symbol (FunctionName "print") : val : xs) = putStr (show val) >> return (Right xs)
 execCall _ (Symbol (FunctionName "print") : _) = return (Left "Stack is empty for print instruction")
 execCall env (Symbol (FunctionName fct) : xs) = case findEnvValue fct env of
@@ -98,7 +99,7 @@ execCall _ (Symbol sym : xs) = return (execBuiltin xs sym)
 execCall _ _ = return (Left "Stack argument is not a symbol")
 
 execBuiltin :: [Value] -> Call -> Either String [Value]
-execBuiltin (Number 0 : Number 0 : _) Div = Left "Cannot divide by 0"
+execBuiltin (Number _ : Number 0 : _) Div = Left "Cannot divide by 0"
 execBuiltin (Number l : Number r : xs) op = case op of
     Add -> Right (Number (l + r) : xs)
     Sub -> Right (Number (l - r) : xs)
