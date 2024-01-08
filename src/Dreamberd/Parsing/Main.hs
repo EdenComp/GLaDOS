@@ -6,9 +6,10 @@ import Data.Char (isSpace)
 import Data.List (isPrefixOf, stripPrefix)
 import Dreamberd.Parsing.Elements.Condition (parseConditionParts)
 import Dreamberd.Parsing.Elements.Function (extractFunctionParts, parseReturn)
+import Dreamberd.Parsing.Elements.Loop (extractLoopParts)
 import Dreamberd.Parsing.Elements.Variable (parseVar)
 import Dreamberd.Parsing.Values (parseFunctionCall)
-import Dreamberd.Types (AstNode (Boolean, Function, If))
+import Dreamberd.Types (AstNode (Boolean, Function, If, Loop))
 
 parseDreamberd :: String -> [AstNode] -> Either String [AstNode]
 parseDreamberd sourceCode ast
@@ -36,8 +37,12 @@ parseElement (stripPrefix "function" -> Just restCode) ast =
         Right (remainingCode, updatedAst) -> Right (remainingCode, updatedAst)
         Left err -> Left err
 parseElement (stripPrefix "return" -> Just restCode) ast =
-    case parseReturn restCode of
-        Right (remainingCode, returnNode) -> Right (remainingCode, ast ++ [returnNode])
+    case parseReturn restCode ast of
+        Right (remainingCode, updatedAst) -> Right (remainingCode, updatedAst)
+        Left err -> Left err
+parseElement (stripPrefix "while" -> Just restCode) ast =
+    case parseLoop "while" restCode ast of
+        Right (remainingCode, updatedAst) -> Right (remainingCode, updatedAst)
         Left err -> Left err
 parseElement code ast
     | "if" `isPrefixOf` code =
@@ -55,6 +60,16 @@ parseFunction code ast =
      in case parseDreamberd body [] of
             Right outputAst -> Right (restOfCode, ast ++ [Function name params outputAst])
             Left err -> Left err
+
+parseLoop :: String -> String -> [AstNode] -> Either String (String, [AstNode])
+parseLoop "while" code ast =
+    case extractLoopParts code of
+        Left err -> Left err
+        Right (_loopTest, body, restOfCode) ->
+            case parseDreamberd body [] of
+                Right outputAst -> Right (restOfCode, ast ++ [Loop (Boolean True) outputAst Nothing Nothing])
+                Left err -> Left err
+parseLoop _ _ _ = Left "Unrecognized loop type"
 
 parseCondition :: String -> [AstNode] -> Either String (String, [AstNode])
 parseCondition str ast =

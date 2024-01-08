@@ -10,6 +10,7 @@ data AstNode
     | Operator String AstNode AstNode
     | If AstNode [AstNode] [AstNode]
     | Return AstNode
+    | Loop AstNode [AstNode] (Maybe AstNode) (Maybe AstNode)
     | List [AstNode]
     deriving (Eq)
 
@@ -25,4 +26,5 @@ instance Show AstNode where
     show (List list) = "[" ++ unwords (map show list) ++ "]"
     show (Function name params body) = "Function " ++ show name ++ " " ++ show params ++ " " ++ show body
     show (Call name params) = "(Call " ++ name ++ " " ++ show params ++ ")"
+    show (Loop test body initializer update) = "(Loop " ++ show test ++ " " ++ show body ++ " " ++ show initializer ++ " " ++ show update ++ ")"
     show (Return element) = "Return " ++ show element
