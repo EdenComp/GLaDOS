@@ -66,10 +66,10 @@ exec env args stack (PushArg idx : insts)
     | otherwise = exec env args ((args !! idx) : stack) insts
 exec env args stack (PushEnv name : insts) = case findEnvValue name env of
     Just (Function _) -> exec env args (Symbol (FunctionName name) : stack) insts
-    Just (Variable v) -> exec env args (v:stack) insts
+    Just (Variable v) -> exec env args (v : stack) insts
     Nothing -> return (Left ("Environment " ++ name ++ " does not exist"))
 exec env args stack (DefineEnv name var : insts) = exec (addEnvValue name var env) args stack insts
-exec env args (x:xs) (DefineEnvFromStack name : insts) = exec (addEnvValue name (Variable x) env) args xs insts
+exec env args (x : xs) (DefineEnvFromStack name : insts) = exec (addEnvValue name (Variable x) env) args xs insts
 exec env args stack (Call : insts) = do
     ret <- execCall env stack
     case ret of
