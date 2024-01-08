@@ -5,7 +5,7 @@ module Dreamberd.Parsing.Elements.Condition (parseConditionParts) where
 import Data.Char (isSpace)
 import Dreamberd.Parsing.Utils (parseScope)
 
-parseConditionParts :: String -> Either String (String, String, [(String, String)], Maybe (String, String), String)
+parseConditionParts :: String -> Either String (String, String, [(String, String)], Maybe String, String)
 parseConditionParts str =
     let (filter (not . isSpace) -> condition, afterCondition) = break (== ')') str
      in if null condition
@@ -17,7 +17,7 @@ parseConditionParts str =
                         Left err -> Left err
                         Right (elifs, elsePart, restOfCode) -> Right (condition, ifBody, elifs, elsePart, restOfCode)
 
-extractElifsAndElse :: String -> Either String ([(String, String)], Maybe (String, String), String)
+extractElifsAndElse :: String -> Either String ([(String, String)], Maybe String, String)
 extractElifsAndElse str
     | take 4 str == "elif" =
         case parseConditionParts (drop 4 str) of
@@ -29,5 +29,5 @@ extractElifsAndElse str
     | take 4 str == "else" =
         case parseScope (drop 4 str) of
             Left err -> Left err
-            Right (elseBody, restOfCode) -> Right ([], Just ("else", elseBody), restOfCode)
+            Right (elseBody, restOfCode) -> Right ([], Just elseBody, restOfCode)
     | otherwise = Right ([], Nothing, str)
