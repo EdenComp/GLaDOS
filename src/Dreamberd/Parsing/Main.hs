@@ -21,15 +21,15 @@ parseDreamberd sourceCode ast
 
 parseElement :: String -> [AstNode] -> Either String (String, [AstNode])
 parseElement (stripPrefix "int" -> Just restCode) ast =
-    case parseVar "int" restCode ast of
+    case parseVar (Just "int") restCode ast of
         Right (remainingCode, updatedAst) -> Right (remainingCode, updatedAst)
         Left err -> Left err
 parseElement (stripPrefix "bool" -> Just restCode) ast =
-    case parseVar "bool" restCode ast of
+    case parseVar (Just "bool") restCode ast of
         Right (remainingCode, updatedAst) -> Right (remainingCode, updatedAst)
         Left err -> Left err
 parseElement (stripPrefix "str" -> Just restCode) ast =
-    case parseVar "str" restCode ast of
+    case parseVar (Just "str") restCode ast of
         Right (remainingCode, updatedAst) -> Right (remainingCode, updatedAst)
         Left err -> Left err
 parseElement (stripPrefix "function" -> Just restCode) ast =
@@ -52,7 +52,9 @@ parseElement code ast
     | otherwise =
         case parseFunctionCall code of
             Right (remainingCode, call) -> Right (remainingCode, ast ++ [call])
-            Left _ -> Left "Unrecognized element"
+            Left _ -> case parseVar Nothing code ast of
+                Right (remainingCode, updatedAst) -> Right (remainingCode, updatedAst)
+                Left _ -> Left "Unrecognized element"
 
 parseFunction :: String -> [AstNode] -> Either String (String, [AstNode])
 parseFunction code ast =
