@@ -44,5 +44,5 @@ parseScope (dropWhile isSpace -> code) =
     case checkStartsWithOpenBracket code of
         Left err -> Left err
         Right validCode ->
-            let (scope, rest) = extractScopeAndRest validCode 1 []
+            let (scope, rest) = extractScopeAndRest validCode 0 []
              in Right (scope, rest)
