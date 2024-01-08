@@ -2,10 +2,10 @@ module Dreamberd.Parsing.Elements.Variable (parseVar) where
 
 import Dreamberd.Parsing.Utils (extractValueAndRest, getVariableName)
 import Dreamberd.Parsing.Values (parseAnyValue)
-import Dreamberd.Types (AstNode (Operator, String))
+import Dreamberd.Types (AstNode (AssignVariable, Identifier, Operator))
 
-parseVar :: String -> String -> [AstNode] -> Either String (String, [AstNode])
-parseVar _ code ast =
+parseVar :: Maybe String -> String -> [AstNode] -> Either String (String, [AstNode])
+parseVar varType code ast =
     let
         wordsInCode = words code
      in
@@ -17,6 +17,8 @@ parseVar _ code ast =
                         (value, restOfCode) = extractValueAndRest (unwords (drop 2 wordsInCode))
                      in
                         case parseAnyValue value of
-                            Right node -> Right (restOfCode, ast ++ [Operator "=" (String name) node])
+                            Right node -> case varType of
+                                Just vt -> Right (restOfCode, ast ++ [AssignVariable vt name node])
+                                Nothing -> Right (restOfCode, ast ++ [Operator "=" (Identifier name) node])
                             Left err -> Left err
                 Left err -> Left err
