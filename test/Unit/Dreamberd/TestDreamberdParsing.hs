@@ -12,11 +12,17 @@ testParseFunction :: Test
 testParseFunction =
     TestList
         [ TestCase (assertEqual "parseFunction basic" (Right ("", [Function "foo" [] [Return (Number 1)]])) (parseFunction "foo(){return 1;}" []))
+        , TestCase (assertEqual "parseFunction nested" (Right ("", [Function "foo" [] [Function "bar" [] [Operator "=" (String "b") (Boolean True)], Return (Number 1)]])) (parseFunction "foo(){ function bar() {bool b = true;} return 1;}" []))
         , TestCase (assertEqual "parseFunction with params" (Right ("", [Function "foo" ["bar"] [Return (Number 1)]])) (parseFunction "foo(bar){return 1;}" []))
-        , TestCase (assertEqual "parseFunction with params and body" (Right ("", [Function "foo" ["bar"] [Return (Number 1)]])) (parseFunction "foo(bar){return 1;}" []))
+        , TestCase (assertEqual "parseFunction with params and body" (Right ("", [Function "foo" ["bar", "other"] [Return (Number 1)]])) (parseFunction "foo(bar, other ){return 1;}" []))
         , TestCase (assertEqual "parseFunction with params, body and spaces" (Right ("", [Function "foo" ["bar"] [Return (Number 1)]])) (parseFunction "foo ( bar ) { return 1; }" []))
         , TestCase (assertEqual "parseFunction with params, body, spaces and newlines" (Right ("", [Function "foo" ["bar"] [Return (Number 1)]])) (parseFunction "foo ( bar ) {\nreturn 1;\n}" []))
         , TestCase (assertEqual "parseFunction with multi-content" (Right ("", [Function "foo" ["bar"] [Operator "=" (String "a") (Number 42), Operator "=" (String "b") (Identifier "bar"), Return (Identifier "bar")]])) (parseFunction "foo ( bar ) {\nint a = 42; int b = bar; return bar;\n}" []))
+        , TestCase (assertEqual "parseFunction wrong - no parenthesis" (Left "No parenthesis found for function params") (parseFunction "foo{return bar; }" []))
+        , TestCase (assertEqual "parseFunction wrong - only open parenthesis" (Left "No parenthesis found for function params") (parseFunction "foo({return bar; }" []))
+        , TestCase (assertEqual "parseFunction wrong - only close parenthesis" (Left "No parenthesis found for function params") (parseFunction "foo){return bar; }" []))
+        , TestCase (assertEqual "parseFunction wrong - invalid function name" (Left "Variable name 'int' is banned") (parseFunction "int(){return bar; }" []))
+        , TestCase (assertEqual "parseFunction wrong - invalid function scope" (Left "Unrecognized element") (parseFunction "foo(){unknown content; }" []))
         ]
 
 testParseFunctionCall :: Test
