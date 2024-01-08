@@ -1,5 +1,7 @@
 module Dreamberd.Lib (
     compileDreamberdCode,
+    compileToAst,
+    compileToVm,
     executeDreamberdBytecode,
     runDreamberdCode,
 ) where
@@ -16,25 +18,42 @@ compileDreamberdCode sourceCode outputFile =
     case parseDreamberd sourceCode [] of
         Right ast -> case compileAst ast of
             Right insts -> writeFile outputFile (transpileIntoBytecode insts)
-            Left err -> putStrLn err >> exitWith (ExitFailure 84)
-        Left err -> putStrLn err >> exitWith (ExitFailure 84)
+            Left err -> returnWithError err
+        Left err -> returnWithError err
 
 executeDreamberdBytecode :: [Char] -> IO ()
 executeDreamberdBytecode bytes =
     case getFromBytecode bytes of
         Right insts -> executeDreamberdInsts insts
-        Left err -> putStrLn err >> exitWith (ExitFailure 84)
+        Left err -> returnWithError err
 
 executeDreamberdInsts :: [Insts] -> IO ()
 executeDreamberdInsts insts =
     case exec [] [] [] insts of
         Right res -> print res
-        Left err -> putStrLn err >> exitWith (ExitFailure 84)
+        Left err -> returnWithError err
 
 runDreamberdCode :: String -> IO ()
 runDreamberdCode sourceCode =
     case parseDreamberd sourceCode [] of
         Right ast -> case compileAst ast of
             Right insts -> executeDreamberdInsts insts
-            Left err -> putStrLn err >> exitWith (ExitFailure 84)
-        Left err -> putStrLn err >> exitWith (ExitFailure 84)
+            Left err -> returnWithError err
+        Left err -> returnWithError err
+
+compileToAst :: String -> IO ()
+compileToAst sourceCode =
+    case parseDreamberd sourceCode [] of
+        Right ast -> print ast
+        Left err -> returnWithError err
+
+compileToVm :: String -> IO ()
+compileToVm sourceCode =
+    case parseDreamberd sourceCode [] of
+        Right ast -> case compileAst ast of
+            Right insts -> print insts
+            Left err -> returnWithError err
+        Left err -> returnWithError err
+
+returnWithError :: String -> IO ()
+returnWithError str = putStrLn str >> exitWith (ExitFailure 84)
