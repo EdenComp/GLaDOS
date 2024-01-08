@@ -2,7 +2,7 @@ module Unit.Dreamberd.TestDreamberdParsing (testDreamberdParsing) where
 
 import Dreamberd.Parsing.Main (parseCondition, parseDreamberd, parseFunction)
 import Dreamberd.Parsing.Values (parseFunctionCall)
-import Dreamberd.Types (AstNode (AssignVariable, Boolean, Call, Function, Identifier, If, Number, Operator, Return, String))
+import Dreamberd.Types (AstNode (AssignVariable, Boolean, Call, Function, Identifier, If, Loop, Number, Operator, Return, String))
 import Test.HUnit (Test (..), assertEqual)
 
 testDreamberdParsing :: Test
@@ -12,7 +12,7 @@ testParseFunction :: Test
 testParseFunction =
     TestList
         [ TestCase (assertEqual "parseFunction basic" (Right ("", [Function "foo" [] [Return (Number 1)]])) (parseFunction "foo(){return 1;}" []))
-        , TestCase (assertEqual "parseFunction nested" (Right ("", [Function "foo" [] [Function "bar" [] [AssignVariable "bool" "b" (Boolean True)], Return (Number 1)]])) (parseFunction "foo(){ function bar() {bool b = true;} return 1;}" []))
+        , TestCase (assertEqual "parseFunction nested" (Right ("", [Function "foo" [] [Function "bar" [] [AssignVariable "bool" "b" (Boolean True)], Return (Number 1)]])) (parseFunction "foo(){ function bar() {bool b=true;} return 1;}" []))
         , TestCase (assertEqual "parseFunction with params" (Right ("", [Function "foo" ["bar"] [Return (Number 1)]])) (parseFunction "foo(bar){return 1;}" []))
         , TestCase (assertEqual "parseFunction with params and body" (Right ("", [Function "foo" ["bar", "other"] [Return (Number 1)]])) (parseFunction "foo(bar, other ){return 1;}" []))
         , TestCase (assertEqual "parseFunction with params, body and spaces" (Right ("", [Function "foo" ["bar"] [Return (Number 1)]])) (parseFunction "foo ( bar ) { return 1; }" []))
@@ -46,7 +46,7 @@ testParseCondition =
         , TestCase (assertEqual "parseCondition with elif" (Right ("", [If (Boolean True) [Return (Number 1)] [If (Boolean True) [Return (Number 2)] []]])) (parseCondition "(true) {return 1;} elif (true) {return 2;}" []))
         , TestCase (assertEqual "parseCondition wrong elif without condition" (Left "If condition must start with '(' and end with ')'") (parseCondition " (true) {return 1;} elif {return 2;}" []))
         , TestCase (assertEqual "parseCondition with elif and else" (Right ("", [If (Boolean True) [AssignVariable "str" "a" (String "test"), Operator "=" (Identifier "a") (String "other")] [If (Boolean True) [Return (Number 2)] [Return (Number 3)]]])) (parseCondition "(true) {str a = \"test\"; a = \"other\";} elif (true) {return 2;} else {return 3;}" []))
-        , TestCase (assertEqual "parseCondition with elif, else and spaces" (Right ("", [If (Boolean True) [Return (Number 1)] [If (Boolean True) [Return (Number 2)] [Return (Number 3)]]])) (parseCondition " (true) {return 1;} elif (true) {return 2;} else {return 3;}" []))
+        , TestCase (assertEqual "parseCondition with elif, else and spaces" (Right ("", [If (Boolean True) [Return (Number 1)] [If (Boolean True) [AssignVariable "bool" "c" (Boolean False)] [Return (Number 3)]]])) (parseCondition " (true) {return 1;} elif (true) {bool c =  false;} else {return 3;}" []))
         , TestCase (assertEqual "parseCondition with elif, else, spaces and newlines" (Right ("", [If (Boolean True) [Return (Number 1)] [If (Boolean True) [Return (Number 2)] [Return (Number 3)]]])) (parseCondition "(true) {\nreturn 1;\n} elif (true) {\nreturn 2;\n} else {\nreturn 3;\n}" []))
         ]
 
@@ -55,7 +55,9 @@ testParseDreamberd =
     TestList
         [ TestCase (assertEqual "parseDreamberd basic assign var" (Right [AssignVariable "int" "a" (Number 1)]) (parseDreamberd "int a = 1;" []))
         , TestCase (assertEqual "parseDreamberd reasign var" (Right [AssignVariable "int" "a" (Number 1), Operator "=" (Identifier "a") (Number 2)]) (parseDreamberd "int a = 1;a = 2;" []))
-        , TestCase (assertEqual "parseDreamberd wrong assign var value" (Left "Expected '=' after variable name") (parseDreamberd "int a 1; " []))
+        , TestCase (assertEqual "parseDreamberd wrong assign var value" (Left "No '=' found for variable assignment") (parseDreamberd "int a 1; " []))
+        , TestCase (assertEqual "parseDreamberd wrong boolean value" (Left "No boolean found") (parseDreamberd "bool a=42; " []))
         , TestCase (assertEqual "parseDreamberd empty code" (Right []) (parseDreamberd "     " []))
         , TestCase (assertEqual "parseDreamberd invalid variable name" (Left "No variable name found") (parseDreamberd "int * = 4;" []))
+        , TestCase (assertEqual "parseDreamberd basic loop" (Right [Loop (Boolean True) [AssignVariable "int" "b" (Number 42)] Nothing Nothing]) (parseDreamberd "while (true) {int b = 42;}" []))
         ]
