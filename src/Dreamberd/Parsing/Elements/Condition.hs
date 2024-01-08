@@ -27,11 +27,7 @@ extractElifsAndElse str
                     then Left "Missing condition in elif statement"
                     else Right ((elifCondition, elifBody) : elifs, elsePart, rest)
     | take 4 str == "else" =
-        let (filter (not . isSpace) -> elseKeyword, restAfterElseKeyword) = break (== '{') (drop 4 str)
-         in case parseScope (drop 1 restAfterElseKeyword) of
-                Left err -> Left err
-                Right (elseBody, restOfCode) ->
-                    if not (null elseKeyword)
-                        then Left "Unexpected condition in else statement"
-                        else Right ([], Just (elseKeyword, elseBody), restOfCode)
+        case parseScope (drop 4 str) of
+            Left err -> Left err
+            Right (elseBody, restOfCode) -> Right ([], Just ("else", elseBody), restOfCode)
     | otherwise = Right ([], Nothing, str)
