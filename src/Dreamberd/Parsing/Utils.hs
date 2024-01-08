@@ -1,5 +1,3 @@
-{-# LANGUAGE ViewPatterns #-}
-
 module Dreamberd.Parsing.Utils (getVariableName, extractValueAndRest, parseScope) where
 
 import Data.Char (isSpace)
@@ -11,7 +9,7 @@ bannedVariables = ["if", "elif", "else", "true", "false", "return", "function", 
 getVariableName :: String -> Either String String
 getVariableName str = case str =~ "^[a-zA-Z_-]+" :: (String, String, String) of
     (_, match, _) | null match -> Left "No variable name found"
-    (_, match, _) | match `elem` bannedVariables -> Left $ "Variable name " ++ show match ++ " is banned"
+    (_, match, _) | match `elem` bannedVariables -> Left $ "Variable name '" ++ match ++ "' is banned"
     (_, match, _) -> Right match
 
 extractValueAndRest :: String -> (String, String)
@@ -26,11 +24,11 @@ extractValueAndRest = go False []
 extractScopeAndRest :: String -> Int -> String -> (String, String)
 extractScopeAndRest [] _ body = (body, [])
 extractScopeAndRest (x : xs) openBraces body
-    | x == '{' = extractScopeAndRest xs (openBraces + 1) body
+    | x == '{' = extractScopeAndRest xs (openBraces + 1) (body ++ [x])
     | x == '}' =
-        if openBraces - 1 == 0
+        if openBraces == 1
             then (body, dropWhile isSpace xs)
-            else extractScopeAndRest xs (openBraces - 1) body
+            else extractScopeAndRest xs (openBraces - 1) (body ++ [x])
     | otherwise = extractScopeAndRest xs openBraces (body ++ [x])
 
 checkStartsWithOpenBracket :: String -> Either String String
@@ -40,9 +38,9 @@ checkStartsWithOpenBracket (x : xs)
     | otherwise = Left ("Code must start with an open bracket but starts with '" ++ [x] ++ "'")
 
 parseScope :: String -> Either String (String, String)
-parseScope (dropWhile isSpace -> code) =
-    case checkStartsWithOpenBracket code of
+parseScope code =
+    case checkStartsWithOpenBracket (dropWhile isSpace code) of
         Left err -> Left err
         Right validCode ->
             let (scope, rest) = extractScopeAndRest validCode 0 []
-             in Right (scope, rest)
+             in Right (drop 1 scope, rest)
