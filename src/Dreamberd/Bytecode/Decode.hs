@@ -30,9 +30,7 @@ parseCall (c : bytes) = case fromEnum c of
     0x28 -> Right (LessOrEqual, bytes)
     0x29 -> Right (Greater, bytes)
     0x2A -> Right (GreaterOrEqual, bytes)
-    0x2B -> case parseString bytes of
-        Left err -> Left err
-        Right (name, rest) -> Right (FunctionName name, rest)
+    0x2B -> parseString bytes >>= \(name, rest) -> Right (FunctionName name, rest)
     _ -> Left "Unknown call"
 
 parseValue :: [Char] -> Either String (Value, [Char])
@@ -42,15 +40,10 @@ parseValue (c : val : bytes) | fromEnum c == 0x12 = case fromEnum val of
     1 -> Right (Bool True, bytes)
     _ -> Left "Unknown value for type Bool"
 parseValue (c : bytes) = case fromEnum c of
-    0x11 -> case parseInt bytes of
-        Left err -> Left err
-        Right (val, rest) -> Right (Number val, rest)
-    0x13 -> case parseString bytes of
-        Left err -> Left err
-        Right (val, rest) -> Right (String val, rest)
-    0x14 -> case parseCall bytes of
-        Left err -> Left err
-        Right (val, rest) -> Right (Symbol val, rest)
+    0x11 -> parseInt bytes >>= \(val, rest) -> Right (Number val, rest)
+    0x13 -> parseString bytes >>= \(val, rest) -> Right (String val, rest)
+    0x14 -> parseCall bytes >>= \(val, rest) -> Right (Symbol val, rest)
+
     0x15 -> Right (Void, bytes)
     _ -> Left "Unknown value type"
 
@@ -64,42 +57,24 @@ parseEnvValue (c : bytes)
             Right func -> if length rest < len then Left "Wrong function body length" else Right (Function func, rest')
           where
             (insts, rest') = splitAt len rest
-    | fromEnum c == 0x32 = case parseValue bytes of
-        Left err -> Left err
-        Right (val, rest) -> Right (Variable val, rest)
+    | fromEnum c == 0x32 = parseValue bytes >>= \(val, rest) -> Right (Variable val, rest)
     | otherwise = Left "Unknown value type"
 
 parseInstructions :: [Char] -> Either String [Insts]
 parseInstructions [] = Right []
 parseInstructions (c : bytes) = case fromEnum c of
-    0x01 -> case parseValue bytes of
-        Left err -> Left err
-        Right (val, rest) -> pursueParsing (Push val) rest
-    0x02 -> case parseInt bytes of
-        Left err -> Left err
-        Right (val, rest) -> pursueParsing (PushArg val) rest
-    0x03 -> case parseString bytes of
-        Left err -> Left err
-        Right (val, rest) -> pursueParsing (PushEnv val) rest
+    0x01 -> parseValue bytes >>= \(val, rest) -> pursueParsing (Push val) rest
+    0x02 -> parseInt bytes >>= \(val, rest) -> pursueParsing (PushArg val) rest
+    0x03 -> parseString bytes >>= \(val, rest) -> pursueParsing (PushEnv val) rest
     0x04 -> pursueParsing Call bytes
-    0x05 -> case parseString bytes of
-        Left err -> Left err
-        Right (name, rest) -> case parseEnvValue rest of
-            Left err -> Left err
-            Right (val, rest') -> pursueParsing (DefineEnv name val) rest'
-    0x06 -> case parseString bytes of
-        Left err -> Left err
-        Right (name, rest) -> pursueParsing (DefineEnvFromStack name) rest
-    0x07 -> case parseInt bytes of
-        Left err -> Left err
-        Right (val, rest) -> pursueParsing (JumpIfFalse val) rest
+    0x05 -> parseString bytes >>= \(name, rest) -> parseEnvValue rest >>= \(val, rest') -> pursueParsing (DefineEnv name val) rest'
+    0x06 -> parseString bytes >>= \(name, rest) -> pursueParsing (DefineEnvFromStack name) rest
+    0x07 -> parseInt bytes >>= \(val, rest) -> pursueParsing (JumpIfFalse val) rest
     0x08 -> pursueParsing Ret bytes
     _ -> Left "Unknown instruction"
 
 pursueParsing :: Insts -> [Char] -> Either String [Insts]
-pursueParsing inst rest = case parseInstructions rest of
-    Left err -> Left err
-    Right insts -> Right (inst : insts)
+pursueParsing inst rest = parseInstructions rest >>= \insts -> Right (inst : insts)
 
 getFromBytecode :: [Char] -> Either String [Insts]
 getFromBytecode ('d' : 'b' : '4' : '\n' : bytes) = parseInstructions $ init bytes
