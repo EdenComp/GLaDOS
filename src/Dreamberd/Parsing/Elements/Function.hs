@@ -1,20 +1,21 @@
-{-# LANGUAGE ViewPatterns #-}
-
 module Dreamberd.Parsing.Elements.Function (parseReturn, extractFunctionParts) where
 
 import Data.Char (isSpace)
-import Dreamberd.Parsing.Utils (extractScopeAndRest, extractValueAndRest)
+import Dreamberd.Parsing.Utils (extractValueAndRest, getVariableName, parseScope)
 import Dreamberd.Parsing.Values (parseAnyValue)
 import Dreamberd.Types (AstNode (Return))
 
-extractFunctionParts :: String -> (String, [String], String, String)
-extractFunctionParts str = (name, params, body, restOfCode)
-  where
-    (beforeBrace, afterBrace) = break (== '{') str
-    (nameAndParams, _) = break (== ')') beforeBrace
-    (filter (not . isSpace) -> name, parameters) = break (== '(') (dropWhile isSpace nameAndParams)
-    params = words $ map (\c -> if c == ',' then ' ' else c) $ tail parameters
-    (body, restOfCode) = extractScopeAndRest (drop 1 afterBrace) 1 []
+extractFunctionParts :: String -> Either String (String, [String], String, String)
+extractFunctionParts str =
+    let (nameAndParams, restAfterParams) = break (== ')') str
+        (_, parameters) = break (== '(') (dropWhile isSpace nameAndParams)
+        params = words $ map (\c -> if c == ',' then ' ' else c) $ tail parameters
+     in case getVariableName (dropWhile isSpace nameAndParams) of
+            Left err -> Left err
+            Right name ->
+                case parseScope (drop 1 restAfterParams) of
+                    Left err -> Left err
+                    Right (body, restOfCode) -> Right (name, params, body, restOfCode)
 
 parseReturn :: String -> [AstNode] -> Either String (String, [AstNode])
 parseReturn code ast =

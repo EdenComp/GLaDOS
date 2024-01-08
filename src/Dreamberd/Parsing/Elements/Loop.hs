@@ -3,13 +3,14 @@
 module Dreamberd.Parsing.Elements.Loop (extractLoopParts) where
 
 import Data.Char (isSpace)
-import Dreamberd.Parsing.Utils (extractScopeAndRest)
+import Dreamberd.Parsing.Utils (parseScope)
 
 extractLoopParts :: String -> Either String (String, String, String)
 extractLoopParts str =
     let (beforeLoopScope, afterLoopScope) = break (== '{') str
         (filter (not . isSpace) -> loopTest, _) = break (== ')') beforeLoopScope
-        (loopBody, restOfCode) = extractScopeAndRest (drop 1 afterLoopScope) 1 []
      in if null loopTest
             then Left "Missing test in loop"
-            else Right (loopTest, loopBody, restOfCode)
+            else case parseScope (drop 1 afterLoopScope) of
+                Left err -> Left err
+                Right (loopBody, restOfCode) -> Right (loopTest, loopBody, restOfCode)

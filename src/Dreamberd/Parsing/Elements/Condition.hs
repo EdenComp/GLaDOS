@@ -3,18 +3,19 @@
 module Dreamberd.Parsing.Elements.Condition (parseConditionParts) where
 
 import Data.Char (isSpace)
-import Dreamberd.Parsing.Utils (extractScopeAndRest)
+import Dreamberd.Parsing.Utils (parseScope)
 
 parseConditionParts :: String -> Either String (String, String, [(String, String)], Maybe (String, String), String)
 parseConditionParts str =
-    let (beforeIf, afterIf) = break (== '{') str
-        (filter (not . isSpace) -> condition, _) = break (== ')') beforeIf
-        (ifBody, restAfterIf) = extractScopeAndRest (drop 1 afterIf) 1 []
+    let (filter (not . isSpace) -> condition, afterCondition) = break (== ')') str
      in if null condition
             then Left "Missing condition in if statement"
-            else case extractElifsAndElse restAfterIf of
+            else case parseScope (drop 1 afterCondition) of
                 Left err -> Left err
-                Right (elifs, elsePart, restOfCode) -> Right (condition, ifBody, elifs, elsePart, restOfCode)
+                Right (ifBody, restAfterIf) ->
+                    case extractElifsAndElse restAfterIf of
+                        Left err -> Left err
+                        Right (elifs, elsePart, restOfCode) -> Right (condition, ifBody, elifs, elsePart, restOfCode)
 
 extractElifsAndElse :: String -> Either String ([(String, String)], Maybe (String, String), String)
 extractElifsAndElse str
@@ -27,8 +28,10 @@ extractElifsAndElse str
                     else Right ((elifCondition, elifBody) : elifs, elsePart, rest)
     | take 4 str == "else" =
         let (filter (not . isSpace) -> elseKeyword, restAfterElseKeyword) = break (== '{') (drop 4 str)
-            (elseBody, restOfCode) = extractScopeAndRest (drop 1 restAfterElseKeyword) 1 []
-         in if not (null elseKeyword)
-                then Left "Unexpected condition in else statement"
-                else Right ([], Just (elseKeyword, elseBody), restOfCode)
+         in case parseScope (drop 1 restAfterElseKeyword) of
+                Left err -> Left err
+                Right (elseBody, restOfCode) ->
+                    if not (null elseKeyword)
+                        then Left "Unexpected condition in else statement"
+                        else Right ([], Just (elseKeyword, elseBody), restOfCode)
     | otherwise = Right ([], Nothing, str)

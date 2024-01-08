@@ -1,4 +1,6 @@
-module Dreamberd.Parsing.Utils (getVariableName, extractValueAndRest, extractScopeAndRest) where
+{-# LANGUAGE ViewPatterns #-}
+
+module Dreamberd.Parsing.Utils (getVariableName, extractValueAndRest, parseScope) where
 
 import Data.Char (isSpace)
 import Text.Regex.Posix ((=~))
@@ -24,9 +26,23 @@ extractValueAndRest = go False []
 extractScopeAndRest :: String -> Int -> String -> (String, String)
 extractScopeAndRest [] _ body = (body, [])
 extractScopeAndRest (x : xs) openBraces body
-    | x == '{' = extractScopeAndRest xs (openBraces + 1) (body ++ [x])
+    | x == '{' = extractScopeAndRest xs (openBraces + 1) body
     | x == '}' =
         if openBraces - 1 == 0
             then (body, dropWhile isSpace xs)
-            else extractScopeAndRest xs (openBraces - 1) (body ++ [x])
+            else extractScopeAndRest xs (openBraces - 1) body
     | otherwise = extractScopeAndRest xs openBraces (body ++ [x])
+
+checkStartsWithOpenBracket :: String -> Either String String
+checkStartsWithOpenBracket [] = Left "Scope must start with open bracket but empty code found"
+checkStartsWithOpenBracket (x : xs)
+    | x == '{' = Right (x : xs)
+    | otherwise = Left ("Code must start with an open bracket but starts with '" ++ [x] ++ "'")
+
+parseScope :: String -> Either String (String, String)
+parseScope (dropWhile isSpace -> code) =
+    case checkStartsWithOpenBracket code of
+        Left err -> Left err
+        Right validCode ->
+            let (scope, rest) = extractScopeAndRest validCode 1 []
+             in Right (scope, rest)
