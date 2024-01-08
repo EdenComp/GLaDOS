@@ -80,7 +80,7 @@ exec env args (Bool x : xs) (JumpIfFalse num : insts)
     | otherwise = exec env args xs insts
 exec _ _ _ (JumpIfFalse _ : _) = return (Left "Wrong data types in stack: JumpIfFalse needs a Bool")
 
-execCall :: [Env] -> [Value] ->  IO (Either String [Value])
+execCall :: [Env] -> [Value] -> IO (Either String [Value])
 execCall _ [] = return (Left "Stack is empty for Call instruction")
 execCall _ (Symbol (FunctionName "print") : val : xs) = putStr (show val) >> return (Right xs)
 execCall _ (Symbol (FunctionName "print") : _) = return (Left "Stack is empty for print instruction")
