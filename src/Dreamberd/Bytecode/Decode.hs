@@ -43,7 +43,6 @@ parseValue (c : bytes) = case fromEnum c of
     0x11 -> parseInt bytes >>= \(val, rest) -> Right (Number val, rest)
     0x13 -> parseString bytes >>= \(val, rest) -> Right (String val, rest)
     0x14 -> parseCall bytes >>= \(val, rest) -> Right (Symbol val, rest)
-
     0x15 -> Right (Void, bytes)
     _ -> Left "Unknown value type"
 
