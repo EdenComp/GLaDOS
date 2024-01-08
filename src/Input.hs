@@ -13,12 +13,11 @@ processInput :: (String -> IO ()) -> IO ()
 processInput func = getUserInput func ""
 
 getUserInput :: (String -> IO ()) -> String -> IO ()
-getUserInput func linesSoFar = do
-    eof <- isEOF
-    if eof
-        then exitSuccess
-        else do
-            userInput <- getLine
-            let updatedLines = linesSoFar ++ userInput
-            func updatedLines
-            getUserInput func updatedLines
+getUserInput func linesSoFar =
+    isEOF >>= \eof ->
+        if eof
+            then exitSuccess
+            else
+                getLine >>= \userInput ->
+                    let updatedLines = linesSoFar ++ userInput
+                     in func updatedLines >> getUserInput func updatedLines

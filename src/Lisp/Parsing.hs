@@ -16,25 +16,19 @@ module Lisp.Parsing (
 ) where
 
 import Control.Applicative (Alternative (..))
+import Control.Monad ((>=>))
 import Data.Char (isDigit)
 import Lisp.SExpr (SymbolicExpression (..))
 
 newtype Parser a = Parser {parse :: String -> Maybe (a, String)}
 
 instance Functor Parser where
-    fmap f (Parser p) = Parser $ \input ->
-        case p input of
-            Just (result, rest) -> Just (f result, rest)
-            Nothing -> Nothing
+    fmap f (Parser p) = Parser $ p >=> \(result, rest) -> Just (f result, rest)
 
 instance Applicative Parser where
     pure x = Parser $ \input -> Just (x, input)
-    (Parser p1) <*> (Parser p2) = Parser $ \input ->
-        case p1 input of
-            Just (f, rest) -> case p2 rest of
-                Just (result, rest') -> Just (f result, rest')
-                Nothing -> Nothing
-            Nothing -> Nothing
+    (Parser p1) <*> (Parser p2) =
+        Parser $ p1 >=> \(f, rest) -> p2 rest >>= \(result, rest') -> Just (f result, rest')
 
 instance Alternative Parser where
     empty = Parser $ const Nothing
@@ -45,10 +39,7 @@ instance Alternative Parser where
 
 instance Monad Parser where
     return = pure
-    (Parser p) >>= f = Parser $ \input ->
-        case p input of
-            Just (result, rest) -> parse (f result) rest
-            Nothing -> Nothing
+    (Parser p) >>= f = Parser $ p >=> \(result, rest) -> parse (f result) rest
 
 parseChar :: Char -> Parser Char
 parseChar c = Parser f
@@ -80,13 +71,10 @@ parseMany p = Parser $ \input ->
         Nothing -> Just ([], input)
 
 parseSome :: Parser a -> Parser [a]
-parseSome p = Parser $ \input ->
-    case parse p input of
-        Just (result, rest) ->
-            case parse (parseMany p) rest of
-                Just (results, rest') -> Just (result : results, rest')
-                Nothing -> Just ([result], rest)
-        Nothing -> Nothing
+parseSome p =
+    Parser $ parse p >=> \(result, rest) -> case parse (parseMany p) rest of
+        Just (results, rest') -> Just (result : results, rest')
+        Nothing -> Just ([result], rest)
 
 parseUInt :: Parser Int
 parseUInt = Parser f
