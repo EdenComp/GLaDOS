@@ -10,7 +10,7 @@ import Dreamberd.Bytecode.Decode (getFromBytecode)
 import Dreamberd.Bytecode.Encode (transpileIntoBytecode)
 import Dreamberd.Compile (compileAst)
 import Dreamberd.Parsing.Main (parseDreamberd)
-import Dreamberd.Vm (Insts (..), Value (..), exec)
+import Dreamberd.Vm (Insts (..), exec)
 import System.Exit (ExitCode (ExitFailure), exitWith)
 
 compileDreamberdCode :: String -> String -> IO ()
