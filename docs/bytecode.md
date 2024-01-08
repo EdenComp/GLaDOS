@@ -9,8 +9,9 @@ Here are all the definitions of the bytecode:
 - `0x03`: PushEnv (+ String)
 - `0x04`: Call
 - `0x05`: DefineEnv (+ String and EnvValue)
-- `0x06`: JumpIfFalse (+ Int)
-- `0x07`: Ret
+- `0x06`: DefineEnvFromStack (+ String)
+- `0x07`: JumpIfFalse (+ Int)
+- `0x08`: Ret
 
 ## Values
 
