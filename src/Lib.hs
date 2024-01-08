@@ -1,7 +1,7 @@
 module Lib (glados) where
 
 import Args (Command (..), commandsParser)
-import Dreamberd.Lib (compileToAst, compileDreamberdCode, compileToVm, executeDreamberdBytecode, runDreamberdCode)
+import Dreamberd.Lib (compileDreamberdCode, compileToAst, compileToVm, executeDreamberdBytecode, runDreamberdCode)
 import Input (processFile, processInput)
 import Lisp.Lib (evaluateAndPrintLispResult)
 
