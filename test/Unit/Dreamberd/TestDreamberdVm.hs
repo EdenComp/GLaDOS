@@ -7,17 +7,18 @@ execVM :: [Insts] -> IO (Either String Value)
 execVM = exec [] [] []
 
 testDreamberdVm :: Test
-testDreamberdVm = TestList
-    [ testBasicExecution
-    , testStackPushes
-    , testCalls
-    , testEnvDefines
-    , testJumps
-    , testFunctions
-    ]
+testDreamberdVm = 
+    TestList
+        [ testBasicExecution
+        , testStackPushes
+        , testCalls
+        , testEnvDefines
+        , testJumps
+        , testFunctions
+        ]
 
 testBasicExecution :: Test
-testBasicExecution = 
+testBasicExecution =
     TestList
         [ TestCase $ execVM [] >>= assertEqual "empty" (Right Void)
         , TestCase $ execVM [Ret] >>= assertEqual "only return" (Right Void)
