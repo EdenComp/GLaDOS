@@ -51,6 +51,9 @@ parseLoop :: String -> String -> [AstNode] -> Either String (String, [AstNode])
 parseLoop "while" code ast =
     extractLoopParts code >>= \(_loopTest, body, restOfCode) ->
         parseDreamberd body [] >>= \outputAst -> Right (restOfCode, ast ++ [Loop (Boolean True) outputAst Nothing Nothing])
+parseLoop "for" code ast =
+    extractLoopParts code >>= \(_loopTest, body, restOfCode) ->
+        parseDreamberd body [] >>= \outputAst -> Right (restOfCode, ast ++ [Loop (Boolean True) outputAst Nothing Nothing])
 parseLoop _ _ _ = Left "Unrecognized loop type"
 
 parseCondition :: String -> [AstNode] -> Either String (String, [AstNode])

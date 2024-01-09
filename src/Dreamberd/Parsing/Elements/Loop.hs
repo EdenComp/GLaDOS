@@ -2,13 +2,14 @@
 
 module Dreamberd.Parsing.Elements.Loop (extractLoopParts) where
 
-import Data.Char (isSpace)
-import Dreamberd.Parsing.Utils (parseScope)
+import Data.List (isPrefixOf)
+import Dreamberd.Parsing.Utils (parseScope, trimSpaces)
 
 extractLoopParts :: String -> Either String (String, String, String)
-extractLoopParts str =
-    let (beforeLoopScope, afterLoopScope) = break (== '{') str
-        (filter (not . isSpace) -> loopTest, _) = break (== ')') beforeLoopScope
-     in if null loopTest
-            then Left "Missing test in loop"
-            else parseScope afterLoopScope >>= \(loopBody, restOfCode) -> Right (loopTest, loopBody, restOfCode)
+extractLoopParts (trimSpaces -> str) =
+    if not ("(" `isPrefixOf` str && ')' `elem` str)
+        then Left "Loop condition must start with '(' and end with ')'"
+        else
+            let (beforeLoopScope, afterLoopScope) = break (== '{') str
+                (trimSpaces . drop 1 -> loopTest, _) = break (== ')') beforeLoopScope
+             in parseScope afterLoopScope >>= \(loopBody, restOfCode) -> Right (loopTest, loopBody, restOfCode)
