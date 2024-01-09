@@ -1,14 +1,13 @@
 module Unit.Dreamberd.TestDreamberdParsing (testDreamberdParsing) where
 
 import Dreamberd.Parsing.Elements.Condition (parseConditionExpression)
-import Dreamberd.Parsing.Elements.Operator (parseExpression)
 import Dreamberd.Parsing.Main (parseCondition, parseDreamberd, parseFunction, parseLoop)
-import Dreamberd.Parsing.Values (parseFunctionCall)
+import Dreamberd.Parsing.Values (parseFunctionCall, parseOperatorValue)
 import Dreamberd.Types (AstNode (AssignVariable, Boolean, Call, Function, Identifier, If, Loop, Number, Operator, Return, String))
 import Test.HUnit (Test (..), assertEqual)
 
 testDreamberdParsing :: Test
-testDreamberdParsing = TestList [testParseFunction, testParseFunctionCall, testParseCondition, testparseExpression, testParseConditionExpression, testParseLoop, testParseDreamberd]
+testDreamberdParsing = TestList [testParseFunction, testParseFunctionCall, testParseCondition, testParseOperatorValue, testParseConditionExpression, testParseLoop, testParseDreamberd]
 
 testParseFunction :: Test
 testParseFunction =
@@ -27,18 +26,21 @@ testParseFunction =
         , TestCase (assertEqual "parseFunction wrong - invalid function scope" (Left "Unrecognized element") (parseFunction "foo(){unknown content; }" []))
         ]
 
-testparseExpression :: Test
-testparseExpression =
+testParseOperatorValue :: Test
+testParseOperatorValue =
     TestList
-        [ TestCase (assertEqual "parseExpression =" (Right (Operator "=" (Number 1) (Number 1))) (parseExpression " 1 = 1"))
-        , TestCase (assertEqual "parseExpression wrong" (Left "Invalid expression") (parseExpression "1 1"))
-        , TestCase (assertEqual "parseExpression +=" (Right (Operator "+=" (Identifier "i") (Number 1))) (parseExpression "i += 1"))
-        , TestCase (assertEqual "parseExpression -= without spaces" (Right (Operator "-=" (Identifier "i") (Number 1))) (parseExpression "i -= 1"))
-        , TestCase (assertEqual "parseExpression *=" (Right (Operator "*=" (Identifier "i") (Number 1))) (parseExpression "i *= 1"))
-        , TestCase (assertEqual "parseExpression /=" (Right (Operator "/=" (Identifier "i") (Number 1))) (parseExpression "i /= 1"))
-        , TestCase (assertEqual "parseExpression %=" (Right (Operator "%=" (Identifier "i") (Number 1))) (parseExpression "i %= 1"))
-        , TestCase (assertEqual "parseExpression +=" (Right (Operator "+=" (Identifier "i") (Number 1))) (parseExpression "i += 1"))
-        , TestCase (assertEqual "parseExpression =+" (Left "Invalid operator") (parseExpression "i =+ 1"))
+        [ TestCase (assertEqual "parseOperatorValue +" (Right (Operator "+" (Number 1) (Number 1))) (parseOperatorValue " 1 + 1"))
+        , TestCase (assertEqual "parseOperatorValue -" (Right (Operator "-" (Identifier "i") (Number 1))) (parseOperatorValue "i - 1"))
+        , TestCase (assertEqual "parseOperatorValue *" (Right (Operator "*" (Identifier "i") (Number 1))) (parseOperatorValue "i * 1"))
+        , TestCase (assertEqual "parseOperatorValue /" (Right (Operator "/" (Identifier "i") (Number 1))) (parseOperatorValue "i / 1"))
+        , TestCase (assertEqual "parseOperatorValue %" (Right (Operator "%" (Identifier "i") (Number 1))) (parseOperatorValue "i % 1"))
+        , TestCase (assertEqual "parseOperatorValue <" (Right (Operator "<" (Identifier "i") (Number 1))) (parseOperatorValue "i < 1"))
+        , TestCase (assertEqual "parseOperatorValue >" (Right (Operator ">" (Identifier "i") (Number 1))) (parseOperatorValue "i > 1"))
+        , TestCase (assertEqual "parseOperatorValue <=" (Right (Operator "<=" (Identifier "i") (Number 1))) (parseOperatorValue "i <= 1"))
+        , TestCase (assertEqual "parseOperatorValue >=" (Right (Operator ">=" (Identifier "i") (Number 1))) (parseOperatorValue "i >= 1"))
+        , TestCase (assertEqual "parseOperatorValue ==" (Right (Operator "==" (Identifier "i") (Number 1))) (parseOperatorValue "i == 1"))
+        , TestCase (assertEqual "parseOperatorValue !=" (Right (Operator "!=" (Identifier "i") (Number 1))) (parseOperatorValue "i != 1"))
+        , TestCase (assertEqual "parseOperatorValue wrong no operator" (Left "Invalid expression") (parseOperatorValue "1 1"))
         ]
 
 testParseConditionExpression :: Test

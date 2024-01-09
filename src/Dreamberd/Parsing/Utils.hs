@@ -19,7 +19,7 @@ extractValueAndRest = go False []
     go _ acc [] = (reverse acc, [])
     go inQuotes acc (x : xs)
         | x == '"' = go (not inQuotes) (x : acc) xs
-        | x == ';' && not inQuotes = (dropWhile isSpace (reverse acc), xs)
+        | x == ';' && not inQuotes = (trimSpaces (reverse acc), xs)
         | otherwise = go inQuotes (x : acc) xs
 
 extractScopeAndRest :: String -> Int -> String -> (String, String)
@@ -28,7 +28,7 @@ extractScopeAndRest (x : xs) openBraces body
     | x == '{' = extractScopeAndRest xs (openBraces + 1) (body ++ [x])
     | x == '}' =
         if openBraces == 1
-            then (body, dropWhile isSpace xs)
+            then (body, trimSpaces xs)
             else extractScopeAndRest xs (openBraces - 1) (body ++ [x])
     | otherwise = extractScopeAndRest xs openBraces (body ++ [x])
 
@@ -40,10 +40,10 @@ checkStartsWithOpenBracket (x : xs)
 
 parseScope :: String -> Either String (String, String)
 parseScope code =
-    checkStartsWithOpenBracket (dropWhile isSpace code)
+    checkStartsWithOpenBracket (trimSpaces code)
         >>= \validCode ->
             let (scope, rest) = extractScopeAndRest validCode 0 []
              in Right (drop 1 scope, rest)
 
 trimSpaces :: String -> String
-trimSpaces = dropWhileEnd isSpace . dropWhile isSpace
+trimSpaces = dropWhileEnd isSpace . trimSpaces
