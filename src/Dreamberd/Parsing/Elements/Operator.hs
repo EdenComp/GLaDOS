@@ -1,7 +1,7 @@
 module Dreamberd.Parsing.Elements.Operator (parseExpression) where
 
-import Dreamberd.Types (AstNode (Operator))
 import Dreamberd.Parsing.Values (parseAnyValue)
+import Dreamberd.Types (AstNode (Operator))
 
 parseExpression :: String -> Either String AstNode
 parseExpression str =
@@ -21,6 +21,6 @@ parseExpression str =
 parseOperator :: String -> Either String String
 parseOperator str =
     let operators = ["=", "+", "-", "*", "/", "%", "+=", "-=", "*=", "/=", "%="]
-    in if str `elem` operators
-        then Right str
-        else Left "Invalid operator"
+     in if str `elem` operators
+            then Right str
+            else Left "Invalid operator"

@@ -61,16 +61,21 @@ parseCondition str ast =
 
 buildConditionNodes :: String -> String -> [(String, String)] -> Maybe String -> Either String [AstNode]
 buildConditionNodes cond ifBody [] Nothing =
-    parseConditionExpression cond >>=
-    \ifCondAst -> parseDreamberd ifBody [] >>=
-    \ifBodyAst -> return [If ifCondAst ifBodyAst []]
+    parseConditionExpression cond
+        >>= \ifCondAst ->
+            parseDreamberd ifBody []
+                >>= \ifBodyAst -> return [If ifCondAst ifBodyAst []]
 buildConditionNodes cond ifBody ((elifCondition, elifBody) : elifs) elsePart =
-    parseConditionExpression cond >>=
-    \ifCondAst -> parseDreamberd ifBody [] >>=
-    \ifBodyAst -> buildConditionNodes elifCondition elifBody elifs elsePart >>=
-    \elifNodes -> return [If ifCondAst ifBodyAst (elifNodes)]
+    parseConditionExpression cond
+        >>= \ifCondAst ->
+            parseDreamberd ifBody []
+                >>= \ifBodyAst ->
+                    buildConditionNodes elifCondition elifBody elifs elsePart
+                        >>= \elifNodes -> return [If ifCondAst ifBodyAst elifNodes]
 buildConditionNodes cond ifBody [] (Just elseBody) =
-    parseConditionExpression cond >>=
-    \ifCondAst -> parseDreamberd ifBody [] >>=
-    \ifBodyAst -> parseDreamberd elseBody [] >>=
-    \elseBodyAst -> return [If ifCondAst ifBodyAst elseBodyAst]
+    parseConditionExpression cond
+        >>= \ifCondAst ->
+            parseDreamberd ifBody []
+                >>= \ifBodyAst ->
+                    parseDreamberd elseBody []
+                        >>= \elseBodyAst -> return [If ifCondAst ifBodyAst elseBodyAst]

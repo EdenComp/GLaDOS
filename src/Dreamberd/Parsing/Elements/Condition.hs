@@ -13,7 +13,6 @@ import Data.Char (isSpace)
 import Data.List (isPrefixOf)
 
 -- | Parses a condition expression, e.g. if (x == 5) { ... } elif (x > 5) { ... } else { ... } etc...
-
 parseConditionExpression :: String -> Either String AstNode
 parseConditionExpression input =
     let trimmedInput = dropWhile isSpace input
