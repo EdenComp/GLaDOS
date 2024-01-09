@@ -4,18 +4,18 @@ module Dreamberd.Parsing.Values (
     parseNumber,
     parseBool,
     parseString,
+    parseOperatorValue,
 ) where
 
 import Data.Char (isDigit, isSpace)
 import Data.Either (lefts, rights)
-import Data.List (isPrefixOf)
 import Dreamberd.Parsing.Utils (getVariableName)
-import Dreamberd.Types (AstNode (Boolean, Call, Identifier, Number, String))
+import Dreamberd.Types (AstNode (Boolean, Call, Identifier, Number, Operator, String))
 
 parseBool :: String -> Either String AstNode
 parseBool input
-    | "true" `isPrefixOf` input = Right (Boolean True)
-    | "false" `isPrefixOf` input = Right (Boolean False)
+    | input == "true" = Right (Boolean True)
+    | input == "false" = Right (Boolean False)
     | otherwise = Left "No boolean found"
 
 parseNumber :: String -> Either String AstNode
@@ -48,14 +48,32 @@ parseFunctionCall code =
 
 parseAnyValue :: String -> Either String AstNode
 parseAnyValue "" = Left "No value found"
-parseAnyValue input = case parseString input of
+parseAnyValue input = case parseOperatorValue input of
     Right result -> Right result
-    Left _ -> case parseNumber input of
+    Left _ -> case parseString input of
         Right result -> Right result
-        Left _ -> case parseBool input of
+        Left _ -> case parseNumber input of
             Right result -> Right result
-            Left _ -> case parseFunctionCall input of
-                Right (_, result) -> Right result
-                Left _ -> case getVariableName input of
-                    Right name -> Right (Identifier name)
-                    Left err -> Left ("Unable to parse value: " ++ err)
+            Left _ -> case parseBool input of
+                Right result -> Right result
+                Left _ -> case parseFunctionCall input of
+                    Right (_, result) -> Right result
+                    Left _ -> case getVariableName input of
+                        Right name -> Right (Identifier name)
+                        Left err -> Left ("Unable to parse value: " ++ err)
+
+parseOperatorValue :: String -> Either String AstNode
+parseOperatorValue str =
+    case words str of
+        [lhs, op, rhs] ->
+            parseAnyValue lhs >>= \lhsNode ->
+                checkOperatorValue op >>= \opNode ->
+                    parseAnyValue rhs >>= \rhsNode ->
+                        Right (Operator opNode lhsNode rhsNode)
+        _ -> Left "Invalid expression"
+
+checkOperatorValue :: String -> Either String String
+checkOperatorValue str =
+    if str `elem` ["+", "-", "*", "/", "%", "<", ">", "<=", ">=", "==", "!="]
+        then Right str
+        else Left "Invalid operator"
