@@ -39,6 +39,8 @@ testParseCondition :: Test
 testParseCondition =
     TestList
         [ TestCase (assertEqual "parseCondition basic" (Right ("", [If (Boolean True) [Return (Number 1)] []])) (parseCondition " (true) {return 1;}" []))
+        , TestCase (assertEqual "parseCondition wrong without scope" (Left "Scope must start with open bracket but empty code found") (parseCondition " (true)" []))
+        , TestCase (assertEqual "parseCondition wrong without scope but other char" (Left "Code must start with an open bracket but starts with 'a'") (parseCondition " (true) anything" []))
         , TestCase (assertEqual "parseCondition wrong if without condition" (Left "Missing condition in if statement") (parseCondition "( ) {return 1;}" []))
         , TestCase (assertEqual "parseCondition wrong if with broken close condition parenthesis" (Left "If condition must start with '(' and end with ')'") (parseCondition " ) {return 1;}" []))
         , TestCase (assertEqual "parseCondition wrong if with broken open condition parenthesis" (Left "If condition must start with '(' and end with ')'") (parseCondition " ( {return 1;}" []))
@@ -60,4 +62,5 @@ testParseDreamberd =
         , TestCase (assertEqual "parseDreamberd empty code" (Right []) (parseDreamberd "     " []))
         , TestCase (assertEqual "parseDreamberd invalid variable name" (Left "No variable name found") (parseDreamberd "int * = 4;" []))
         , TestCase (assertEqual "parseDreamberd basic loop" (Right [Loop (Boolean True) [AssignVariable "int" "b" (Number 42)] Nothing Nothing]) (parseDreamberd "while (true) {int b = 42;}" []))
+        , TestCase (assertEqual "parseDreamberd wrong var type" (Left "Unrecognized element") (parseDreamberd "fluid variable = 89;" []))
         ]

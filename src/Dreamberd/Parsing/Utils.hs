@@ -1,6 +1,7 @@
-module Dreamberd.Parsing.Utils (getVariableName, extractValueAndRest, parseScope) where
+module Dreamberd.Parsing.Utils (getVariableName, extractValueAndRest, parseScope, trimSpaces) where
 
 import Data.Char (isSpace)
+import Data.List (dropWhileEnd)
 import Text.Regex.Posix ((=~))
 
 bannedVariables :: [String]
@@ -43,3 +44,6 @@ parseScope code =
         >>= \validCode ->
             let (scope, rest) = extractScopeAndRest validCode 0 []
              in Right (drop 1 scope, rest)
+
+trimSpaces :: String -> String
+trimSpaces = dropWhileEnd isSpace . dropWhile isSpace
