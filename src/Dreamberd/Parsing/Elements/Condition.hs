@@ -27,9 +27,9 @@ parseConditionExpression input =
             [lhs, op, rhs] | op `elem` operators ->
                 case (parseAnyValue lhs, parseAnyValue rhs) of
                     (Right lhsValue, Right rhsValue) -> Right (Operator op lhsValue rhsValue)
-                    _ -> Left "Invalid expression"
+                    _ -> Left "Invalid condition expression"
             [single] -> parseAnyValue single
-            _ -> Left "Invalid expression"
+            _ -> Left "Invalid condition expression"
 
 parseConditionParts :: String -> Either String (String, String, [(String, String)], Maybe String, String)
 parseConditionParts str =

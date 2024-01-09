@@ -1,6 +1,6 @@
 {-# LANGUAGE ViewPatterns #-}
 
-module Dreamberd.Parsing.Main (parseDreamberd, parseFunction, parseCondition) where
+module Dreamberd.Parsing.Main (parseDreamberd, parseFunction, parseCondition, parseLoop) where
 
 import Data.Char (isSpace)
 import Data.List (stripPrefix)
@@ -49,8 +49,9 @@ parseFunction code ast =
 
 parseLoop :: String -> String -> [AstNode] -> Either String (String, [AstNode])
 parseLoop "while" code ast =
-    extractLoopParts code >>= \(_loopTest, body, restOfCode) ->
-        parseDreamberd body [] >>= \outputAst -> Right (restOfCode, ast ++ [Loop (Boolean True) outputAst Nothing Nothing])
+    extractLoopParts code >>= \(loopTest, body, restOfCode) ->
+        parseConditionExpression loopTest >>= \loopTestAst ->
+            parseDreamberd body [] >>= \outputAst -> Right (restOfCode, ast ++ [Loop loopTestAst outputAst Nothing Nothing])
 parseLoop "for" code ast =
     extractLoopParts code >>= \(_loopTest, body, restOfCode) ->
         parseDreamberd body [] >>= \outputAst -> Right (restOfCode, ast ++ [Loop (Boolean True) outputAst Nothing Nothing])
