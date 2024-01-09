@@ -2,13 +2,13 @@ module Unit.Dreamberd.TestDreamberdParsing (testDreamberdParsing) where
 
 import Dreamberd.Parsing.Elements.Condition (parseConditionExpression)
 import Dreamberd.Parsing.Elements.Operator (parseExpression)
-import Dreamberd.Parsing.Main (parseCondition, parseDreamberd, parseFunction)
+import Dreamberd.Parsing.Main (parseCondition, parseDreamberd, parseFunction, parseLoop)
 import Dreamberd.Parsing.Values (parseFunctionCall)
 import Dreamberd.Types (AstNode (AssignVariable, Boolean, Call, Function, Identifier, If, Loop, Number, Operator, Return, String))
 import Test.HUnit (Test (..), assertEqual)
 
 testDreamberdParsing :: Test
-testDreamberdParsing = TestList [testParseFunction, testParseFunctionCall, testParseCondition, testparseExpression, testParseConditionExpression, testParseDreamberd]
+testDreamberdParsing = TestList [testParseFunction, testParseFunctionCall, testParseCondition, testparseExpression, testParseConditionExpression, testParseLoop, testParseDreamberd]
 
 testParseFunction :: Test
 testParseFunction =
@@ -50,10 +50,10 @@ testParseConditionExpression =
         , TestCase (assertEqual "parseConditionExpression with spaces" (Right (Operator "<=" (Number 1) (Number 2))) (parseConditionExpression "1 <= 2"))
         , TestCase (assertEqual "parseConditionExpression with spaces" (Right (Operator "==" (Number 1) (Number 2))) (parseConditionExpression "1 == 2"))
         , TestCase (assertEqual "parseConditionExpression with spaces" (Right (Operator "!=" (Number 1) (Number 2))) (parseConditionExpression "1 != 2"))
-        , TestCase (assertEqual "parseConditionExpression with spaces" (Left "Invalid expression") (parseConditionExpression " 1 2 "))
+        , TestCase (assertEqual "parseConditionExpression with spaces" (Left "Invalid condition expression") (parseConditionExpression " 1 2 "))
         , TestCase (assertEqual "parseConditionExpression with spaces" (Right (Number 1)) (parseConditionExpression "1 "))
-        , TestCase (assertEqual "parseConditionExpression with spaces" (Left "Invalid expression") (parseConditionExpression " "))
-        , TestCase (assertEqual "parseConditionExpression with spaces" (Left "Invalid expression") (parseConditionExpression "1 a 1"))
+        , TestCase (assertEqual "parseConditionExpression with spaces" (Left "Invalid condition expression") (parseConditionExpression " "))
+        , TestCase (assertEqual "parseConditionExpression with spaces" (Left "Invalid condition expression") (parseConditionExpression "1 a 1"))
         ]
 
 testParseFunctionCall :: Test
@@ -81,6 +81,17 @@ testParseCondition =
         , TestCase (assertEqual "parseCondition with elif and else" (Right ("", [If (Boolean True) [AssignVariable "str" "a" (String "test"), Operator "=" (Identifier "a") (String "other")] [If (Boolean True) [Return (Number 2)] [Return (Number 3)]]])) (parseCondition "(true) {str a = \"test\"; a = \"other\";} elif (true) {return 2;} else {return 3;}" []))
         , TestCase (assertEqual "parseCondition with elif, else and spaces" (Right ("", [If (Boolean True) [Return (Number 1)] [If (Boolean True) [AssignVariable "bool" "c" (Boolean False)] [Return (Number 3)]]])) (parseCondition " (true) {return 1;} elif (true) {bool c =  false;} else {return 3;}" []))
         , TestCase (assertEqual "parseCondition with elif, else, spaces and newlines" (Right ("", [If (Boolean True) [Return (Number 1)] [If (Boolean True) [Return (Number 2)] [Return (Number 3)]]])) (parseCondition "(true) {\nreturn 1;\n} elif (true) {\nreturn 2;\n} else {\nreturn 3;\n}" []))
+        ]
+
+testParseLoop :: Test
+testParseLoop =
+    TestList
+        [ TestCase (assertEqual "parseLoop while basic" (Right ("", [Loop (Boolean True) [Return (Number 1)] Nothing Nothing])) (parseLoop "while" " (true) {return 1;}" []))
+        , TestCase (assertEqual "parseLoop while wrong with broken close condition parenthesis" (Left "Loop condition must start with '(' and end with ')'") (parseLoop "while" ") {return 1;}" []))
+        , TestCase (assertEqual "parseLoop while wrong with broken open condition parenthesis" (Left "Loop condition must start with '(' and end with ')'") (parseLoop "while" "( {return 1;}" []))
+        , TestCase (assertEqual "parseLoop while with spaces" (Right ("", [Loop (Boolean True) [Return (Number 1)] Nothing Nothing])) (parseLoop "while" "( true ) { return 1; }" []))
+        , TestCase (assertEqual "parseLoop while with spaces and newlines" (Right ("", [Loop (Number 1) [Return (Number 1)] Nothing Nothing])) (parseLoop "while" "( 1 ) {\nreturn 1;\n}" []))
+        , TestCase (assertEqual "parseLoop while with superior condition" (Right ("", [Loop (Operator ">" (Identifier "a") (Identifier "b")) [Return (Number 1)] Nothing Nothing])) (parseLoop "while" "( a > b ) {\nreturn 1;\n}" []))
         ]
 
 testParseDreamberd :: Test

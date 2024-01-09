@@ -11,11 +11,9 @@ parseInt (b1 : b2 : b3 : b4 : rest) = Right (val, rest)
 parseInt _ = Left "Not enough space for an int"
 
 parseString :: [Char] -> Either String (String, [Char])
-parseString bytes = case parseInt bytes of
-    Left err -> Left err
-    Right (val, rest) -> if length rest < val then Left "Wrong string length" else Right (str, rest')
-      where
-        (str, rest') = splitAt val rest
+parseString bytes =
+    parseInt bytes >>= \(val, rest) ->
+        if length rest < val then Left "Wrong string length" else Right (splitAt val rest)
 
 parseCall :: [Char] -> Either String (Call, [Char])
 parseCall [] = Left "No call provided"
