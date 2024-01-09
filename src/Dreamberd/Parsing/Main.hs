@@ -4,7 +4,10 @@ module Dreamberd.Parsing.Main (parseDreamberd, parseFunction, parseCondition) wh
 
 import Data.Char (isSpace)
 import Data.List (stripPrefix)
-import Dreamberd.Parsing.Elements.Condition (parseConditionParts)
+import Dreamberd.Parsing.Elements.Condition (
+    parseConditionExpression,
+    parseConditionParts,
+ )
 import Dreamberd.Parsing.Elements.Function (extractFunctionParts, parseReturn)
 import Dreamberd.Parsing.Elements.Loop (extractLoopParts)
 import Dreamberd.Parsing.Elements.Variable (parseVar)
@@ -57,14 +60,22 @@ parseCondition str ast =
             buildConditionNodes condition ifBody elifs elsePart >>= \ifNodes -> Right (restOfCode, ast ++ ifNodes)
 
 buildConditionNodes :: String -> String -> [(String, String)] -> Maybe String -> Either String [AstNode]
-buildConditionNodes _ ifBody [] Nothing = do
-    ifBodyAst <- parseDreamberd ifBody []
-    return [If (Boolean True) ifBodyAst []]
-buildConditionNodes _ ifBody ((elifCondition, elifBody) : elifs) elsePart = do
-    ifBodyAst <- parseDreamberd ifBody []
-    elifNodes <- buildConditionNodes elifCondition elifBody elifs elsePart
-    return [If (Boolean True) ifBodyAst elifNodes]
-buildConditionNodes _ ifBody [] (Just elseBody) = do
-    ifBodyAst <- parseDreamberd ifBody []
-    elseBodyAst <- parseDreamberd elseBody []
-    return [If (Boolean True) ifBodyAst elseBodyAst]
+buildConditionNodes cond ifBody [] Nothing =
+    parseConditionExpression cond
+        >>= \ifCondAst ->
+            parseDreamberd ifBody []
+                >>= \ifBodyAst -> return [If ifCondAst ifBodyAst []]
+buildConditionNodes cond ifBody ((elifCondition, elifBody) : elifs) elsePart =
+    parseConditionExpression cond
+        >>= \ifCondAst ->
+            parseDreamberd ifBody []
+                >>= \ifBodyAst ->
+                    buildConditionNodes elifCondition elifBody elifs elsePart
+                        >>= \elifNodes -> return [If ifCondAst ifBodyAst elifNodes]
+buildConditionNodes cond ifBody [] (Just elseBody) =
+    parseConditionExpression cond
+        >>= \ifCondAst ->
+            parseDreamberd ifBody []
+                >>= \ifBodyAst ->
+                    parseDreamberd elseBody []
+                        >>= \elseBodyAst -> return [If ifCondAst ifBodyAst elseBodyAst]

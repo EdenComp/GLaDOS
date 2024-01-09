@@ -47,6 +47,7 @@ parseFunctionCall code =
                         else Right (afterParams, Call strippedName (rights paramList))
 
 parseAnyValue :: String -> Either String AstNode
+parseAnyValue "" = Left "No value found"
 parseAnyValue input = case parseString input of
     Right result -> Right result
     Left _ -> case parseNumber input of
