@@ -3,6 +3,7 @@ import System.Exit (exitFailure)
 import Test.HUnit (Test (..), errors, failures, runTestTT)
 import Unit.Dreamberd.TestDreamberdBytecode (testDreamberdBytecode)
 import Unit.Dreamberd.TestDreamberdParsing (testDreamberdParsing)
+import Unit.Dreamberd.TestDreamberdTypes (testDreamberdTypes)
 import Unit.Dreamberd.TestDreamberdVm (testDreamberdVm)
 import Unit.Lisp.TestLispEval (testLispEvaluation)
 import Unit.Lisp.TestLispParsing (testLispParsing)
@@ -22,4 +23,5 @@ listTests =
         , testDreamberdParsing
         , testDreamberdVm
         , testDreamberdBytecode
+        , testDreamberdTypes
         ]
