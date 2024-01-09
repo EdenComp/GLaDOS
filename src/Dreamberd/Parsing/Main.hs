@@ -68,7 +68,7 @@ buildConditionNodes cond ifBody ((elifCondition, elifBody) : elifs) elsePart =
     parseConditionExpression cond >>=
     \ifCondAst -> parseDreamberd ifBody [] >>=
     \ifBodyAst -> buildConditionNodes elifCondition elifBody elifs elsePart >>=
-    \elifNodes -> return [If ifCondAst ifBodyAst (elifNodes)]
+    \elifNodes -> return [If ifCondAst ifBodyAst elifNodes]
 buildConditionNodes cond ifBody [] (Just elseBody) =
     parseConditionExpression cond >>=
     \ifCondAst -> parseDreamberd ifBody [] >>=
