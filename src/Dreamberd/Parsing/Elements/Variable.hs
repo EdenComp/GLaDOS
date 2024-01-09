@@ -2,8 +2,7 @@
 
 module Dreamberd.Parsing.Elements.Variable (parseVar) where
 
-import Data.Char (isSpace)
-import Dreamberd.Parsing.Utils (extractValueAndRest, getVariableName)
+import Dreamberd.Parsing.Utils (extractValueAndRest, getVariableName, trimSpaces)
 import Dreamberd.Parsing.Values (parseAnyValue, parseBool, parseFunctionCall, parseNumber, parseString)
 import Dreamberd.Types (AstNode (AssignVariable, Identifier, Operator))
 
@@ -33,12 +32,15 @@ parseVar varType code ast =
         else
             let
                 (variableName, drop 1 -> afterEqual) = break (== '=') code
-                strippedName = filter (not . isSpace) variableName
+                strippedName = trimSpaces variableName
              in
-                getVariableName strippedName >>= \name ->
-                    let
-                        (value, restOfCode) = extractValueAndRest afterEqual
-                     in
-                        parseVarValue varType value >>= \node -> case varType of
-                            Just vt -> Right (restOfCode, ast ++ [AssignVariable vt name node])
-                            Nothing -> Right (restOfCode, ast ++ [Operator "=" (Identifier name) node])
+                if length (words strippedName) > 1
+                    then Left ("Invalid variable type '" ++ head (words strippedName) ++ "'")
+                    else
+                        getVariableName strippedName >>= \name ->
+                            let
+                                (value, restOfCode) = extractValueAndRest afterEqual
+                             in
+                                parseVarValue varType value >>= \node -> case varType of
+                                    Just vt -> Right (restOfCode, ast ++ [AssignVariable vt name node])
+                                    Nothing -> Right (restOfCode, ast ++ [Operator "=" (Identifier name) node])
