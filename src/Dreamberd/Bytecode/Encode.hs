@@ -1,4 +1,9 @@
 module Dreamberd.Bytecode.Encode (
+    transpileCall,
+    transpileInt,
+    transpileString,
+    transpileValue,
+    transpileInstruction,
     transpileIntoBytecode,
 ) where
 
