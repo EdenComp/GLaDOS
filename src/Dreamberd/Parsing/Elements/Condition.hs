@@ -12,10 +12,12 @@ import Dreamberd.Types (AstNode (Operator))
 import Data.Char (isSpace)
 import Data.List (isPrefixOf)
 
+-- | Parses a condition expression, e.g. if (x == 5) { ... } elif (x > 5) { ... } else { ... } etc...
+
 parseConditionExpression :: String -> Either String AstNode
 parseConditionExpression input =
     let trimmedInput = dropWhile isSpace input
-        operators = ["<=", ">=", "==", "!=", "<", ">", "="]
+        operators = ["<=", ">=", "==", "!=", "<", ">"]
         extractComponents [] acc = reverse acc
         extractComponents s acc =
             let (word, rest) = break isSpace s

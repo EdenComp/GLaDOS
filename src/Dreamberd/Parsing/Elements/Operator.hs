@@ -1,14 +1,26 @@
-module Dreamberd.Parsing.Elements.Operator (parseOperator) where
+module Dreamberd.Parsing.Elements.Operator (parseExpression) where
 
-import Data.Char (isSpace)
-import Data.List (isPrefixOf)
+import Dreamberd.Types (AstNode (Operator))
+import Dreamberd.Parsing.Values (parseAnyValue)
 
-parseOperator :: String -> Either String (String, String)
+parseExpression :: String -> Either String AstNode
+parseExpression str =
+    case words str of
+        [lhs, op, rhs] ->
+            case parseAnyValue lhs of
+                Left err -> Left err
+                Right lhsNode ->
+                    case parseOperator op of
+                        Left err -> Left err
+                        Right opNode ->
+                            case parseAnyValue rhs of
+                                Left err -> Left err
+                                Right rhsNode -> Right (Operator opNode lhsNode rhsNode)
+        _ -> Left "Invalid expression"
+
+parseOperator :: String -> Either String String
 parseOperator str =
-    let operators = ["<=", ">=", "==", "!=", "<", ">", "="]
-        findOperator [] = Nothing
-        findOperator (op : ops) = if op `isPrefixOf` noSpaceStr then Just op else findOperator ops
-        noSpaceStr = filter (not . isSpace) str
-     in case findOperator operators of
-            Just op -> Right (op, dropWhile isSpace . drop (length op) $ str)
-            Nothing -> Left "No operator found"
+    let operators = ["=", "+", "-", "*", "/", "%", "+=", "-=", "*=", "/=", "%="]
+    in if str `elem` operators
+        then Right str
+        else Left "Invalid operator"
