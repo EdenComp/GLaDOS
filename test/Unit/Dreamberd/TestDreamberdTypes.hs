@@ -6,18 +6,18 @@ import Test.HUnit (Test (..), assertEqual)
 testDreamberdTypes :: Test
 testDreamberdTypes =
     TestList
-        [ testNumber,
-        testBoolean,
-        testString,
-        testIdentifier,
-        testFunction,
-        testCall,
-        testOperator,
-        testAssignVariable,
-        testIf,
-        testReturn,
-        testLoop,
-        testList
+        [ testNumber
+        , testBoolean
+        , testString
+        , testIdentifier
+        , testFunction
+        , testCall
+        , testOperator
+        , testAssignVariable
+        , testIf
+        , testReturn
+        , testLoop
+        , testList
         ]
 
 testNumber :: Test
@@ -29,8 +29,8 @@ testNumber =
 testBoolean :: Test
 testBoolean =
     TestList
-        [ TestCase (assertEqual "Boolean True" (show (Boolean True)) "true"),
-        TestCase (assertEqual "Boolean False" (show (Boolean False)) "false")
+        [ TestCase (assertEqual "Boolean True" (show (Boolean True)) "true")
+        , TestCase (assertEqual "Boolean False" (show (Boolean False)) "false")
         ]
 
 testString :: Test
