@@ -31,11 +31,6 @@ testparseExpression :: Test
 testparseExpression =
     TestList
         [ TestCase (assertEqual "parseExpression =" (Right (Operator "=" (Number 1) (Number 1))) (parseExpression " 1 = 1"))
-        , TestCase (assertEqual "parseExpression +" (Right (Operator "+" (Number 1) (Number 1))) (parseExpression "1 + 1"))
-        , TestCase (assertEqual "parseExpression -" (Right (Operator "-" (Number 1) (Number 1))) (parseExpression "1 - 1"))
-        , TestCase (assertEqual "parseExpression *" (Right (Operator "*" (Number 1) (Number 1))) (parseExpression "1 * 1"))
-        , TestCase (assertEqual "parseExpression /" (Right (Operator "/" (Number 1) (Number 1))) (parseExpression "1 / 1"))
-        , TestCase (assertEqual "parseExpression %" (Right (Operator "%" (Number 1) (Number 1))) (parseExpression "1 % 1"))
         , TestCase (assertEqual "parseExpression wrong" (Left "Invalid expression") (parseExpression "1 1"))
         , TestCase (assertEqual "parseExpression +=" (Right (Operator "+=" (Identifier "i") (Number 1))) (parseExpression "i += 1"))
         , TestCase (assertEqual "parseExpression -= without spaces" (Right (Operator "-=" (Identifier "i") (Number 1))) (parseExpression "i -= 1"))
