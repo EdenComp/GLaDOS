@@ -20,7 +20,7 @@ parseExpression str =
 
 parseOperator :: String -> Either String String
 parseOperator str =
-    let operators = ["=", "%", "+=", "-=", "*=", "/=", "%="]
+    let operators = ["=", "+=", "-=", "*=", "/=", "%="]
      in if str `elem` operators
             then Right str
             else Left "Invalid operator"
