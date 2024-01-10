@@ -64,7 +64,12 @@ compileIf params (AST.Call op args) trueBody falseBody =
                 >>= \trueInsts ->
                     compileNodes params falseBody []
                         >>= \falseInsts ->
-                            Right $ call ++ [VM.JumpIfFalse $ length trueInsts] ++ trueInsts ++ falseInsts
+                            Right $
+                                call
+                                    ++ [VM.JumpIfFalse $ length trueInsts + 2]
+                                    ++ trueInsts
+                                    ++ [VM.Push $ VM.Bool False, VM.JumpIfFalse $ length falseInsts]
+                                    ++ falseInsts
 compileIf params test trueBody falseBody =
     ( compileNode params test
         >>= \testPush ->
