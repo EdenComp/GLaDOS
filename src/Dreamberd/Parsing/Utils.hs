@@ -8,7 +8,7 @@ bannedVariables :: [String]
 bannedVariables = ["if", "elif", "else", "true", "false", "return", "function", "int", "str", "bool"]
 
 getVariableName :: String -> Either String String
-getVariableName str = case str =~ "^[a-zA-Z_-]+" :: (String, String, String) of
+getVariableName str = case str =~ "^[a-zA-Z_-]+$" :: (String, String, String) of
     (_, match, _) | null match -> Left "No variable name found"
     (_, match, _) | match `elem` bannedVariables -> Left $ "Variable name '" ++ match ++ "' is banned"
     (_, match, _) -> Right match
@@ -46,4 +46,4 @@ parseScope code =
              in Right (drop 1 scope, rest)
 
 trimSpaces :: String -> String
-trimSpaces = dropWhileEnd isSpace . trimSpaces
+trimSpaces = dropWhileEnd isSpace . dropWhile isSpace

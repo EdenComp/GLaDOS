@@ -1,7 +1,6 @@
 module Dreamberd.Parsing.Elements.Function (parseReturn, extractFunctionParts) where
 
-import Data.Char (isSpace)
-import Dreamberd.Parsing.Utils (extractValueAndRest, getVariableName, parseScope)
+import Dreamberd.Parsing.Utils (extractValueAndRest, getVariableName, parseScope, trimSpaces)
 import Dreamberd.Parsing.Values (parseAnyValue)
 import Dreamberd.Types (AstNode (Return))
 
@@ -11,9 +10,9 @@ extractFunctionParts str =
         then Left "No parenthesis found for function params"
         else
             let (nameAndParams, restAfterParams) = break (== ')') str
-                (_, parameters) = break (== '(') (dropWhile isSpace nameAndParams)
+                (strippedName, parameters) = break (== '(') (trimSpaces nameAndParams)
                 params = words $ map (\c -> if c == ',' then ' ' else c) $ tail parameters
-             in getVariableName (dropWhile isSpace nameAndParams) >>= \name ->
+             in getVariableName (trimSpaces strippedName) >>= \name ->
                     parseScope (drop 1 restAfterParams) >>= \(body, restOfCode) -> Right (name, params, body, restOfCode)
 
 parseReturn :: String -> [AstNode] -> Either String (String, [AstNode])
