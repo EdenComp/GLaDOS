@@ -120,7 +120,6 @@ execJump env args (x : xs) insts idx num (Just b)
     | otherwise = exec env args xs insts (idx + 1)
 execJump _ _ _ _ _ _ _ = return (Left "Stack is empty for a conditional jump")
 
-
 execBuiltin :: [Value] -> Operator -> Either String [Value]
 execBuiltin (Number _ : Number 0 : _) Div = Left "Cannot divide by 0"
 execBuiltin (Number _ : Number 0 : _) Mod = Left "Cannot divide by 0"
