@@ -9,7 +9,7 @@ module Dreamberd.Parsing.Values (
 
 import Data.Char (isDigit, isSpace)
 import Data.Either (lefts, rights)
-import Dreamberd.Parsing.Utils (getVariableName)
+import Dreamberd.Parsing.Utils (getVariableName, trimSpaces)
 import Dreamberd.Types (AstNode (Boolean, Call, Identifier, Number, Operator, String))
 
 parseBool :: String -> Either String AstNode
@@ -19,13 +19,13 @@ parseBool input
     | otherwise = Left "No boolean found"
 
 parseNumber :: String -> Either String AstNode
-parseNumber input = case span isDigit input of
-    ("", _) -> Left "No number found"
-    (numStr, _) -> Right (Number (read numStr))
+parseNumber input
+    | all isDigit input = Right (Number (read input))
+    | otherwise = Left "No number found"
 
 parseString :: String -> Either String AstNode
 parseString input
-    | head input /= '"' = Left "String does not start with a quote"
+    | head input /= '"' || last input /= '"' = Left "String does not start or end with a quote"
     | otherwise = case span (/= '"') (tail input) of
         (_, "") -> Left "No closing quote found for String"
         (str, _) -> Right (String str)
@@ -37,9 +37,8 @@ parseFunctionCall code =
      in if null rest
             then Left "Invalid function call"
             else
-                let paramsAndRest = init $ tail rest
-                    (params, remaining) = span (/= ')') paramsAndRest
-                    afterParams = dropWhile (\c -> c == ';' || isSpace c) $ tail remaining
+                let (params, remaining) = break (== ')') (drop 1 rest)
+                    afterParams = drop 1 (trimSpaces (drop 1 remaining))
                     paramList = map parseAnyValue (words $ map (\c -> if c == ',' then ' ' else c) params)
                     errors = lefts paramList
                  in if not (null errors)
