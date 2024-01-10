@@ -9,7 +9,7 @@ module Dreamberd.Parsing.Values (
     parseOperatorValue,
 ) where
 
-import Data.Char (isDigit, isSpace)
+import Data.Char (isDigit)
 import Data.Either (lefts, rights)
 import Data.Foldable (find)
 import Data.List (isInfixOf)
@@ -34,20 +34,22 @@ parseString input
         (_, "") -> Left "No closing quote found for String"
         (str, _) -> Right (String str)
 
-parseFunctionCall :: String -> Either String (String, AstNode)
+parseFunctionCall :: String -> Either String AstNode
 parseFunctionCall code =
-    let (name, rest) = break (== '(') code
-        strippedName = filter (not . isSpace) name
-     in if null rest
-            then Left "Invalid function call"
-            else
-                let (params, remaining) = break (== ')') (drop 1 rest)
-                    afterParams = drop 1 (trimSpaces (drop 1 remaining))
-                    paramList = map parseAnyValue (words $ map (\c -> if c == ',' then ' ' else c) params)
-                    errors = lefts paramList
-                 in if not (null errors)
-                        then Left (head errors)
-                        else Right (afterParams, Call strippedName (rights paramList))
+    if not ('(' `elem` code && ')' `elem` code)
+        then Left "Function call must contain parenthesis for params"
+        else
+            let (trimSpaces -> strippedName, drop 1 -> paramsAndRest) = break (== '(') code
+             in getVariableName strippedName >>= \name ->
+                    let (params, trimSpaces . drop 1 -> remaining) = break (== ')') paramsAndRest
+                        paramList = map parseAnyValue (words $ map (\c -> if c == ',' then ' ' else c) params)
+                        errors = lefts paramList
+                     in if not (null remaining)
+                            then Left "Invalid content after function call"
+                            else
+                                if not (null errors)
+                                    then Left (head errors)
+                                    else Right (Call name (rights paramList))
 
 parseAnyValue :: String -> Either String AstNode
 parseAnyValue "" = Left "No value found"
@@ -60,7 +62,7 @@ parseAnyValue input = case parseOperatorValue input of
             Left _ -> case parseBool input of
                 Right result -> Right result
                 Left _ -> case parseFunctionCall input of
-                    Right (_, result) -> Right result
+                    Right result -> Right result
                     Left _ -> case getVariableName input of
                         Right name -> Right (Identifier name)
                         Left err -> Left ("Unable to parse value: " ++ err)

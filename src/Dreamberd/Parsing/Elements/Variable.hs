@@ -4,25 +4,25 @@ module Dreamberd.Parsing.Elements.Variable (parseVar) where
 
 import Dreamberd.Parsing.Utils (extractValueAndRest, getVariableName, trimSpaces)
 import Dreamberd.Parsing.Values (parseAnyValue, parseBool, parseFunctionCall, parseNumber, parseOperatorValue, parseString)
-import Dreamberd.Types (AstNode (Call, Identifier))
+import Dreamberd.Types (AstNode (Call, Identifier, String))
 
 parseVarValue :: Maybe String -> String -> Either String AstNode
 parseVarValue (Just "int") value = case parseFunctionCall value of
-    Right (_, result) -> Right result
+    Right result -> Right result
     Left _ -> case parseOperatorValue value of
         Right result -> Right result
         Left _ -> case getVariableName value of
             Right name -> Right (Identifier name)
             Left _ -> parseNumber value >>= \result -> Right result
 parseVarValue (Just "bool") value = case parseFunctionCall value of
-    Right (_, result) -> Right result
+    Right result -> Right result
     Left _ -> case parseOperatorValue value of
         Right result -> Right result
         Left _ -> case getVariableName value of
             Right name -> Right (Identifier name)
             Left _ -> parseBool value >>= \result -> Right result
 parseVarValue (Just "str") value = case parseFunctionCall value of
-    Right (_, result) -> Right result
+    Right result -> Right result
     Left _ -> case parseOperatorValue value of
         Right result -> Right result
         Left _ -> case getVariableName value of
@@ -48,5 +48,5 @@ parseVar varType code ast =
                                 (value, restOfCode) = extractValueAndRest afterEqual
                              in
                                 parseVarValue varType value >>= \node -> case varType of
-                                    Just vt -> Right (restOfCode, ast ++ [Call vt [Identifier name, node]])
+                                    Just vt -> Right (restOfCode, ast ++ [Call "=" [String vt, Identifier name, node]])
                                     Nothing -> Right (restOfCode, ast ++ [Call "=" [Identifier name, node]])

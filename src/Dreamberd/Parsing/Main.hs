@@ -8,10 +8,9 @@ import Dreamberd.Parsing.Elements.Condition (
     parseConditionExpression,
     parseConditionParts,
  )
-import Dreamberd.Parsing.Elements.Function (extractFunctionParts, parseReturn)
+import Dreamberd.Parsing.Elements.Function (extractFunctionParts, parseFunctionGlobalCall, parseReturn)
 import Dreamberd.Parsing.Elements.Loop (extractLoopParts)
 import Dreamberd.Parsing.Elements.Variable (parseVar)
-import Dreamberd.Parsing.Values (parseFunctionCall)
 import Dreamberd.Types (AstNode (Boolean, Function, If, Loop))
 
 parseDreamberd :: String -> [AstNode] -> Either String [AstNode]
@@ -36,7 +35,7 @@ parseElement (stripPrefix "while" -> Just restCode) ast =
 parseElement (stripPrefix "if" -> Just restCode) ast =
     parseCondition restCode ast >>= \(remainingCode, updatedAst) -> Right (remainingCode, updatedAst)
 parseElement code ast =
-    case parseFunctionCall code of
+    case parseFunctionGlobalCall code of
         Right (remainingCode, call) -> Right (remainingCode, ast ++ [call])
         Left _ -> case parseVar Nothing code ast of
             Right (remainingCode, updatedAst) -> Right (remainingCode, updatedAst)
