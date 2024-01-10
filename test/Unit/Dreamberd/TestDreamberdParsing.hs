@@ -13,7 +13,7 @@ testParseFunction :: Test
 testParseFunction =
     TestList
         [ TestCase (assertEqual "parseFunction basic" (Right ("", [Function "foo" [] [Return (Number 1)]])) (parseFunction "foo(){return 1;}" []))
-        , TestCase (assertEqual "parseFunction nested" (Right ("", [Function "foo" [] [Function "bar" [] [Call "bool" [Identifier "b", Boolean True]], Return (Number 1)]])) (parseFunction "foo(){ function bar() {bool b=true;} return 1;}" []))
+        , TestCase (assertEqual "parseFunction nested" (Right ("", [Function "foo" [] [Function "bar" [] [Call "bool" [Identifier "b", Boolean True]], Return (Number 1)]])) (parseFunction "foo(){ fn bar() {bool b=true;} return 1;}" []))
         , TestCase (assertEqual "parseFunction with params" (Right ("", [Function "foo" ["bar"] [Return (Number 1)]])) (parseFunction "foo(bar){return 1;}" []))
         , TestCase (assertEqual "parseFunction with params and body" (Right ("", [Function "foo" ["bar", "other"] [Return (Number 1)]])) (parseFunction "foo(bar, other ){return 1;}" []))
         , TestCase (assertEqual "parseFunction with params, body and spaces" (Right ("", [Function "foo" ["bar"] [Return (Number 1)]])) (parseFunction "foo ( bar ) { return 1; }" []))
