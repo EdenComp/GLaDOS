@@ -17,19 +17,10 @@ parseString bytes =
 
 parseCall :: [Char] -> Either String (Call, [Char])
 parseCall [] = Left "No call provided"
-parseCall (c : bytes) = case fromEnum c of
-    0x21 -> Right (Add, bytes)
-    0x22 -> Right (Sub, bytes)
-    0x23 -> Right (Mul, bytes)
-    0x24 -> Right (Div, bytes)
-    0x25 -> Right (Eq, bytes)
-    0x26 -> Right (Neq, bytes)
-    0x27 -> Right (Less, bytes)
-    0x28 -> Right (LessOrEqual, bytes)
-    0x29 -> Right (Greater, bytes)
-    0x2A -> Right (GreaterOrEqual, bytes)
-    0x2B -> parseString bytes >>= \(name, rest) -> Right (FunctionName name, rest)
-    _ -> Left "Unknown call"
+parseCall (c : op : bytes) | fromEnum c == 0x21 && hex >= 0x31 && hex <= 0x3B = Right (Builtin (toEnum $ hex - 0x31), bytes)
+  where hex = fromEnum op
+parseCall (c : bytes) | fromEnum c == 0x22 = parseString bytes >>= \(name, rest) -> Right (FunctionName name, rest)
+                      | otherwise = Left "Unknown call"
 
 parseValue :: [Char] -> Either String (Value, [Char])
 parseValue [] = Left "No value provided"
@@ -47,14 +38,14 @@ parseValue (c : bytes) = case fromEnum c of
 parseEnvValue :: [Char] -> Either String (EnvValue, [Char])
 parseEnvValue [] = Left "No value provided"
 parseEnvValue (c : bytes)
-    | fromEnum c == 0x31 = case parseInt bytes of
+    | fromEnum c == 0x41 = case parseInt bytes of
         Left err -> Left err
         Right (len, rest) -> case parseInstructions insts of
             Left err -> Left err
             Right func -> if length rest < len then Left "Wrong function body length" else Right (Function func, rest')
           where
             (insts, rest') = splitAt len rest
-    | fromEnum c == 0x32 = parseValue bytes >>= \(val, rest) -> Right (Variable val, rest)
+    | fromEnum c == 0x42 = parseValue bytes >>= \(val, rest) -> Right (Variable val, rest)
     | otherwise = Left "Unknown value type"
 
 parseInstructions :: [Char] -> Either String [Insts]
