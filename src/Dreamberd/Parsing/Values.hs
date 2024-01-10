@@ -14,7 +14,7 @@ import Data.Either (lefts, rights)
 import Data.Foldable (find)
 import Data.List (isInfixOf)
 import Dreamberd.Parsing.Utils (getVariableName, splitOn, trimSpaces)
-import Dreamberd.Types (AstNode (Boolean, Call, Identifier, Number, Operator, String))
+import Dreamberd.Types (AstNode (Boolean, Call, Identifier, Number, String))
 
 parseBool :: String -> Either String AstNode
 parseBool input
@@ -73,7 +73,7 @@ parseOperatorValue str =
                 [trimSpaces -> lhs, trimSpaces -> rhs] ->
                     parseAnyValue lhs >>= \lhsNode ->
                         parseAnyValue rhs >>= \rhsNode ->
-                            Right (Operator op lhsNode rhsNode)
+                            Right (Call op [lhsNode, rhsNode])
                 _ -> Left "Invalid expression - expected two values around operator"
         _ -> Left "Invalid operator expression"
 

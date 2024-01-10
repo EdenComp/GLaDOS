@@ -4,7 +4,7 @@ module Dreamberd.Parsing.Elements.Variable (parseVar) where
 
 import Dreamberd.Parsing.Utils (extractValueAndRest, getVariableName, trimSpaces)
 import Dreamberd.Parsing.Values (parseAnyValue, parseBool, parseFunctionCall, parseNumber, parseOperatorValue, parseString)
-import Dreamberd.Types (AstNode (AssignVariable, Identifier, Operator))
+import Dreamberd.Types (AstNode (Call, Identifier))
 
 parseVarValue :: Maybe String -> String -> Either String AstNode
 parseVarValue (Just "int") value = case parseFunctionCall value of
@@ -48,5 +48,5 @@ parseVar varType code ast =
                                 (value, restOfCode) = extractValueAndRest afterEqual
                              in
                                 parseVarValue varType value >>= \node -> case varType of
-                                    Just vt -> Right (restOfCode, ast ++ [AssignVariable vt name node])
-                                    Nothing -> Right (restOfCode, ast ++ [Operator "=" (Identifier name) node])
+                                    Just vt -> Right (restOfCode, ast ++ [Call vt [Identifier name, node]])
+                                    Nothing -> Right (restOfCode, ast ++ [Call "=" [Identifier name, node]])
