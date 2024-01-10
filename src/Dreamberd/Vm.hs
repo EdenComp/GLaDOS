@@ -148,7 +148,7 @@ execBuiltin (String str : r : xs) op = case op of
     Eq -> Right (Bool (str == show r) : xs)
     Neq -> Right (Bool (str == show r) : xs)
     _ -> Left ("Wrong data types in stack: " ++ show op ++ " with a string and " ++ show r)
-execBuiltin stack op = Left ("Wrong stack variables for builtin " ++ show op ++ ": " ++ show stack)
+execBuiltin _ op = Left ("Wrong stack variables for builtin " ++ show op)
 
 findEnvValue :: String -> [Env] -> Maybe EnvValue
 findEnvValue _ [] = Nothing
