@@ -1,5 +1,6 @@
 module Dreamberd.Vm (
     exec,
+    execVM,
     Call (..),
     Env (..),
     EnvValue (..),
@@ -58,31 +59,40 @@ data Insts
     | Ret
     deriving (Show)
 
-exec :: [Env] -> [Value] -> [Value] -> [Insts] -> IO (Either String Value)
-exec _ _ _ [] = return (Right Void)
-exec _ _ [] (Ret : _) = return (Right Void)
-exec _ _ (val : _) (Ret : _) = return (Right val)
-exec env args stack (Push val : insts) = exec env args (val : stack) insts
-exec env args stack (PushArg idx : insts)
-    | idx >= length args || idx < 0 = return (Left "Argument index out of bounds")
-    | otherwise = exec env args ((args !! idx) : stack) insts
-exec env args stack (PushEnv name : insts) = case findEnvValue name env of
-    Just (Function _) -> exec env args (Symbol (FunctionName name) : stack) insts
-    Just (Variable v) -> exec env args (v : stack) insts
+execVM :: [Insts] -> IO (Either String Value)
+execVM insts = exec [] [] [] insts 0
+
+exec :: [Env] -> [Value] -> [Value] -> [Insts] -> Int -> IO (Either String Value)
+exec _ _ _ [] _ = return (Right Void)
+exec env args stack insts idx | idx < 0 || idx > length insts = return (Left "Instructions index out of bounds")
+                              | idx == length insts = return (Right Void)
+                              | otherwise = execInstruction env args stack insts (insts !! idx) idx
+
+execInstruction :: [Env] -> [Value] -> [Value] -> [Insts] -> Insts -> Int -> IO (Either String Value)
+execInstruction _ _ [] _ Ret _ = return (Right Void)
+execInstruction _ _ (val : _) _ Ret _ = return (Right val)
+execInstruction env args stack insts (Push val) idx = exec env args (val : stack) insts (idx + 1)
+execInstruction env args stack insts (PushArg arg) idx
+    | arg >= length args || arg < 0 = return (Left "Argument index out of bounds")
+    | otherwise = exec env args ((args !! (length args - arg - 1)) : stack) insts (idx + 1)
+execInstruction env args stack insts (PushEnv name) idx = case findEnvValue name env of
+    Just (Function _) -> exec env args (Symbol (FunctionName name) : stack) insts (idx + 1)
+    Just (Variable v) -> exec env args (v : stack) insts (idx + 1)
     Nothing -> return (Left ("Environment " ++ name ++ " does not exist"))
-exec env args stack (DefineEnv name var : insts) = exec (addEnvValue name var env) args stack insts
-exec env args (x : xs) (DefineEnvFromStack name : insts) = exec (addEnvValue name (Variable x) env) args xs insts
-exec env args stack (Call : insts) = do
+execInstruction env args stack insts (DefineEnv name var) idx = exec (addEnvValue name var env) args stack insts (idx + 1)
+execInstruction env args (x : xs) insts (DefineEnvFromStack name) idx = exec (addEnvValue name (Variable x) env) args xs insts (idx + 1)
+execInstruction env args stack insts Call idx = do
     ret <- execCall env stack
     case ret of
         Left err -> return (Left err)
-        Right newValues -> exec env args newValues insts
-exec _ _ [] (x : _) = return (Left ("Stack is empty for a " ++ show x ++ " instruction"))
-exec env args (Bool x : xs) (JumpIfFalse num : insts)
-    | num < 1 || num > length insts = return (Left "Invalid number of instructions")
-    | not x = exec env args xs (drop num insts)
-    | otherwise = exec env args xs insts
-exec _ _ _ (JumpIfFalse _ : _) = return (Left "Wrong data types in stack: JumpIfFalse needs a Bool")
+        Right newValues -> exec env args newValues insts (idx + 1)
+execInstruction _ _ [] _ x _ = return (Left ("Stack is empty for a " ++ show x ++ " instruction"))
+execInstruction env args (Bool x : xs) insts (JumpIfFalse num) idx
+    | num == (-1) || num > 0 && num >= (length insts - idx - 1) = return (Left "Invalid number of instructions")
+    | num < idx * (-1) = return (Left "Invalid number of instructions")
+    | not x = exec env args xs insts (idx + num + 1)
+    | otherwise = exec env args xs insts (idx + 1)
+execInstruction _ _ _ _ (JumpIfFalse _) _ = return (Left "Wrong data types in stack: JumpIfFalse needs a Bool")
 
 execCall :: [Env] -> [Value] -> IO (Either String [Value])
 execCall _ [] = return (Left "Stack is empty for a Call instruction")
@@ -90,7 +100,7 @@ execCall _ (Symbol (FunctionName "print") : val : xs) = putStr (show val) >> ret
 execCall _ (Symbol (FunctionName "print") : _) = return (Left "Stack is empty for print instruction")
 execCall env (Symbol (FunctionName fct) : xs) = case findEnvValue fct env of
     Just (Function insts) -> do
-        ret <- exec env xs [] insts
+        ret <- exec env xs [] insts 0
         case ret of
             Left err -> return (Left err)
             Right val -> return (Right (val : xs))
