@@ -1,10 +1,7 @@
 module Unit.Dreamberd.TestDreamberdVm (testDreamberdVm) where
 
-import Dreamberd.Vm (Call (..), Env (..), EnvValue (..), Insts (..), Value (..), exec)
+import Dreamberd.Vm (Call (..), Env (..), EnvValue (..), Insts (..), Value (..), exec, execVM)
 import Test.HUnit (Test (..), assertEqual)
-
-execVM :: [Insts] -> IO (Either String Value)
-execVM = exec [] [] []
 
 testDreamberdVm :: Test
 testDreamberdVm =
@@ -33,11 +30,11 @@ testStackPushes :: Test
 testStackPushes =
     TestList
         [ TestCase $ execVM [PushArg 0] >>= assertEqual "PushArg without args" (Left "Argument index out of bounds")
-        , TestCase $ exec [] [Number 1] [] [PushArg 0, Ret] >>= assertEqual "push from arg" (Right (Number 1))
-        , TestCase $ exec [] [Number 1] [] [PushArg (-1), Ret] >>= assertEqual "push negative" (Left "Argument index out of bounds")
-        , TestCase $ exec [Env{identifier = "ret", value = Function [PushArg 0, Ret]}] [] [] [Push (Number 10), PushEnv "ret", Call, Ret] >>= assertEqual "push arg from function" (Right (Number 10))
-        , TestCase $ exec [Env{identifier = "ret", value = Function [PushArg 0, Ret]}] [] [] [Push (Number 10), PushEnv "res", Call, Ret] >>= assertEqual "push unknown env" (Left "Environment res does not exist")
-        , TestCase $ exec [Env{identifier = "const", value = Variable (Bool True)}] [] [] [Push (Number 10), PushEnv "const", Ret] >>= assertEqual "push constant env" (Right (Bool True))
+        , TestCase $ exec [] [Number 1] [] [PushArg 0, Ret] 0 >>= assertEqual "push from arg" (Right (Number 1))
+        , TestCase $ exec [] [Number 1] [] [PushArg (-1), Ret] 0 >>= assertEqual "push negative" (Left "Argument index out of bounds")
+        , TestCase $ exec [Env{identifier = "ret", value = Function [PushArg 0, Ret]}] [] [] [Push (Number 10), PushEnv "ret", Call, Ret] 0 >>= assertEqual "push arg from function" (Right (Number 10))
+        , TestCase $ exec [Env{identifier = "ret", value = Function [PushArg 0, Ret]}] [] [] [Push (Number 10), PushEnv "res", Call, Ret] 0 >>= assertEqual "push unknown env" (Left "Environment res does not exist")
+        , TestCase $ exec [Env{identifier = "const", value = Variable (Bool True)}] [] [] [Push (Number 10), PushEnv "const", Ret] 0 >>= assertEqual "push constant env" (Right (Bool True))
         ]
 
 testCalls :: Test
@@ -79,4 +76,5 @@ testFunctions :: Test
 testFunctions =
     TestList
         [ TestCase $ execVM [DefineEnv "fact" (Function [PushArg 0, Push (Number 1), Push (Symbol Eq), Call, JumpIfFalse 2, Push (Number 1), Ret, Push (Number 1), PushArg 0, Push (Symbol Sub), Call, PushEnv "fact", Call, PushArg 0, Push (Symbol Mul), Call, Ret]), Push (Number 5), PushEnv "fact", Call, Ret] >>= assertEqual "factorial" (Right (Number 120))
+        , TestCase $ execVM [DefineEnv "a" (Variable (Number 0)), DefineEnv "b" (Variable (String "hello")), Push (Bool False), JumpIfFalse 10, Push (Number 1), PushEnv "a", Push (Symbol Add), Call, DefineEnvFromStack "a", Push (Number 2), PushEnv "b", Push (Symbol Mul), Call, DefineEnvFromStack "b", Push (Number 2), PushEnv "a", Push (Symbol GreaterOrEqual), Call, JumpIfFalse (-15), PushEnv "b", Ret] >>= assertEqual "for loop" (Right (String "hellohellohellohello"))
         ]
