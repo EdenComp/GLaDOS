@@ -64,7 +64,7 @@ compileIf params (AST.Call op args) trueBody falseBody =
                 >>= \trueInsts ->
                     compileNodes params falseBody []
                         >>= \falseInsts ->
-                            Right $ call ++ [VM.JumpIfFalse $ length trueInsts + 1] ++ trueInsts ++ falseInsts
+                            Right $ call ++ [VM.JumpIfFalse $ length trueInsts] ++ trueInsts ++ falseInsts
 compileIf params test trueBody falseBody =
     ( compileNode params test
         >>= \testPush ->
@@ -99,7 +99,7 @@ getBuiltinCallForOp ">=" = Right VM.GreaterOrEqual
 getBuiltinCallForOp _ = Left "Unknown builtin call"
 
 compileCustomCall :: [String] -> String -> [AST.AstNode] -> Either String [VM.Insts]
-compileCustomCall params name args = mapM (compileNode params) args >>= \args' -> Right $ reverse (concat args') ++ [VM.PushEnv name, VM.Call]
+compileCustomCall params name args = mapM (compileNode params) args >>= \args' -> Right $ concat (reverse args') ++ [VM.PushEnv name, VM.Call]
 
 compileAssignation :: [String] -> String -> AST.AstNode -> Either String [VM.Insts]
 compileAssignation params iden value = compileNode params value >>= \pushInsts -> Right $ pushInsts ++ [VM.DefineEnvFromStack iden]
