@@ -19,11 +19,11 @@ compileNode params (AST.Call op args) = compileCall params op args
 compileNode params (AST.If test trueBody falseBody) = compileIf params test trueBody falseBody
 compileNode params (AST.Function name args body) = compileFunction params name args body
 compileNode params (AST.Return value) = compileReturn params value
-compileNode _ _ = Left "Unknown node type"
+compileNode params node = (compileValuePush params node >>= \inst -> Right [inst]) <> Left "Unknown node type"
 
 compileReturn :: [String] -> AST.AstNode -> Either String [VM.Insts]
 compileReturn params (AST.Call op args) = compileCall params op args >>= \call -> Right $ call ++ [VM.Ret]
-compileReturn params value = compileValuePush params value >>= \pushInst -> Right [pushInst, VM.Ret]
+compileReturn params value = compileNode params value >>= \pushInst -> Right $ pushInst ++ [VM.Ret]
 
 compileFunction :: [String] -> String -> [String] -> [AST.AstNode] -> Either String [VM.Insts]
 compileFunction params name args body =
@@ -31,6 +31,7 @@ compileFunction params name args body =
         >>= \bodyInsts -> Right [VM.DefineEnv name $ VM.Function bodyInsts]
 
 compileCall :: [String] -> String -> [AST.AstNode] -> Either String [VM.Insts]
+compileCall params "=" [_, AST.Identifier iden, value] = compileAssignation params iden value
 compileCall params "=" [AST.Identifier iden, value] = compileAssignation params iden value
 compileCall params op args = compileBuiltinCall params op args <> compileCustomCall params op args
 
@@ -44,12 +45,12 @@ compileIf params (AST.Call op args) trueBody falseBody =
                         >>= \falseInsts ->
                             Right $ call ++ [VM.JumpIfFalse $ length trueInsts] ++ trueInsts ++ falseInsts
 compileIf params test trueBody falseBody =
-    ( compileValuePush params test
+    ( compileNode params test
         >>= \testPush ->
             compileNodes params trueBody []
                 >>= \trueInsts ->
                     compileNodes params falseBody []
-                        >>= \falseInsts -> Right $ [testPush, VM.JumpIfFalse $ length trueInsts] ++ trueInsts ++ falseInsts
+                        >>= \falseInsts -> Right $ testPush ++ [VM.JumpIfFalse $ length trueInsts] ++ trueInsts ++ falseInsts
     )
         <> Left "Unknown if type"
 
@@ -57,10 +58,10 @@ compileBuiltinCall :: [String] -> String -> [AST.AstNode] -> Either String [VM.I
 compileBuiltinCall params op [a, b] =
     getBuiltinCallForOp op
         >>= \call ->
-            compileValuePush params a
+            compileNode params a
                 >>= \aPush ->
-                    compileValuePush params b
-                        >>= \bPush -> Right [bPush, aPush, VM.Push $ VM.Symbol call, VM.Call]
+                    compileNode params b
+                        >>= \bPush -> Right $ bPush ++ aPush ++ [VM.Push $ VM.Symbol call, VM.Call]
 compileBuiltinCall _ _ _ = Left "Unknown builtin call"
 
 getBuiltinCallForOp :: String -> Either String VM.Call
@@ -77,16 +78,14 @@ getBuiltinCallForOp ">=" = Right VM.GreaterOrEqual
 getBuiltinCallForOp _ = Left "Unknown builtin call"
 
 compileCustomCall :: [String] -> String -> [AST.AstNode] -> Either String [VM.Insts]
-compileCustomCall params name args = mapM (compileValuePush params) args >>= \args' -> Right $ reverse args' ++ [VM.PushEnv name, VM.Call]
+compileCustomCall params name args = mapM (compileNode params) args >>= \args' -> Right $ reverse (concat args') ++ [VM.PushEnv name, VM.Call]
 
 compileAssignation :: [String] -> String -> AST.AstNode -> Either String [VM.Insts]
-compileAssignation params iden value = compileValuePush params value >>= \pushInst -> Right [pushInst, VM.DefineEnvFromStack iden]
+compileAssignation params iden value = compileNode params value >>= \pushInsts -> Right $ pushInsts ++ [VM.DefineEnvFromStack iden]
 
 compileValuePush :: [String] -> AST.AstNode -> Either String VM.Insts
 compileValuePush _ (AST.Boolean b) = Right $ VM.Push $ VM.Bool b
 compileValuePush _ (AST.Number n) = Right $ VM.Push $ VM.Number n
 compileValuePush _ (AST.String s) = Right $ VM.Push $ VM.String s
-compileValuePush params (AST.Identifier i) = Right $ case elemIndex i params of
-    Nothing -> VM.PushEnv i
-    Just idx -> VM.PushArg idx
+compileValuePush params (AST.Identifier i) = Right $ maybe (VM.PushEnv i) VM.PushArg $ elemIndex i params
 compileValuePush _ _ = Left "Unknown value type"
