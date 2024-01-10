@@ -30,7 +30,6 @@ instance Eq AstNode where
     (Boolean a) == (Boolean b) = a == b
     (String a) == (String b) = a == b
     (Identifier a) == (Identifier b) = a == b
-    (Operator a b c) == (Operator d e f) = a == d && b == e && c == f
     (If a b c) == (If d e f) = a == d && b == e && c == f
     (List a) == (List b) = a == b
     (Function a b c) == (Function d e f) = a == d && b == e && c == f
@@ -44,7 +43,6 @@ instance Ord AstNode where
     (Boolean a) `compare` (Boolean b) = a `compare` b
     (String a) `compare` (String b) = a `compare` b
     (Identifier a) `compare` (Identifier b) = a `compare` b
-    (Operator a b c) `compare` (Operator d e f) = a `compare` d <> b `compare` e <> c `compare` f
     (If a b c) `compare` (If d e f) = a `compare` d <> b `compare` e <> c `compare` f
     (List a) `compare` (List b) = a `compare` b
     (Function a b c) `compare` (Function d e f) = a `compare` d <> b `compare` e <> c `compare` f

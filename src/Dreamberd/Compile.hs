@@ -1,14 +1,10 @@
 module Dreamberd.Compile (
     compileAst,
-    compileExecAst,
 ) where
 
 import Data.List (elemIndex)
 import qualified Dreamberd.Types as AST
 import qualified Dreamberd.Vm as VM
-
-compileExecAst :: [AST.AstNode] -> IO (Either String VM.Value)
-compileExecAst ast = either (pure . Left) (VM.exec [] [] []) (compileAst ast)
 
 compileAst :: [AST.AstNode] -> Either String [VM.Insts]
 compileAst [] = Left "No instructions provided"
@@ -20,9 +16,6 @@ compileNodes params (curNode : nextNodes) insts = compileNode params curNode >>=
 
 compileNode :: [String] -> AST.AstNode -> Either String [VM.Insts]
 compileNode params (AST.Call op args) = compileCall params op args
-compileNode params (AST.Operator op l r) = compileNode params (AST.Call op [l, r]) -- TODO: Remove this when Operators are removed
-compileNode params (AST.AssignVariable _ name value) = compileNode params (AST.Call "=" [AST.Identifier name, value]) -- TODO: Remove this when AssginVariable
-compileNode params (AST.If (AST.Operator op l r) t f) = compileNode params (AST.If (AST.Call op [l, r]) t f) -- TODO: Remove this when Operators are removed
 compileNode params (AST.If test trueBody falseBody) = compileIf params test trueBody falseBody
 compileNode params (AST.Function name args body) = compileFunction params name args body
 compileNode params (AST.Return value) = compileReturn params value
