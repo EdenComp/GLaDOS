@@ -3,7 +3,6 @@ module Dreamberd.Compile (
     compileExecAst,
 ) where
 
-import Control.Monad ((>=>))
 import qualified Dreamberd.Types as AST
 import qualified Dreamberd.Vm as VM
 
@@ -20,21 +19,43 @@ compileNodes (curNode : nextNodes) insts = compileNode curNode >>= \curInsts -> 
 
 compileNode :: AST.AstNode -> Either String [VM.Insts]
 compileNode (AST.Call op args) = compileCall op args
-compileNode (AST.Return value) = compileValue value >>= \r -> Right [VM.Push r, VM.Ret]
+compileNode (AST.Operator op l r) = compileNode (AST.Call op [l, r]) -- TODO: Remove this when Operators are removed
+compileNode (AST.AssignVariable _ name value) = compileNode (AST.Call "=" [AST.Identifier name, value]) -- TODO: Remove this when AssginVariable
+compileNode (AST.If (AST.Operator op l r) t f) = compileNode (AST.If (AST.Call op [l, r]) t f) -- TODO: Remove this when Operators are removed
+compileNode (AST.If test trueBody falseBody) = compileIf test trueBody falseBody
 compileNode _ = Left "Unknown node type"
 
 compileCall :: String -> [AST.AstNode] -> Either String [VM.Insts]
 compileCall "=" [AST.Identifier iden, value] = compileAssignation iden value
 compileCall op args = compileBuiltinCall op args <> compileCustomCall op args
 
+compileIf :: AST.AstNode -> [AST.AstNode] -> [AST.AstNode] -> Either String [VM.Insts]
+compileIf (AST.Call op args) trueBody falseBody =
+    compileCall op args
+        >>= \call ->
+            compileNodes trueBody []
+                >>= \trueInsts ->
+                    compileNodes falseBody []
+                        >>= \falseInsts ->
+                            Right $ call ++ [VM.JumpIfFalse $ length trueInsts] ++ trueInsts ++ falseInsts
+compileIf test trueBody falseBody =
+    ( compileValuePush test
+        >>= \testPush ->
+            compileNodes trueBody []
+                >>= \trueInsts ->
+                    compileNodes falseBody []
+                        >>= \falseInsts -> Right $ [testPush, VM.JumpIfFalse $ length trueInsts] ++ trueInsts ++ falseInsts
+    )
+        <> Left "Unknown if type"
+
 compileBuiltinCall :: String -> [AST.AstNode] -> Either String [VM.Insts]
 compileBuiltinCall op [a, b] =
     getBuiltinCallForOp op
         >>= \call ->
-            compileValue a
-                >>= \a' ->
-                    compileValue b
-                        >>= \b' -> Right [VM.Push b', VM.Push a', VM.Push $ VM.Symbol call, VM.Call]
+            compileValuePush a
+                >>= \aPush ->
+                    compileValuePush b
+                        >>= \bPush -> Right [bPush, aPush, VM.Push $ VM.Symbol call, VM.Call]
 compileBuiltinCall _ _ = Left "Unknown builtin call"
 
 getBuiltinCallForOp :: String -> Either String VM.Call
@@ -51,13 +72,14 @@ getBuiltinCallForOp ">=" = Right VM.GreaterOrEqual
 getBuiltinCallForOp _ = Left "Unknown builtin call"
 
 compileCustomCall :: String -> [AST.AstNode] -> Either String [VM.Insts]
-compileCustomCall name args = mapM (compileValue >=> (Right . VM.Push)) args >>= \args' -> Right $ reverse args' ++ [VM.PushEnv name, VM.Call]
+compileCustomCall name args = mapM compileValuePush args >>= \args' -> Right $ reverse args' ++ [VM.PushEnv name, VM.Call]
 
 compileAssignation :: String -> AST.AstNode -> Either String [VM.Insts]
-compileAssignation iden v = compileValue v >>= \r -> Right [VM.DefineEnv iden $ VM.Variable r]
+compileAssignation iden value = compileValuePush value >>= \pushInst -> Right [pushInst, VM.DefineEnvFromStack iden]
 
-compileValue :: AST.AstNode -> Either String VM.Value
-compileValue (AST.Number val) = Right $ VM.Number val
-compileValue (AST.Boolean val) = Right $ VM.Bool val
-compileValue (AST.String val) = Right $ VM.String val
-compileValue _ = Left "Unknown value type"
+compileValuePush :: AST.AstNode -> Either String VM.Insts
+compileValuePush (AST.Boolean b) = Right $ VM.Push $ VM.Bool b
+compileValuePush (AST.Number n) = Right $ VM.Push $ VM.Number n
+compileValuePush (AST.String s) = Right $ VM.Push $ VM.String s
+compileValuePush (AST.Identifier i) = Right $ VM.PushEnv i
+compileValuePush _ = Left "Unknown value type"

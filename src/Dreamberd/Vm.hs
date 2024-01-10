@@ -15,14 +15,14 @@ data Value
     | String String
     | Symbol Call
     | Void
-    deriving (Eq)
+    deriving (Eq, Show)
 
-instance Show Value where
-    show (Number nbr) = show nbr
-    show (Bool b) = show b
-    show (String str) = str
-    show (Symbol sym) = show sym
-    show Void = ""
+-- instance Show Value where
+--     show (Number nbr) = show nbr
+--     show (Bool b) = show b
+--     show (String str) = str
+--     show (Symbol sym) = show sym
+--     show Void = ""
 
 data EnvValue
     = Function [Insts]
@@ -148,7 +148,7 @@ execBuiltin (String str : r : xs) op = case op of
     Eq -> Right (Bool (str == show r) : xs)
     Neq -> Right (Bool (str == show r) : xs)
     _ -> Left ("Wrong data types in stack: " ++ show op ++ " with a string and " ++ show r)
-execBuiltin _ op = Left ("Wrong stack variables for builtin " ++ show op)
+execBuiltin stack op = Left ("Wrong stack variables for builtin " ++ show op ++ ": " ++ show stack)
 
 findEnvValue :: String -> [Env] -> Maybe EnvValue
 findEnvValue _ [] = Nothing
