@@ -1,7 +1,7 @@
-module Dreamberd.Parsing.Utils (getVariableName, extractValueAndRest, parseScope, trimSpaces) where
+module Dreamberd.Parsing.Utils (getVariableName, extractValueAndRest, parseScope, trimSpaces, splitOn) where
 
 import Data.Char (isSpace)
-import Data.List (dropWhileEnd)
+import Data.List (dropWhileEnd, isPrefixOf)
 import Text.Regex.Posix ((=~))
 
 bannedVariables :: [String]
@@ -47,3 +47,18 @@ parseScope code =
 
 trimSpaces :: String -> String
 trimSpaces = dropWhileEnd isSpace . dropWhile isSpace
+
+splitOn :: String -> String -> [String]
+splitOn [] _ = []
+splitOn delim str = case breakOn delim str of
+    (a, b)
+        | null b -> [a]
+        | otherwise -> a : splitOn delim (drop (length delim) b)
+
+breakOn :: String -> String -> (String, String)
+breakOn delim = func
+  where
+    func [] = ([], [])
+    func str@(x : xs)
+        | delim `isPrefixOf` str = span (/= head delim) str
+        | otherwise = let (leftVal, rightVal) = func xs in (x : leftVal, rightVal)
