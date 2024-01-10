@@ -1,4 +1,4 @@
-module Dreamberd.Parsing.Utils (getVariableName, extractValueAndRest, parseScope, trimSpaces, splitOn) where
+module Dreamberd.Parsing.Utils (getVariableName, extractValueAndRest, parseScope, trimSpaces, splitOn, breakOnClosingParenthesis) where
 
 import Data.Char (isSpace)
 import Data.List (dropWhileEnd, isPrefixOf)
@@ -62,3 +62,16 @@ breakOn delim = func
     func str@(x : xs)
         | delim `isPrefixOf` str = span (/= head delim) str
         | otherwise = let (leftVal, rightVal) = func xs in (x : leftVal, rightVal)
+
+breakOnClosingParenthesis :: String -> Int -> Either String (String, String)
+breakOnClosingParenthesis = helper False
+  where
+    helper :: Bool -> String -> Int -> Either String (String, String)
+    helper _ [] _ = Left "No closing parenthesis found"
+    helper inString (c : cs) n
+        | c == '"' && not inString = helper True cs n >>= \(inside, outside) -> Right (c : inside, outside)
+        | c == '"' && inString = helper False cs n >>= \(inside, outside) -> Right (c : inside, outside)
+        | c == '(' && not inString = helper inString cs (n + 1) >>= \(inside, outside) -> Right (c : inside, outside)
+        | c == ')' && not inString && n == 0 = Right ([], cs)
+        | c == ')' && not inString = helper inString cs (n - 1) >>= \(inside, outside) -> Right (c : inside, outside)
+        | otherwise = helper inString cs n >>= \(inside, outside) -> Right (c : inside, outside)

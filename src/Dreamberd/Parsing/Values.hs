@@ -13,7 +13,7 @@ import Data.Char (isDigit)
 import Data.Either (lefts, rights)
 import Data.Foldable (find)
 import Data.List (isInfixOf)
-import Dreamberd.Parsing.Utils (getVariableName, splitOn, trimSpaces)
+import Dreamberd.Parsing.Utils (breakOnClosingParenthesis, getVariableName, splitOn, trimSpaces)
 import Dreamberd.Types (AstNode (Boolean, Call, Identifier, Number, String))
 
 parseBool :: String -> Either String AstNode
@@ -41,15 +41,14 @@ parseFunctionCall code =
         else
             let (trimSpaces -> strippedName, drop 1 -> paramsAndRest) = break (== '(') code
              in getVariableName strippedName >>= \name ->
-                    let (params, trimSpaces . drop 1 -> remaining) = break (== ')') paramsAndRest
-                        paramList = map parseAnyValue (words $ map (\c -> if c == ',' then ' ' else c) params)
-                        errors = lefts paramList
-                     in if not (null remaining)
-                            then Left "Invalid content after function call"
-                            else
-                                if not (null errors)
-                                    then Left (head errors)
-                                    else Right (Call name (rights paramList))
+                    breakOnClosingParenthesis paramsAndRest 0 >>= \(params, _) ->
+                        let
+                            paramList = map parseAnyValue (words $ map (\c -> if c == ',' then ' ' else c) params)
+                            errors = lefts paramList
+                         in
+                            if not (null errors)
+                                then Left (head errors)
+                                else Right (Call name (rights paramList))
 
 parseAnyValue :: String -> Either String AstNode
 parseAnyValue "" = Left "No value found"
@@ -69,7 +68,7 @@ parseAnyValue input = case parseOperatorValue input of
 
 parseOperatorValue :: String -> Either String AstNode
 parseOperatorValue str =
-    case findOperator str of
+    case find (`isInfixOf` str) ["<=", ">=", "==", "!=", "+", "-", "*", "/", "%", "<", ">"] of
         Just op ->
             case splitOn op str of
                 [trimSpaces -> lhs, trimSpaces -> rhs] ->
@@ -78,6 +77,3 @@ parseOperatorValue str =
                             Right (Call op [lhsNode, rhsNode])
                 _ -> Left "Invalid expression - expected two values around operator"
         _ -> Left "Invalid operator expression"
-
-findOperator :: String -> Maybe String
-findOperator str = find (`isInfixOf` str) ["<=", ">=", "==", "!=", "+", "-", "*", "/", "%", "<", ">"]
