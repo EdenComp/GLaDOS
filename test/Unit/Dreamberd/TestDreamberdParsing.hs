@@ -107,4 +107,6 @@ testParseDreamberd =
         , TestCase (assertEqual "parseDreamberd invalid variable name" (Left "No variable name found") (parseDreamberd "int * = 4;" []))
         , TestCase (assertEqual "parseDreamberd basic loop" (Right [Loop (Boolean True) [Call "=" [String "int", Identifier "b", Number 42]] Nothing Nothing]) (parseDreamberd "while (true) {int b = 42;}" []))
         , TestCase (assertEqual "parseDreamberd wrong var type" (Left "Unrecognized element") (parseDreamberd "fluid variable = 89;" []))
+        , TestCase (assertEqual "parseDreamberd strange function call with parenthesis" (Right [Call "a" [String "lo()l)", Call "b" [Call "c" [String "()"]]]]) (parseDreamberd "a(\"lo()l)\", b(c(\"()\")));" []))
+        , TestCase (assertEqual "parseDreamberd define var, += and return it" (Right [Call "=" [String "int", Identifier "i", Number 0], Call "+=" [Identifier "i", Number 1], Return (Identifier "i")]) (parseDreamberd "int i=0;i+=1;return i;" []))
         ]

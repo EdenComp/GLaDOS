@@ -2,7 +2,9 @@
 
 module Dreamberd.Parsing.Elements.Variable (parseVar) where
 
-import Dreamberd.Parsing.Utils (extractValueAndRest, getVariableName, trimSpaces)
+import Data.Foldable (find)
+import Data.List (isInfixOf)
+import Dreamberd.Parsing.Utils (extractValueAndRest, getVariableName, splitOn, trimSpaces)
 import Dreamberd.Parsing.Values (parseAnyValue, parseBool, parseFunctionCall, parseNumber, parseOperatorValue, parseString)
 import Dreamberd.Types (AstNode (Call, Identifier, String))
 
@@ -32,7 +34,18 @@ parseVarValue Nothing value = parseAnyValue value
 parseVarValue (Just varType) _ = Left ("Invalid variable value for type '" ++ varType ++ "'")
 
 parseVar :: Maybe String -> String -> [AstNode] -> Either String (String, [AstNode])
-parseVar varType code ast =
+parseVar Nothing code ast =
+    case find (`isInfixOf` code) ["+=", "-=", "*=", "/=", "%=", "="] of
+        Just op -> case splitOn op code of
+            [trimSpaces -> variableName, trimSpaces -> rawValue] ->
+                getVariableName variableName >>= \name ->
+                    let
+                        (value, restOfCode) = extractValueAndRest rawValue
+                     in
+                        parseAnyValue value >>= \node -> Right (restOfCode, ast ++ [Call op [Identifier name, node]])
+            _ -> Left "Expected 2 values around operator for variable re-assignment"
+        _ -> Left "No operator found for variable re-assignment"
+parseVar (Just varType) code ast =
     if '=' `notElem` code
         then Left "No '=' found for variable assignment"
         else
@@ -47,6 +60,5 @@ parseVar varType code ast =
                             let
                                 (value, restOfCode) = extractValueAndRest afterEqual
                              in
-                                parseVarValue varType value >>= \node -> case varType of
-                                    Just vt -> Right (restOfCode, ast ++ [Call "=" [String vt, Identifier name, node]])
-                                    Nothing -> Right (restOfCode, ast ++ [Call "=" [Identifier name, node]])
+                                parseVarValue (Just varType) value
+                                    >>= \node -> Right (restOfCode, ast ++ [Call "=" [String varType, Identifier name, node]])

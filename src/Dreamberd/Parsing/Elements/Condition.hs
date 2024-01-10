@@ -5,7 +5,7 @@ module Dreamberd.Parsing.Elements.Condition (
     parseConditionExpression,
 ) where
 
-import Dreamberd.Parsing.Utils (parseScope)
+import Dreamberd.Parsing.Utils (breakOnClosingParenthesis, parseScope, trimSpaces)
 import Dreamberd.Parsing.Values (parseAnyValue)
 import Dreamberd.Types (AstNode (Call))
 
@@ -36,14 +36,16 @@ parseConditionParts str =
     if not ("(" `isPrefixOf` str && ')' `elem` str)
         then Left "If condition must start with '(' and end with ')'"
         else
-            let (rawCondition, afterCondition) = break (== ')') str
-                (dropWhile isSpace -> beforeCondition, dropWhile isSpace . drop 1 -> condition) = break (== '(') (dropWhile isSpace rawCondition)
-             in if not (null beforeCondition) || null condition
-                    then Left "Missing condition in if statement"
-                    else
-                        parseScope (drop 1 afterCondition) >>= \(ifBody, restAfterIf) ->
-                            extractElifsAndElse restAfterIf >>= \(elifs, elsePart, restOfCode) ->
-                                Right (condition, ifBody, elifs, elsePart, restOfCode)
+            breakOnClosingParenthesis str (-1) >>= \(rawCondition, afterCondition) ->
+                let
+                    (trimSpaces -> beforeCondition, trimSpaces . drop 1 -> condition) = break (== '(') (trimSpaces rawCondition)
+                 in
+                    if not (null beforeCondition) || null condition
+                        then Left "Missing condition in if statement"
+                        else
+                            parseScope afterCondition >>= \(ifBody, restAfterIf) ->
+                                extractElifsAndElse restAfterIf >>= \(elifs, elsePart, restOfCode) ->
+                                    Right (condition, ifBody, elifs, elsePart, restOfCode)
 
 extractElifsAndElse :: String -> Either String ([(String, String)], Maybe String, String)
 extractElifsAndElse str
