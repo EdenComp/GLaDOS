@@ -115,8 +115,9 @@ execJump _ _ _ _ _ (-1) _ = return (Left "Invalid number of instructions")
 execJump _ _ _ insts idx num _ | num > 0 && num >= (length insts - idx - 1) = return (Left "Invalid number of instructions")
 execJump _ _ _ _ idx num _ | num < (idx + 1) * (-1) = return (Left "Invalid number of instructions")
 execJump env args stack insts idx num Nothing = exec env args stack insts (idx + num + 1)
-execJump env args (x : xs) insts idx num (Just b) | toBool x == b = exec env args xs insts (idx + num + 1)
-                                                  | otherwise = exec env args xs insts (idx + 1)
+execJump env args (x : xs) insts idx num (Just b)
+    | toBool x == b = exec env args xs insts (idx + num + 1)
+    | otherwise = exec env args xs insts (idx + 1)
 execJump _ _ _ _ _ _ _ = return (Left "Stack is empty for a conditional jump")
 
 

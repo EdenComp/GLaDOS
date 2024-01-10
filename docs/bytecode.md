@@ -51,7 +51,7 @@ Both DefineEnv and DefineEnvFromStack use 1 byte to determine the type of the de
 - `0x41`: Function (+ 4 bytes instructions length)
 - `0x42`: Value
 
-# TriBools
+## TriBools
 
 TriBools are a special type for the handling of conditional jumps:
 
