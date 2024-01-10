@@ -61,8 +61,7 @@ data Insts
     | Call
     | DefineEnv String EnvValue
     | DefineEnvFromStack String
-    | Jump Int
-    | JumpIfFalse Int
+    | Jump Int (Maybe Bool)
     | Ret
     deriving (Show)
 
@@ -94,15 +93,7 @@ execInstruction env args stack insts Call idx = do
     case ret of
         Left err -> return (Left err)
         Right newValues -> exec env args newValues insts (idx + 1)
-execInstruction env args stack insts (Jump num) idx
-    | num == (-1) || num > 0 && num >= (length insts - idx - 1) = return (Left "Invalid number of instructions")
-    | num < (idx + 1) * (-1) = return (Left "Invalid number of instructions")
-    | otherwise = exec env args stack insts (idx + num + 1)
-execInstruction env args (x : xs) insts (JumpIfFalse num) idx
-    | num == (-1) || num > 0 && num >= (length insts - idx - 1) = return (Left "Invalid number of instructions")
-    | num < (idx + 1) * (-1) = return (Left "Invalid number of instructions")
-    | toBool x = exec env args xs insts (idx + 1)
-    | otherwise = exec env args xs insts (idx + num + 1)
+execInstruction env args stack insts (Jump num cond) idx = execJump env args stack insts idx num cond
 execInstruction _ _ [] _ x _ = return (Left ("Stack is empty for a " ++ show x ++ " instruction"))
 
 execCall :: [Env] -> [Value] -> IO (Either String [Value])
@@ -118,6 +109,16 @@ execCall env (Symbol (FunctionName fct) : xs) = case findEnvValue fct env of
     _ -> return (Left ("Environment " ++ fct ++ " does not exist"))
 execCall _ (Symbol (Builtin op) : xs) = return (execBuiltin xs op)
 execCall _ _ = return (Left "Stack argument is not a symbol")
+
+execJump :: [Env] -> [Value] -> [Value] -> [Insts] -> Int -> Int -> Maybe Bool -> IO (Either String Value)
+execJump _ _ _ _ _ (-1) _ = return (Left "Invalid number of instructions")
+execJump _ _ _ insts idx num _ | num > 0 && num >= (length insts - idx - 1) = return (Left "Invalid number of instructions")
+execJump _ _ _ _ idx num _ | num < (idx + 1) * (-1) = return (Left "Invalid number of instructions")
+execJump env args stack insts idx num Nothing = exec env args stack insts (idx + num + 1)
+execJump env args (x : xs) insts idx num (Just b) | toBool x == b = exec env args xs insts (idx + num + 1)
+                                                  | otherwise = exec env args xs insts (idx + 1)
+execJump _ _ _ _ _ _ _ = return (Left "Stack is empty for a conditional jump")
+
 
 execBuiltin :: [Value] -> Operator -> Either String [Value]
 execBuiltin (Number _ : Number 0 : _) Div = Left "Cannot divide by 0"

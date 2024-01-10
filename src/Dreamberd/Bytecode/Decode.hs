@@ -50,6 +50,14 @@ parseEnvValue (c : bytes)
     | fromEnum c == 0x42 = parseValue bytes >>= \(val, rest) -> Right (Variable val, rest)
     | otherwise = Left "Unknown value type"
 
+parseJump :: (Int, [Char]) -> Either String [Insts]
+parseJump (val, c : bytes) = case fromEnum c of
+    0x51 -> pursueParsing (Jump val (Just True)) bytes
+    0x52 -> pursueParsing (Jump val (Just False)) bytes
+    0x53 -> pursueParsing (Jump val Nothing) bytes
+    _ -> Left "Unknown jump"
+parseJump _ = Left "Wrong jump length"
+
 parseInstructions :: [Char] -> Either String [Insts]
 parseInstructions [] = Right []
 parseInstructions (c : bytes) = case fromEnum c of
@@ -59,9 +67,8 @@ parseInstructions (c : bytes) = case fromEnum c of
     0x04 -> pursueParsing Call bytes
     0x05 -> parseString bytes >>= \(name, rest) -> parseEnvValue rest >>= \(val, rest') -> pursueParsing (DefineEnv name val) rest'
     0x06 -> parseString bytes >>= \(name, rest) -> pursueParsing (DefineEnvFromStack name) rest
-    0x07 -> parseInt bytes >>= \(val, rest) -> pursueParsing (Jump val) rest
-    0x08 -> parseInt bytes >>= \(val, rest) -> pursueParsing (JumpIfFalse val) rest
-    0x09 -> pursueParsing Ret bytes
+    0x07 -> parseInt bytes >>= parseJump
+    0x08 -> pursueParsing Ret bytes
     _ -> Left "Unknown instruction"
 
 pursueParsing :: Insts -> [Char] -> Either String [Insts]
