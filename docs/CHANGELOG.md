@@ -1,3 +1,60 @@
+<a name="v0.6.0"></a>
+# [v0.6.0 🌈](https://github.com/EdenComp/GLaDOS/releases/tag/v0.6.0) - 08 Jan 2024
+
+## Changes
+
+[Describe this new release here]
+
+## 🚀 Features
+
+- Language improvements: case of replaced with >>= [@EdenComp](https://github.com/EdenComp) ([#51](https://github.com/EdenComp/GLaDOS/issues/51))
+- Define from stack VM instruction [@EdenComp](https://github.com/EdenComp) ([#49](https://github.com/EdenComp/GLaDOS/issues/49))
+
+## 🐛 Bug Fixes
+
+- Parsing: Nested scopes handled correctly [@RezaRahemtola](https://github.com/RezaRahemtola) ([#50](https://github.com/EdenComp/GLaDOS/issues/50))
+- Function parsing: Fix parenthesis in params [@RezaRahemtola](https://github.com/RezaRahemtola) ([#48](https://github.com/EdenComp/GLaDOS/issues/48))
+- Parsing: Scopes and functions improvements [@RezaRahemtola](https://github.com/RezaRahemtola) ([#44](https://github.com/EdenComp/GLaDOS/issues/44))
+
+## 📄 Documentation
+
+- Update changelog for "v0.5.0" [@github-actions](https://github.com/github-actions) ([#47](https://github.com/EdenComp/GLaDOS/issues/47))
+
+
+[Changes][v0.6.0]
+
+
+<a name="v0.6.0"></a>
+# [v0.6.0 🌈](https://github.com/EdenComp/GLaDOS/releases/tag/v0.6.0) - 10 Jan 2024
+
+## Changes
+
+Unit tests improvements (parsing and VM), parsing of conditions, operators and scopres
+
+## 🚀 Features
+
+- Add parse conditions operators [@pablo0675](https://github.com/pablo0675) ([#37](https://github.com/EdenComp/GLaDOS/issues/37))
+- Parsing: Assign and reassign variables [@RezaRahemtola](https://github.com/RezaRahemtola) ([#52](https://github.com/EdenComp/GLaDOS/issues/52))
+- VM execution unit tests [@EdenComp](https://github.com/EdenComp) ([#53](https://github.com/EdenComp/GLaDOS/issues/53))
+- Language improvements: case of replaced with >>= [@EdenComp](https://github.com/EdenComp) ([#51](https://github.com/EdenComp/GLaDOS/issues/51))
+- Define from stack VM instruction [@EdenComp](https://github.com/EdenComp) ([#49](https://github.com/EdenComp/GLaDOS/issues/49))
+
+## 🐛 Bug Fixes
+
+- Fix parsing variable value type and spaces around equal sign [@RezaRahemtola](https://github.com/RezaRahemtola) ([#55](https://github.com/EdenComp/GLaDOS/issues/55))
+- Parsing: If/elif/else parsing for condition [@RezaRahemtola](https://github.com/RezaRahemtola) ([#54](https://github.com/EdenComp/GLaDOS/issues/54))
+- Parsing: Nested scopes handled correctly [@RezaRahemtola](https://github.com/RezaRahemtola) ([#50](https://github.com/EdenComp/GLaDOS/issues/50))
+- Function parsing: Fix parenthesis in params [@RezaRahemtola](https://github.com/RezaRahemtola) ([#48](https://github.com/EdenComp/GLaDOS/issues/48))
+- Parsing: Scopes and functions improvements [@RezaRahemtola](https://github.com/RezaRahemtola) ([#44](https://github.com/EdenComp/GLaDOS/issues/44))
+
+## 📄 Documentation
+
+- Update changelog for "v0.5.0" [@github-actions](https://github.com/github-actions) ([#47](https://github.com/EdenComp/GLaDOS/issues/47))
+
+
+[Changes][v0.6.0]
+
+
 <a name="v0.5.0"></a>
 # [v0.5.0 🌈](https://github.com/EdenComp/GLaDOS/releases/tag/v0.5.0) - 08 Jan 2024
 
@@ -130,6 +187,8 @@ Project setup with CI, evaluation of SExpr and documentation
 [Changes][v0.1.0]
 
 
+[v0.6.0]: https://github.com/EdenComp/GLaDOS/compare/v0.6.0...v0.6.0
+[v0.6.0]: https://github.com/EdenComp/GLaDOS/compare/v0.5.0...v0.6.0
 [v0.5.0]: https://github.com/EdenComp/GLaDOS/compare/v0.4.0...v0.5.0
 [v0.4.0]: https://github.com/EdenComp/GLaDOS/compare/v0.3.0...v0.4.0
 [v0.3.0]: https://github.com/EdenComp/GLaDOS/compare/v0.2.0...v0.3.0
