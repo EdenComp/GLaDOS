@@ -6,7 +6,7 @@ import Test.HUnit (Test (..), assertEqual)
 
 testDreamberdBytecode :: Test
 testDreamberdBytecode = 
-    TestList 
+    TestList
         [ testTypesTranspilation
         , testTranspilation
         ]
