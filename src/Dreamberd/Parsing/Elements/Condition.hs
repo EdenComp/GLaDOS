@@ -7,7 +7,7 @@ module Dreamberd.Parsing.Elements.Condition (
 
 import Dreamberd.Parsing.Utils (parseScope)
 import Dreamberd.Parsing.Values (parseAnyValue)
-import Dreamberd.Types (AstNode (Operator))
+import Dreamberd.Types (AstNode (Call))
 
 import Data.Char (isSpace)
 import Data.List (isPrefixOf)
@@ -26,7 +26,7 @@ parseConditionExpression input =
      in case components of
             [lhs, op, rhs] | op `elem` operators ->
                 case (parseAnyValue lhs, parseAnyValue rhs) of
-                    (Right lhsValue, Right rhsValue) -> Right (Operator op lhsValue rhsValue)
+                    (Right lhsValue, Right rhsValue) -> Right (Call op [lhsValue, rhsValue])
                     _ -> Left "Invalid condition expression"
             [single] -> parseAnyValue single
             _ -> Left "Invalid condition expression"
