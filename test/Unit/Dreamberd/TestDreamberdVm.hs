@@ -22,8 +22,8 @@ testBasicExecution =
         , TestCase $ execVM [Push (Number 1)] >>= assertEqual "basic push" (Right Void)
         , TestCase $ execVM [Push (Number 1), Ret] >>= assertEqual "basic push with ret" (Right (Number 1))
         , TestCase $ execVM [Push (Number 1), Push (Number 2), Push (Symbol (Builtin Add)), Call, Ret] >>= assertEqual "basic operation" (Right (Number 3))
-        , TestCase $ execVM [Push (Number 1), Push (Number 2), Push (Symbol (Builtin Neq)), Call, JumpIfFalse 2, Push (Bool False), Ret, Push (Bool True), Ret] >>= assertEqual "basic if true" (Right (Bool False))
-        , TestCase $ execVM [Push (Number 1), Push (Number 2), Push (Symbol (Builtin Eq)), Call, JumpIfFalse 2, Push (Bool False), Ret, Push (Bool True), Ret] >>= assertEqual "basic if false" (Right (Bool True))
+        , TestCase $ execVM [Push (Number 1), Push (Number 2), Push (Symbol (Builtin Neq)), Call, Jump 2 (Just False), Push (Bool False), Ret, Push (Bool True), Ret] >>= assertEqual "basic if true" (Right (Bool False))
+        , TestCase $ execVM [Push (Number 1), Push (Number 2), Push (Symbol (Builtin Eq)), Call, Jump 2 (Just False), Push (Bool False), Ret, Push (Bool True), Ret] >>= assertEqual "basic if false" (Right (Bool True))
         , TestCase $ exec [] [] [] [Push (Number 0), Ret] (-1) >>= assertEqual "wrong index: negative" (Left "Instructions index out of bounds")
         , TestCase $ exec [] [] [] [Push (Number 0), Ret] 3 >>= assertEqual "wrong index: too long" (Left "Instructions index out of bounds")
         ]
@@ -68,20 +68,20 @@ testEnvDefines =
 testJumps :: Test
 testJumps =
     TestList
-        [ TestCase $ execVM [Jump 1, Ret, Push (Number 1), Ret] >>= assertEqual "basic jump" (Right (Number 1))
-        , TestCase $ execVM [Push (Bool True), JumpIfFalse 2, Push (Number 1), Ret, Push (Number 2), Ret] >>= assertEqual "basic jump if false" (Right (Number 1))
-        , TestCase $ execVM [JumpIfFalse 1, Push (Number 1), Ret, Push (Number 2), Ret] >>= assertEqual "jump with empty stack" (Left "Stack is empty for a JumpIfFalse 1 instruction")
-        , TestCase $ execVM [Push (Number 2), JumpIfFalse 3, Push (Number 1), Ret, Push (Number 2), Ret] >>= assertEqual "jump with a number" (Right (Number 1))
-        , TestCase $ execVM [Push (Number 0), JumpIfFalse 2, Push (Number 1), Ret, Push (Number 2), Ret] >>= assertEqual "jump with a number" (Right (Number 2))
-        , TestCase $ execVM [Push (String ""), Jump 5, Push (Number 2), Push (Number 0), Push (Symbol (Builtin Div)), Call, Ret, JumpIfFalse (-6)] >>= assertEqual "jump with a negative number" (Right (Number 0))
-        , TestCase $ execVM [Push (String ""), Jump 5, Push (Number 2), Push (Number 0), Push (Symbol (Builtin Div)), Call, Ret, Jump (-9)] >>= assertEqual "too long negative jump" (Left "Invalid number of instructions")
-        , TestCase $ execVM [Push (Bool False), JumpIfFalse (-1), Push (Number 1), Ret, Push (Number 2), Ret] >>= assertEqual "invalid jump" (Left "Invalid number of instructions")
-        , TestCase $ execVM [Push (Bool True), JumpIfFalse 5, Push (Number 1), Ret, Push (Number 2), Ret] >>= assertEqual "too long jump" (Left "Invalid number of instructions")
+        [ TestCase $ execVM [Jump 1 Nothing, Ret, Push (Number 1), Ret] >>= assertEqual "basic jump" (Right (Number 1))
+        , TestCase $ execVM [Push (Bool True), Jump 2 (Just False), Push (Number 1), Ret, Push (Number 2), Ret] >>= assertEqual "basic jump if false" (Right (Number 1))
+        , TestCase $ execVM [Jump 1 (Just False), Push (Number 1), Ret, Push (Number 2), Ret] >>= assertEqual "jump with empty stack" (Left "Stack is empty for a conditional jump")
+        , TestCase $ execVM [Push (Number 2), Jump 3 (Just False), Push (Number 1), Ret, Push (Number 2), Ret] >>= assertEqual "jump with a number" (Right (Number 1))
+        , TestCase $ execVM [Push (Number 0), Jump 2 (Just False), Push (Number 1), Ret, Push (Number 2), Ret] >>= assertEqual "jump with a number" (Right (Number 2))
+        , TestCase $ execVM [Push (String ""), Jump 5 Nothing, Push (Number 2), Push (Number 0), Push (Symbol (Builtin Div)), Call, Ret, Jump (-6) (Just False)] >>= assertEqual "jump with a negative number" (Right (Number 0))
+        , TestCase $ execVM [Push (String ""), Jump 5 Nothing, Push (Number 2), Push (Number 0), Push (Symbol (Builtin Div)), Call, Ret, Jump (-9) Nothing] >>= assertEqual "too long negative jump" (Left "Invalid number of instructions")
+        , TestCase $ execVM [Push (Bool False), Jump (-1) (Just False), Push (Number 1), Ret, Push (Number 2), Ret] >>= assertEqual "invalid jump" (Left "Invalid number of instructions")
+        , TestCase $ execVM [Push (Bool True), Jump 5 (Just False), Push (Number 1), Ret, Push (Number 2), Ret] >>= assertEqual "too long jump" (Left "Invalid number of instructions")
         ]
 
 testFunctions :: Test
 testFunctions =
     TestList
-        [ TestCase $ execVM [DefineEnv "fact" (Function [PushArg 0, Push (Number 1), Push (Symbol (Builtin Eq)), Call, JumpIfFalse 2, Push (Number 1), Ret, Push (Number 1), PushArg 0, Push (Symbol (Builtin Sub)), Call, PushEnv "fact", Call, PushArg 0, Push (Symbol (Builtin Mul)), Call, Ret]), Push (Number 5), PushEnv "fact", Call, Ret] >>= assertEqual "factorial" (Right (Number 120))
-        , TestCase $ execVM [DefineEnv "a" (Variable (Number 0)), DefineEnv "b" (Variable (String "hello")), Push (Bool False), JumpIfFalse 10, Push (Number 1), PushEnv "a", Push (Symbol (Builtin Add)), Call, DefineEnvFromStack "a", Push (Number 2), PushEnv "b", Push (Symbol (Builtin Mul)), Call, DefineEnvFromStack "b", Push (Number 2), PushEnv "a", Push (Symbol (Builtin GreaterOrEqual)), Call, JumpIfFalse (-15), PushEnv "b", Ret] >>= assertEqual "for loop" (Right (String "hellohellohellohello"))
+        [ TestCase $ execVM [DefineEnv "fact" (Function [PushArg 0, Push (Number 1), Push (Symbol (Builtin Eq)), Call, Jump 2 (Just False), Push (Number 1), Ret, Push (Number 1), PushArg 0, Push (Symbol (Builtin Sub)), Call, PushEnv "fact", Call, PushArg 0, Push (Symbol (Builtin Mul)), Call, Ret]), Push (Number 5), PushEnv "fact", Call, Ret] >>= assertEqual "factorial" (Right (Number 120))
+        , TestCase $ execVM [DefineEnv "a" (Variable (Number 0)), DefineEnv "b" (Variable (String "hello")), Push (Bool False), Jump 10 (Just False), Push (Number 1), PushEnv "a", Push (Symbol (Builtin Add)), Call, DefineEnvFromStack "a", Push (Number 2), PushEnv "b", Push (Symbol (Builtin Mul)), Call, DefineEnvFromStack "b", Push (Number 2), PushEnv "a", Push (Symbol (Builtin GreaterOrEqual)), Call, Jump (-15) (Just False), PushEnv "b", Ret] >>= assertEqual "for loop" (Right (String "hellohellohellohello"))
         ]

@@ -10,9 +10,8 @@ Here are all the definitions of the bytecode:
 - `0x04`: Call
 - `0x05`: DefineEnv (+ String and EnvValue)
 - `0x06`: DefineEnvFromStack (+ String)
-- `0x07`: Jump (+ Int)
-- `0x08`: JumpIfFalse (+ Int)
-- `0x09`: Ret
+- `0x07`: Jump (+ Int) (+ TriBool)
+- `0x08`: Ret
 
 ## Values
 
@@ -51,3 +50,11 @@ Both DefineEnv and DefineEnvFromStack use 1 byte to determine the type of the de
 
 - `0x41`: Function (+ 4 bytes instructions length)
 - `0x42`: Value
+
+# TriBools
+
+TriBools are a special type for the handling of conditional jumps:
+
+- `0x51`: True
+- `0x52`: False
+- `0x53`: Nothing
