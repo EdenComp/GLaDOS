@@ -19,7 +19,28 @@ compileNode params (AST.Call op args) = compileCall params op args
 compileNode params (AST.If test trueBody falseBody) = compileIf params test trueBody falseBody
 compileNode params (AST.Function name args body) = compileFunction params name args body
 compileNode params (AST.Return value) = compileReturn params value
+compileNode params (AST.Loop test body initNode updateNode) = compileLoop params test body initNode updateNode
 compileNode params node = (compileValuePush params node >>= \inst -> Right [inst]) <> Left "Unknown node type"
+
+compileLoop :: [String] -> AST.AstNode -> [AST.AstNode] -> Maybe AST.AstNode -> Maybe AST.AstNode -> Either String [VM.Insts]
+compileLoop params test body initNode updateNode =
+    compileNode params test
+        >>= \testInsts ->
+            compileNodes params body []
+                >>= \bodyInsts ->
+                    compileMaybeNode initNode
+                        >>= \initInsts ->
+                            compileMaybeNode updateNode
+                                >>= \updateInsts ->
+                                    Right
+                                        $ initInsts
+                                        ++ testInsts
+                                        ++ [VM.JumpIfFalse $ length bodyInsts + length updateInsts + 2]
+                                        ++ bodyInsts
+                                        ++ updateInsts
+                                        ++ [VM.Push $ VM.Bool False, VM.JumpIfFalse $ -(length bodyInsts + length updateInsts + length testInsts + 3)]
+  where
+    compileMaybeNode = maybe (Right []) (compileNode params)
 
 compileReturn :: [String] -> AST.AstNode -> Either String [VM.Insts]
 compileReturn params (AST.Call op args) = compileCall params op args >>= \call -> Right $ call ++ [VM.Ret]
