@@ -15,14 +15,14 @@ data Value
     | String String
     | Symbol Call
     | Void
-    deriving (Eq, Show)
+    deriving (Eq)
 
--- instance Show Value where
---     show (Number nbr) = show nbr
---     show (Bool b) = show b
---     show (String str) = str
---     show (Symbol sym) = show sym
---     show Void = ""
+instance Show Value where
+    show (Number nbr) = show nbr
+    show (Bool b) = show b
+    show (String str) = str
+    show (Symbol sym) = show sym
+    show Void = ""
 
 data EnvValue
     = Function [Insts]

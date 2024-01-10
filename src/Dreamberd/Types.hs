@@ -11,7 +11,6 @@ data AstNode
     | Return AstNode
     | Loop AstNode [AstNode] (Maybe AstNode) (Maybe AstNode)
     | List [AstNode]
-    deriving (Show)
 
 instance Show AstNode where
     show (Number val) = show val
