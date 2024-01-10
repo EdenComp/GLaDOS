@@ -3,6 +3,7 @@ module Dreamberd.Compile (
     compileExecAst,
 ) where
 
+import Data.List (elemIndex)
 import qualified Dreamberd.Types as AST
 import qualified Dreamberd.Vm as VM
 
@@ -11,52 +12,63 @@ compileExecAst ast = either (pure . Left) (VM.exec [] [] []) (compileAst ast)
 
 compileAst :: [AST.AstNode] -> Either String [VM.Insts]
 compileAst [] = Left "No instructions provided"
-compileAst ast = compileNodes ast []
+compileAst ast = compileNodes [] ast []
 
-compileNodes :: [AST.AstNode] -> [VM.Insts] -> Either String [VM.Insts]
-compileNodes [] insts = Right insts
-compileNodes (curNode : nextNodes) insts = compileNode curNode >>= \curInsts -> compileNodes nextNodes (insts ++ curInsts)
+compileNodes :: [String] -> [AST.AstNode] -> [VM.Insts] -> Either String [VM.Insts]
+compileNodes _ [] insts = Right insts
+compileNodes params (curNode : nextNodes) insts = compileNode params curNode >>= \curInsts -> compileNodes params nextNodes (insts ++ curInsts)
 
-compileNode :: AST.AstNode -> Either String [VM.Insts]
-compileNode (AST.Call op args) = compileCall op args
-compileNode (AST.Operator op l r) = compileNode (AST.Call op [l, r]) -- TODO: Remove this when Operators are removed
-compileNode (AST.AssignVariable _ name value) = compileNode (AST.Call "=" [AST.Identifier name, value]) -- TODO: Remove this when AssginVariable
-compileNode (AST.If (AST.Operator op l r) t f) = compileNode (AST.If (AST.Call op [l, r]) t f) -- TODO: Remove this when Operators are removed
-compileNode (AST.If test trueBody falseBody) = compileIf test trueBody falseBody
-compileNode _ = Left "Unknown node type"
+compileNode :: [String] -> AST.AstNode -> Either String [VM.Insts]
+compileNode params (AST.Call op args) = compileCall params op args
+compileNode params (AST.Operator op l r) = compileNode params (AST.Call op [l, r]) -- TODO: Remove this when Operators are removed
+compileNode params (AST.AssignVariable _ name value) = compileNode params (AST.Call "=" [AST.Identifier name, value]) -- TODO: Remove this when AssginVariable
+compileNode params (AST.If (AST.Operator op l r) t f) = compileNode params (AST.If (AST.Call op [l, r]) t f) -- TODO: Remove this when Operators are removed
+compileNode params (AST.If test trueBody falseBody) = compileIf params test trueBody falseBody
+compileNode params (AST.Function name args body) = compileFunction params name args body
+compileNode params (AST.Return value) = compileReturn params value
+compileNode _ _ = Left "Unknown node type"
 
-compileCall :: String -> [AST.AstNode] -> Either String [VM.Insts]
-compileCall "=" [AST.Identifier iden, value] = compileAssignation iden value
-compileCall op args = compileBuiltinCall op args <> compileCustomCall op args
+compileReturn :: [String] -> AST.AstNode -> Either String [VM.Insts]
+compileReturn params (AST.Call op args) = compileCall params op args >>= \call -> Right $ call ++ [VM.Ret]
+compileReturn params value = compileValuePush params value >>= \pushInst -> Right [pushInst, VM.Ret]
 
-compileIf :: AST.AstNode -> [AST.AstNode] -> [AST.AstNode] -> Either String [VM.Insts]
-compileIf (AST.Call op args) trueBody falseBody =
-    compileCall op args
+compileFunction :: [String] -> String -> [String] -> [AST.AstNode] -> Either String [VM.Insts]
+compileFunction params name args body =
+    compileNodes (args ++ params) body []
+        >>= \bodyInsts -> Right [VM.DefineEnv name $ VM.Function bodyInsts]
+
+compileCall :: [String] -> String -> [AST.AstNode] -> Either String [VM.Insts]
+compileCall params "=" [AST.Identifier iden, value] = compileAssignation params iden value
+compileCall params op args = compileBuiltinCall params op args <> compileCustomCall params op args
+
+compileIf :: [String] -> AST.AstNode -> [AST.AstNode] -> [AST.AstNode] -> Either String [VM.Insts]
+compileIf params (AST.Call op args) trueBody falseBody =
+    compileCall params op args
         >>= \call ->
-            compileNodes trueBody []
+            compileNodes params trueBody []
                 >>= \trueInsts ->
-                    compileNodes falseBody []
+                    compileNodes params falseBody []
                         >>= \falseInsts ->
                             Right $ call ++ [VM.JumpIfFalse $ length trueInsts] ++ trueInsts ++ falseInsts
-compileIf test trueBody falseBody =
-    ( compileValuePush test
+compileIf params test trueBody falseBody =
+    ( compileValuePush params test
         >>= \testPush ->
-            compileNodes trueBody []
+            compileNodes params trueBody []
                 >>= \trueInsts ->
-                    compileNodes falseBody []
+                    compileNodes params falseBody []
                         >>= \falseInsts -> Right $ [testPush, VM.JumpIfFalse $ length trueInsts] ++ trueInsts ++ falseInsts
     )
         <> Left "Unknown if type"
 
-compileBuiltinCall :: String -> [AST.AstNode] -> Either String [VM.Insts]
-compileBuiltinCall op [a, b] =
+compileBuiltinCall :: [String] -> String -> [AST.AstNode] -> Either String [VM.Insts]
+compileBuiltinCall params op [a, b] =
     getBuiltinCallForOp op
         >>= \call ->
-            compileValuePush a
+            compileValuePush params a
                 >>= \aPush ->
-                    compileValuePush b
+                    compileValuePush params b
                         >>= \bPush -> Right [bPush, aPush, VM.Push $ VM.Symbol call, VM.Call]
-compileBuiltinCall _ _ = Left "Unknown builtin call"
+compileBuiltinCall _ _ _ = Left "Unknown builtin call"
 
 getBuiltinCallForOp :: String -> Either String VM.Call
 getBuiltinCallForOp "+" = Right VM.Add
@@ -71,15 +83,17 @@ getBuiltinCallForOp ">" = Right VM.Greater
 getBuiltinCallForOp ">=" = Right VM.GreaterOrEqual
 getBuiltinCallForOp _ = Left "Unknown builtin call"
 
-compileCustomCall :: String -> [AST.AstNode] -> Either String [VM.Insts]
-compileCustomCall name args = mapM compileValuePush args >>= \args' -> Right $ reverse args' ++ [VM.PushEnv name, VM.Call]
+compileCustomCall :: [String] -> String -> [AST.AstNode] -> Either String [VM.Insts]
+compileCustomCall params name args = mapM (compileValuePush params) args >>= \args' -> Right $ reverse args' ++ [VM.PushEnv name, VM.Call]
 
-compileAssignation :: String -> AST.AstNode -> Either String [VM.Insts]
-compileAssignation iden value = compileValuePush value >>= \pushInst -> Right [pushInst, VM.DefineEnvFromStack iden]
+compileAssignation :: [String] -> String -> AST.AstNode -> Either String [VM.Insts]
+compileAssignation params iden value = compileValuePush params value >>= \pushInst -> Right [pushInst, VM.DefineEnvFromStack iden]
 
-compileValuePush :: AST.AstNode -> Either String VM.Insts
-compileValuePush (AST.Boolean b) = Right $ VM.Push $ VM.Bool b
-compileValuePush (AST.Number n) = Right $ VM.Push $ VM.Number n
-compileValuePush (AST.String s) = Right $ VM.Push $ VM.String s
-compileValuePush (AST.Identifier i) = Right $ VM.PushEnv i
-compileValuePush _ = Left "Unknown value type"
+compileValuePush :: [String] -> AST.AstNode -> Either String VM.Insts
+compileValuePush _ (AST.Boolean b) = Right $ VM.Push $ VM.Bool b
+compileValuePush _ (AST.Number n) = Right $ VM.Push $ VM.Number n
+compileValuePush _ (AST.String s) = Right $ VM.Push $ VM.String s
+compileValuePush params (AST.Identifier i) = Right $ case elemIndex i params of
+    Nothing -> VM.PushEnv i
+    Just idx -> VM.PushArg idx
+compileValuePush _ _ = Left "Unknown value type"
