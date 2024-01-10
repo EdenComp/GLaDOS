@@ -35,10 +35,10 @@ compileLoop params test body initNode updateNode =
                                     Right $
                                         initInsts
                                             ++ testInsts
-                                            ++ [VM.JumpIfFalse $ length bodyInsts + length updateInsts + 2]
+                                            ++ [VM.Jump (length bodyInsts + length updateInsts + 1) $ Just False]
                                             ++ bodyInsts
                                             ++ updateInsts
-                                            ++ [VM.Push $ VM.Bool False, VM.JumpIfFalse $ -(length bodyInsts + length updateInsts + length testInsts + 3)]
+                                            ++ [VM.Jump (-(length bodyInsts + length updateInsts + length testInsts + 2)) Nothing]
   where
     compileMaybeNode = maybe (Right []) (compileNode params)
 
@@ -66,9 +66,9 @@ compileIf params (AST.Call op args) trueBody falseBody =
                         >>= \falseInsts ->
                             Right $
                                 call
-                                    ++ [VM.JumpIfFalse $ length trueInsts + 2]
+                                    ++ [VM.Jump (length trueInsts + 1) $ Just False]
                                     ++ trueInsts
-                                    ++ [VM.Push $ VM.Bool False, VM.JumpIfFalse $ length falseInsts]
+                                    ++ [VM.Jump (length falseInsts) Nothing]
                                     ++ falseInsts
 compileIf params test trueBody falseBody =
     ( compileNode params test
@@ -76,7 +76,7 @@ compileIf params test trueBody falseBody =
             compileNodes params trueBody []
                 >>= \trueInsts ->
                     compileNodes params falseBody []
-                        >>= \falseInsts -> Right $ testPush ++ [VM.JumpIfFalse $ length trueInsts] ++ trueInsts ++ falseInsts
+                        >>= \falseInsts -> Right $ testPush ++ [VM.Jump (length trueInsts) Nothing] ++ trueInsts ++ falseInsts
     )
         <> Left "Unknown if type"
 
@@ -87,10 +87,10 @@ compileBuiltinCall params op [a, b] =
             compileNode params a
                 >>= \aPush ->
                     compileNode params b
-                        >>= \bPush -> Right $ bPush ++ aPush ++ [VM.Push $ VM.Symbol call, VM.Call]
+                        >>= \bPush -> Right $ bPush ++ aPush ++ [VM.Push $ VM.Symbol $ VM.Builtin call, VM.Call]
 compileBuiltinCall _ _ _ = Left "Unknown builtin call"
 
-getBuiltinCallForOp :: String -> Either String VM.Call
+getBuiltinCallForOp :: String -> Either String VM.Operator
 getBuiltinCallForOp "+" = Right VM.Add
 getBuiltinCallForOp "-" = Right VM.Sub
 getBuiltinCallForOp "*" = Right VM.Mul
