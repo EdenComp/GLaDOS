@@ -92,12 +92,11 @@ execInstruction env args stack insts (Jump num) idx
     | num == (-1) || num > 0 && num >= (length insts - idx - 1) = return (Left "Invalid number of instructions")
     | num < idx * (-1) = return (Left "Invalid number of instructions")
     | otherwise = exec env args stack insts (idx + num + 1)
-execInstruction env args (Bool x : xs) insts (JumpIfFalse num) idx
+execInstruction env args (x : xs) insts (JumpIfFalse num) idx
     | num == (-1) || num > 0 && num >= (length insts - idx - 1) = return (Left "Invalid number of instructions")
     | num < idx * (-1) = return (Left "Invalid number of instructions")
-    | not x = exec env args xs insts (idx + num + 1)
-    | otherwise = exec env args xs insts (idx + 1)
-execInstruction _ _ (_ : _) _ (JumpIfFalse _) _ = return (Left "Wrong data types in stack: JumpIfFalse needs a Bool")
+    | toBool x = exec env args xs insts (idx + 1)
+    | otherwise = exec env args xs insts (idx + num + 1)
 execInstruction _ _ [] _ x _ = return (Left ("Stack is empty for a " ++ show x ++ " instruction"))
 
 execCall :: [Env] -> [Value] -> IO (Either String [Value])
@@ -154,3 +153,10 @@ addEnvValue iden val (x : xs)
     | identifier x == iden = Env{identifier = iden, value = val} : xs
     | otherwise = x : addEnvValue iden val xs
 addEnvValue iden val [] = [Env{identifier = iden, value = val}]
+
+toBool :: Value -> Bool
+toBool (Bool False) = False
+toBool (Number 0) = False
+toBool (String "") = False
+toBool Void = False
+toBool _ = True

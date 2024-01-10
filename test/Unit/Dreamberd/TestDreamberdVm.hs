@@ -68,7 +68,8 @@ testJumps =
         [ TestCase $ execVM [Jump 1, Ret, Push (Number 1), Ret] >>= assertEqual "basic jump" (Right (Number 1))
         , TestCase $ execVM [Push (Bool True), JumpIfFalse 2, Push (Number 1), Ret, Push (Number 2), Ret] >>= assertEqual "basic jump if false" (Right (Number 1))
         , TestCase $ execVM [JumpIfFalse 1, Push (Number 1), Ret, Push (Number 2), Ret] >>= assertEqual "jump with empty stack" (Left "Stack is empty for a JumpIfFalse 1 instruction")
-        , TestCase $ execVM [Push (Number 2), JumpIfFalse 1, Push (Number 1), Ret, Push (Number 2), Ret] >>= assertEqual "jump with a number" (Left "Wrong data types in stack: JumpIfFalse needs a Bool")
+        , TestCase $ execVM [Push (Number 2), JumpIfFalse 3, Push (Number 1), Ret, Push (Number 2), Ret] >>= assertEqual "jump with a number" (Right (Number 1))
+        , TestCase $ execVM [Push (Number 0), JumpIfFalse 2, Push (Number 1), Ret, Push (Number 2), Ret] >>= assertEqual "jump with a number" (Right (Number 2))
         , TestCase $ execVM [Push (Bool False), JumpIfFalse (-1), Push (Number 1), Ret, Push (Number 2), Ret] >>= assertEqual "negative jump" (Left "Invalid number of instructions")
         , TestCase $ execVM [Push (Bool True), JumpIfFalse 5, Push (Number 1), Ret, Push (Number 2), Ret] >>= assertEqual "too long jump" (Left "Invalid number of instructions")
         ]
