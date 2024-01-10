@@ -64,9 +64,10 @@ execVM insts = exec [] [] [] insts 0
 
 exec :: [Env] -> [Value] -> [Value] -> [Insts] -> Int -> IO (Either String Value)
 exec _ _ _ [] _ = return (Right Void)
-exec env args stack insts idx | idx < 0 || idx > length insts = return (Left "Instructions index out of bounds")
-                              | idx == length insts = return (Right Void)
-                              | otherwise = execInstruction env args stack insts (insts !! idx) idx
+exec env args stack insts idx
+    | idx < 0 || idx > length insts = return (Left "Instructions index out of bounds")
+    | idx == length insts = return (Right Void)
+    | otherwise = execInstruction env args stack insts (insts !! idx) idx
 
 execInstruction :: [Env] -> [Value] -> [Value] -> [Insts] -> Insts -> Int -> IO (Either String Value)
 execInstruction _ _ [] _ Ret _ = return (Right Void)
