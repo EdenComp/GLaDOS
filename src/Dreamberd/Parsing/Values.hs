@@ -1,3 +1,5 @@
+{-# LANGUAGE ViewPatterns #-}
+
 module Dreamberd.Parsing.Values (
     parseAnyValue,
     parseFunctionCall,
@@ -9,7 +11,9 @@ module Dreamberd.Parsing.Values (
 
 import Data.Char (isDigit, isSpace)
 import Data.Either (lefts, rights)
-import Dreamberd.Parsing.Utils (getVariableName, trimSpaces)
+import Data.Foldable (find)
+import Data.List (isInfixOf)
+import Dreamberd.Parsing.Utils (getVariableName, splitOn, trimSpaces)
 import Dreamberd.Types (AstNode (Boolean, Call, Identifier, Number, Operator, String))
 
 parseBool :: String -> Either String AstNode
@@ -63,16 +67,15 @@ parseAnyValue input = case parseOperatorValue input of
 
 parseOperatorValue :: String -> Either String AstNode
 parseOperatorValue str =
-    case words str of
-        [lhs, op, rhs] ->
-            parseAnyValue lhs >>= \lhsNode ->
-                checkOperatorValue op >>= \opNode ->
-                    parseAnyValue rhs >>= \rhsNode ->
-                        Right (Operator opNode lhsNode rhsNode)
-        _ -> Left "Invalid expression"
+    case findOperator str of
+        Just op ->
+            case splitOn op str of
+                [trimSpaces -> lhs, trimSpaces -> rhs] ->
+                    parseAnyValue lhs >>= \lhsNode ->
+                        parseAnyValue rhs >>= \rhsNode ->
+                            Right (Operator op lhsNode rhsNode)
+                _ -> Left "Invalid expression - expected two values around operator"
+        _ -> Left "Invalid operator expression"
 
-checkOperatorValue :: String -> Either String String
-checkOperatorValue str =
-    if str `elem` ["+", "-", "*", "/", "%", "<", ">", "<=", ">=", "==", "!="]
-        then Right str
-        else Left "Invalid operator"
+findOperator :: String -> Maybe String
+findOperator str = find (`isInfixOf` str) ["<=", ">=", "==", "!=", "+", "-", "*", "/", "%", "<", ">"]
