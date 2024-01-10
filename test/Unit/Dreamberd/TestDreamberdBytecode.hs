@@ -5,7 +5,7 @@ import Dreamberd.Vm
 import Test.HUnit (Test (..), assertEqual)
 
 testDreamberdBytecode :: Test
-testDreamberdBytecode = 
+testDreamberdBytecode =
     TestList
         [ testTypesTranspilation
         , testTranspilation
