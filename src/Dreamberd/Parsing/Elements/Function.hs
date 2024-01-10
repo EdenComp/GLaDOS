@@ -1,8 +1,7 @@
-{-# LANGUAGE ViewPatterns #-}
-
 module Dreamberd.Parsing.Elements.Function (parseReturn, extractFunctionParts, parseFunctionGlobalCall) where
 
-import Dreamberd.Parsing.Utils (extractValueAndRest, getVariableName, parseScope, trimSpaces)
+import Data.List (isPrefixOf)
+import Dreamberd.Parsing.Utils (breakOnClosingParenthesis, extractValueAndRest, getVariableName, parseScope, trimSpaces)
 import Dreamberd.Parsing.Values (parseAnyValue, parseFunctionCall)
 import Dreamberd.Types (AstNode (Return))
 
@@ -27,5 +26,10 @@ parseFunctionGlobalCall code =
     if ';' `notElem` code
         then Left "No semicolon found after function call"
         else
-            let (trimSpaces -> beforeSemi, drop 1 -> afterSemi) = break (== ';') code
-             in parseFunctionCall beforeSemi >>= \node -> Right (afterSemi, node)
+            breakOnClosingParenthesis code (-1) >>= \(beforeCloseParenthesis, afterCloseParenthesis) ->
+                parseFunctionCall (beforeCloseParenthesis ++ ")") >>= \node ->
+                    if not (";" `isPrefixOf` afterCloseParenthesis)
+                        then Left "No semicolon found after function call"
+                        else
+                            Right
+                                (drop 1 afterCloseParenthesis, node)
