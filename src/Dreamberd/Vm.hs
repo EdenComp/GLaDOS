@@ -5,6 +5,7 @@ module Dreamberd.Vm (
     Env (..),
     EnvValue (..),
     Insts (..),
+    Operator (..),
     Value (..),
 ) where
 
@@ -35,18 +36,23 @@ data Env = Env
     deriving (Show)
 
 data Call
+    = Builtin Operator
+    | FunctionName String
+    deriving (Eq, Show)
+
+data Operator
     = Add
     | Sub
     | Mul
     | Div
+    | Mod
     | Eq
     | Neq
     | Less
     | LessOrEqual
     | Greater
     | GreaterOrEqual
-    | FunctionName String
-    deriving (Eq, Show)
+    deriving (Enum, Eq, Show)
 
 data Insts
     = Push Value
@@ -90,11 +96,11 @@ execInstruction env args stack insts Call idx = do
         Right newValues -> exec env args newValues insts (idx + 1)
 execInstruction env args stack insts (Jump num) idx
     | num == (-1) || num > 0 && num >= (length insts - idx - 1) = return (Left "Invalid number of instructions")
-    | num < idx * (-1) = return (Left "Invalid number of instructions")
+    | num < (idx + 1) * (-1) = return (Left "Invalid number of instructions")
     | otherwise = exec env args stack insts (idx + num + 1)
 execInstruction env args (x : xs) insts (JumpIfFalse num) idx
     | num == (-1) || num > 0 && num >= (length insts - idx - 1) = return (Left "Invalid number of instructions")
-    | num < idx * (-1) = return (Left "Invalid number of instructions")
+    | num < (idx + 1) * (-1) = return (Left "Invalid number of instructions")
     | toBool x = exec env args xs insts (idx + 1)
     | otherwise = exec env args xs insts (idx + num + 1)
 execInstruction _ _ [] _ x _ = return (Left ("Stack is empty for a " ++ show x ++ " instruction"))
@@ -110,23 +116,24 @@ execCall env (Symbol (FunctionName fct) : xs) = case findEnvValue fct env of
             Left err -> return (Left err)
             Right val -> return (Right (val : xs))
     _ -> return (Left ("Environment " ++ fct ++ " does not exist"))
-execCall _ (Symbol sym : xs) = return (execBuiltin xs sym)
+execCall _ (Symbol (Builtin op) : xs) = return (execBuiltin xs op)
 execCall _ _ = return (Left "Stack argument is not a symbol")
 
-execBuiltin :: [Value] -> Call -> Either String [Value]
+execBuiltin :: [Value] -> Operator -> Either String [Value]
 execBuiltin (Number _ : Number 0 : _) Div = Left "Cannot divide by 0"
+execBuiltin (Number _ : Number 0 : _) Mod = Left "Cannot divide by 0"
 execBuiltin (Number l : Number r : xs) op = case op of
     Add -> Right (Number (l + r) : xs)
     Sub -> Right (Number (l - r) : xs)
     Mul -> Right (Number (l * r) : xs)
     Div -> Right (Number (div l r) : xs)
+    Mod -> Right (Number (mod l r) : xs)
     Eq -> Right (Bool (l == r) : xs)
     Neq -> Right (Bool (l /= r) : xs)
     Less -> Right (Bool (l < r) : xs)
     LessOrEqual -> Right (Bool (l <= r) : xs)
     Greater -> Right (Bool (l > r) : xs)
     GreaterOrEqual -> Right (Bool (l >= r) : xs)
-    _ -> Left ("Wrong data types in stack: " ++ show op ++ " with 2 numbers")
 execBuiltin (Bool l : Bool r : xs) op = case op of
     Eq -> Right (Bool (l == r) : xs)
     Neq -> Right (Bool (l /= r) : xs)

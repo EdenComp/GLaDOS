@@ -16,24 +16,38 @@ Here are all the definitions of the bytecode:
 
 ## Values
 
-`0x11` + 4 bytes: Int
-`0x12` + 1 byte: Bool
-`0x13`: String
-`0x14` + (Symbol or function name): Symbol
-`0x15`: Void
+- `0x11` + 4 bytes: Int
+- `0x12` + 1 byte: Bool
+- `0x13`: String
+- `0x14` + (Symbol or function name): Symbol
+- `0x15`: Void
 
 Strings: 4 bytes for length + string content
 
 > :warning: Strings are not a value type in the language.
 
 ## Symbols
-`0x21`: Add
-`0x22`: Sub
-... and so on for the builtins, until:
-`0x2B`: Function Name
+
+- `0x21`: Builtin + 1 byte: Operator
+- `0x22`: Function Name
+
+## Builtins
+
+- `0x31`: Add
+- `0x32`: Sub
+- `0x33`: Mul
+- `0x34`: Div
+- `0x35`: Mod
+- `0x36`: Eq
+- `0x37`: Neq
+- `0x38`: Less
+- `0x39`: LessOrEqual
+- `0x3A`: Greater
+- `0x3B`: GreaterOrEqual
 
 ## DefineEnv
 
-This instructions uses 1 byte to determine the type of the definition:
-`0x31`: Function (+ 4 bytes instructions length)
-`0x32`: Value
+Both DefineEnv and DefineEnvFromStack use 1 byte to determine the type of the definition:
+
+- `0x41`: Function (+ 4 bytes instructions length)
+- `0x42`: Value
