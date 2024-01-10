@@ -32,13 +32,13 @@ compileLoop params test body initNode updateNode =
                         >>= \initInsts ->
                             compileMaybeNode updateNode
                                 >>= \updateInsts ->
-                                    Right
-                                        $ initInsts
-                                        ++ testInsts
-                                        ++ [VM.JumpIfFalse $ length bodyInsts + length updateInsts + 2]
-                                        ++ bodyInsts
-                                        ++ updateInsts
-                                        ++ [VM.Push $ VM.Bool False, VM.JumpIfFalse $ -(length bodyInsts + length updateInsts + length testInsts + 3)]
+                                    Right $
+                                        initInsts
+                                            ++ testInsts
+                                            ++ [VM.JumpIfFalse $ length bodyInsts + length updateInsts + 2]
+                                            ++ bodyInsts
+                                            ++ updateInsts
+                                            ++ [VM.Push $ VM.Bool False, VM.JumpIfFalse $ -(length bodyInsts + length updateInsts + length testInsts + 3)]
   where
     compileMaybeNode = maybe (Right []) (compileNode params)
 
