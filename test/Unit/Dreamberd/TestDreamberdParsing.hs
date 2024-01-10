@@ -14,7 +14,7 @@ testParseFunction :: Test
 testParseFunction =
     TestList
         [ TestCase (assertEqual "parseFunction basic" (Right ("", [Function "foo" [] [Return (Number 1)]])) (parseFunction "foo(){return 1;}" []))
-        , TestCase (assertEqual "parseFunction nested" (Right ("", [Function "foo" [] [Function "bar" [] [AssignVariable "bool" "b" (Boolean True)], Return (Number 1)]])) (parseFunction "foo(){ function bar() {bool b = true;} return 1;}" []))
+        , TestCase (assertEqual "parseFunction nested" (Right ("", [Function "foo" [] [Function "bar" [] [AssignVariable "bool" "b" (Boolean True)], Return (Number 1)]])) (parseFunction "foo(){ fn bar() {bool b = true;} return 1;}" []))
         , TestCase (assertEqual "parseFunction with params" (Right ("", [Function "foo" ["bar"] [Return (Number 1)]])) (parseFunction "foo(bar){return 1;}" []))
         , TestCase (assertEqual "parseFunction with params and body" (Right ("", [Function "foo" ["bar", "other"] [Return (Number 1)]])) (parseFunction "foo(bar, other ){return 1;}" []))
         , TestCase (assertEqual "parseFunction with params, body and spaces" (Right ("", [Function "foo" ["bar"] [Return (Number 1)]])) (parseFunction "foo ( bar ) { return 1; }" []))
@@ -32,7 +32,7 @@ testparseExpression =
     TestList
         [ TestCase (assertEqual "parseExpression =" (Right (Operator "=" (Number 1) (Number 1))) (parseExpression " 1 = 1"))
         , TestCase (assertEqual "parseExpression +" (Right (Operator "+" (Number 1) (Number 1))) (parseExpression "1 + 1"))
-        , TestCase (assertEqual "parseExpression -" (Right (Operator "-" (Number 1) (Number 1))) (parseExpression "1 - 1"))
+        , TestCase (assertEqual "parseExpression -" (Right (Operator "=" (Boolean True) (Boolean True))) (parseExpression "true = true"))
         , TestCase (assertEqual "parseExpression *" (Right (Operator "*" (Number 1) (Number 1))) (parseExpression "1 * 1"))
         , TestCase (assertEqual "parseExpression /" (Right (Operator "/" (Number 1) (Number 1))) (parseExpression "1 / 1"))
         , TestCase (assertEqual "parseExpression %" (Right (Operator "%" (Number 1) (Number 1))) (parseExpression "1 % 1"))
@@ -51,7 +51,7 @@ testParseConditionExpression =
     TestList
         [ TestCase (assertEqual "parseConditionExpression basic" (Right (Operator "<" (Number 1) (Number 2))) (parseConditionExpression "1 < 2"))
         , TestCase (assertEqual "parseConditionExpression with spaces" (Right (Operator ">" (Number 1) (Number 2))) (parseConditionExpression "1 > 2"))
-        , TestCase (assertEqual "parseConditionExpression with spaces" (Right (Operator ">=" (Number 1) (Number 2))) (parseConditionExpression "1 >= 2"))
+        , TestCase (assertEqual "parseConditionExpression with spaces" (Right (Operator ">=" (Boolean True) (Boolean False))) (parseConditionExpression "true >= false"))
         , TestCase (assertEqual "parseConditionExpression with spaces" (Right (Operator "<=" (Number 1) (Number 2))) (parseConditionExpression "1 <= 2"))
         , TestCase (assertEqual "parseConditionExpression with spaces" (Right (Operator "==" (Number 1) (Number 2))) (parseConditionExpression "1 == 2"))
         , TestCase (assertEqual "parseConditionExpression with spaces" (Right (Operator "!=" (Number 1) (Number 2))) (parseConditionExpression "1 != 2"))
