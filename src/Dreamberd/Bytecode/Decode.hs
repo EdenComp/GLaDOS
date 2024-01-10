@@ -18,9 +18,11 @@ parseString bytes =
 parseCall :: [Char] -> Either String (Call, [Char])
 parseCall [] = Left "No call provided"
 parseCall (c : op : bytes) | fromEnum c == 0x21 && hex >= 0x31 && hex <= 0x3B = Right (Builtin (toEnum $ hex - 0x31), bytes)
-  where hex = fromEnum op
-parseCall (c : bytes) | fromEnum c == 0x22 = parseString bytes >>= \(name, rest) -> Right (FunctionName name, rest)
-                      | otherwise = Left "Unknown call"
+  where
+    hex = fromEnum op
+parseCall (c : bytes)
+    | fromEnum c == 0x22 = parseString bytes >>= \(name, rest) -> Right (FunctionName name, rest)
+    | otherwise = Left "Unknown call"
 
 parseValue :: [Char] -> Either String (Value, [Char])
 parseValue [] = Left "No value provided"
