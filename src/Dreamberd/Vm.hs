@@ -55,6 +55,7 @@ data Insts
     | Call
     | DefineEnv String EnvValue
     | DefineEnvFromStack String
+    | Jump Int
     | JumpIfFalse Int
     | Ret
     deriving (Show)
@@ -87,13 +88,17 @@ execInstruction env args stack insts Call idx = do
     case ret of
         Left err -> return (Left err)
         Right newValues -> exec env args newValues insts (idx + 1)
-execInstruction _ _ [] _ x _ = return (Left ("Stack is empty for a " ++ show x ++ " instruction"))
+execInstruction env args stack insts (Jump num) idx
+    | num == (-1) || num > 0 && num >= (length insts - idx - 1) = return (Left "Invalid number of instructions")
+    | num < idx * (-1) = return (Left "Invalid number of instructions")
+    | otherwise = exec env args stack insts (idx + num + 1)
 execInstruction env args (Bool x : xs) insts (JumpIfFalse num) idx
     | num == (-1) || num > 0 && num >= (length insts - idx - 1) = return (Left "Invalid number of instructions")
     | num < idx * (-1) = return (Left "Invalid number of instructions")
     | not x = exec env args xs insts (idx + num + 1)
     | otherwise = exec env args xs insts (idx + 1)
-execInstruction _ _ _ _ (JumpIfFalse _) _ = return (Left "Wrong data types in stack: JumpIfFalse needs a Bool")
+execInstruction _ _ (_ : _) _ (JumpIfFalse _) _ = return (Left "Wrong data types in stack: JumpIfFalse needs a Bool")
+execInstruction _ _ [] _ x _ = return (Left ("Stack is empty for a " ++ show x ++ " instruction"))
 
 execCall :: [Env] -> [Value] -> IO (Either String [Value])
 execCall _ [] = return (Left "Stack is empty for a Call instruction")
