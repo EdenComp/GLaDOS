@@ -3,6 +3,7 @@ module Dreamberd.Compile (
 ) where
 
 import Data.List (elemIndex)
+import Data.Maybe (mapMaybe)
 import qualified Dreamberd.Types as AST
 import qualified Dreamberd.Vm as VM
 
@@ -65,7 +66,7 @@ compileCall params [op, '='] [AST.Identifier iden, value]
 compileCall params op args = compileBuiltinCall params op args <> compileCustomCall params op args
 
 getScopedInstructions :: [VM.Insts] -> [VM.Insts]
-getScopedInstructions insts = map getIdenfierFromInst insts >>= maybe [] (\iden -> [VM.EraseEnv iden])
+getScopedInstructions insts = insts ++ map VM.EraseEnv (mapMaybe getIdenfierFromInst insts)
   where
     getIdenfierFromInst (VM.DefineEnvFromStack iden) = Just iden
     getIdenfierFromInst (VM.DefineEnv iden _) = Just iden
