@@ -110,6 +110,7 @@ getBuiltinCallForOp "+" = Right VM.Add
 getBuiltinCallForOp "-" = Right VM.Sub
 getBuiltinCallForOp "*" = Right VM.Mul
 getBuiltinCallForOp "/" = Right VM.Div
+getBuiltinCallForOp "%" = Right VM.Mod
 getBuiltinCallForOp "==" = Right VM.Eq
 getBuiltinCallForOp "!=" = Right VM.Neq
 getBuiltinCallForOp "<" = Right VM.Less
