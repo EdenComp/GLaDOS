@@ -1,27 +1,30 @@
-<a name="v0.6.0"></a>
-# [v0.6.0 🌈](https://github.com/EdenComp/GLaDOS/releases/tag/v0.6.0) - 08 Jan 2024
+<a name="v0.7.0"></a>
+# [v0.7.0 🌈](https://github.com/EdenComp/GLaDOS/releases/tag/v0.7.0) - 11 Jan 2024
 
 ## Changes
 
-[Describe this new release here]
+Operators in parsing, VM instructions improvements and compilation
 
 ## 🚀 Features
 
-- Language improvements: case of replaced with >>= [@EdenComp](https://github.com/EdenComp) ([#51](https://github.com/EdenComp/GLaDOS/issues/51))
-- Define from stack VM instruction [@EdenComp](https://github.com/EdenComp) ([#49](https://github.com/EdenComp/GLaDOS/issues/49))
+- Compilation [@Croos3r](https://github.com/Croos3r) ([#59](https://github.com/EdenComp/GLaDOS/issues/59))
+- Unit tests : Encode.hs / Types.hs [@Tomi-Tom](https://github.com/Tomi-Tom) ([#56](https://github.com/EdenComp/GLaDOS/issues/56))
+- Modulo operator in VM and builtin/jump refactor [@EdenComp](https://github.com/EdenComp) ([#65](https://github.com/EdenComp/GLaDOS/issues/65))
+- Jump VM instruction [@EdenComp](https://github.com/EdenComp) ([#64](https://github.com/EdenComp/GLaDOS/issues/64))
+- JumpIfFalse for negative numbers [@EdenComp](https://github.com/EdenComp) ([#61](https://github.com/EdenComp/GLaDOS/issues/61))
+- Parsing: Working while loop and operators as values [@RezaRahemtola](https://github.com/RezaRahemtola) ([#57](https://github.com/EdenComp/GLaDOS/issues/57))
 
 ## 🐛 Bug Fixes
 
-- Parsing: Nested scopes handled correctly [@RezaRahemtola](https://github.com/RezaRahemtola) ([#50](https://github.com/EdenComp/GLaDOS/issues/50))
-- Function parsing: Fix parenthesis in params [@RezaRahemtola](https://github.com/RezaRahemtola) ([#48](https://github.com/EdenComp/GLaDOS/issues/48))
-- Parsing: Scopes and functions improvements [@RezaRahemtola](https://github.com/RezaRahemtola) ([#44](https://github.com/EdenComp/GLaDOS/issues/44))
+- Fix parsing Parenthesis handling in function calls [@RezaRahemtola](https://github.com/RezaRahemtola) ([#66](https://github.com/EdenComp/GLaDOS/issues/66))
+- Fix parsing function calls for exact match [@RezaRahemtola](https://github.com/RezaRahemtola) ([#63](https://github.com/EdenComp/GLaDOS/issues/63))
 
 ## 📄 Documentation
 
-- Update changelog for "v0.5.0" [@github-actions](https://github.com/github-actions) ([#47](https://github.com/EdenComp/GLaDOS/issues/47))
+- Update changelog for "v0.6.0" [@github-actions](https://github.com/github-actions) ([#58](https://github.com/EdenComp/GLaDOS/issues/58))
 
 
-[Changes][v0.6.0]
+[Changes][v0.7.0]
 
 
 <a name="v0.6.0"></a>
@@ -187,7 +190,7 @@ Project setup with CI, evaluation of SExpr and documentation
 [Changes][v0.1.0]
 
 
-[v0.6.0]: https://github.com/EdenComp/GLaDOS/compare/v0.6.0...v0.6.0
+[v0.7.0]: https://github.com/EdenComp/GLaDOS/compare/v0.6.0...v0.7.0
 [v0.6.0]: https://github.com/EdenComp/GLaDOS/compare/v0.5.0...v0.6.0
 [v0.5.0]: https://github.com/EdenComp/GLaDOS/compare/v0.4.0...v0.5.0
 [v0.4.0]: https://github.com/EdenComp/GLaDOS/compare/v0.3.0...v0.4.0
