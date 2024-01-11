@@ -7,6 +7,8 @@ module Dreamberd.Vm (
     Insts (..),
     Operator (..),
     Value (..),
+    removeEnvValue,
+    addEnvValue,
 ) where
 
 data Value
@@ -61,6 +63,9 @@ data Insts
     | Call
     | DefineEnv String EnvValue
     | DefineEnvFromStack String
+    | RedefineEnv String EnvValue
+    | RedefineEnvFromStack String
+    | EraseEnv String
     | Jump Int (Maybe Bool)
     | Ret
     deriving (Show)
@@ -86,8 +91,21 @@ execInstruction env args stack insts (PushEnv name) idx = case findEnvValue name
     Just (Function _) -> exec env args (Symbol (FunctionName name) : stack) insts (idx + 1)
     Just (Variable v) -> exec env args (v : stack) insts (idx + 1)
     Nothing -> return (Left ("Environment " ++ name ++ " does not exist"))
-execInstruction env args stack insts (DefineEnv name var) idx = exec (addEnvValue name var env) args stack insts (idx + 1)
-execInstruction env args (x : xs) insts (DefineEnvFromStack name) idx = exec (addEnvValue name (Variable x) env) args xs insts (idx + 1)
+execInstruction env args stack insts (EraseEnv name) idx = case findEnvValue name env of
+    Just _ -> exec (removeEnvValue name env) args stack insts (idx + 1)
+    Nothing -> return (Left ("Environment " ++ name ++ " does not exist"))
+execInstruction env args stack insts (DefineEnv name var) idx = case findEnvValue name env of
+    Nothing -> exec (addEnvValue name var env) args stack insts (idx + 1)
+    Just _ -> return (Left ("Environment " ++ name ++ " already exists"))
+execInstruction env args (x : xs) insts (DefineEnvFromStack name) idx = case findEnvValue name env of
+    Nothing -> exec (addEnvValue name (Variable x) env) args xs insts (idx + 1)
+    Just _ -> return (Left ("Environment " ++ name ++ " already exists"))
+execInstruction env args (x : xs) insts (RedefineEnvFromStack name) idx = case findEnvValue name env of
+    Just _ -> exec (addEnvValue name (Variable x) env) args xs insts (idx + 1)
+    Nothing -> return (Left ("Environment " ++ name ++ " does not exist"))
+execInstruction env args stack insts (RedefineEnv name var) idx = case findEnvValue name env of
+    Just _ -> exec (addEnvValue name var env) args stack insts (idx + 1)
+    Nothing -> return (Left ("Environment " ++ name ++ " does not exist"))
 execInstruction env args stack insts Call idx = do
     ret <- execCall env stack
     case ret of
@@ -161,6 +179,9 @@ addEnvValue iden val (x : xs)
     | identifier x == iden = Env{identifier = iden, value = val} : xs
     | otherwise = x : addEnvValue iden val xs
 addEnvValue iden val [] = [Env{identifier = iden, value = val}]
+
+removeEnvValue :: String -> [Env] -> [Env]
+removeEnvValue iden = filter (\x -> identifier x /= iden)
 
 toBool :: Value -> Bool
 toBool (Bool False) = False

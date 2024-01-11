@@ -26,7 +26,7 @@ parseElement (stripPrefix "bool" -> Just restCode) ast =
     parseVar (Just "bool") restCode ast >>= \(remainingCode, updatedAst) -> Right (remainingCode, updatedAst)
 parseElement (stripPrefix "str" -> Just restCode) ast =
     parseVar (Just "str") restCode ast >>= \(remainingCode, updatedAst) -> Right (remainingCode, updatedAst)
-parseElement (stripPrefix "function" -> Just restCode) ast =
+parseElement (stripPrefix "fn" -> Just restCode) ast =
     parseFunction restCode ast >>= \(remainingCode, updatedAst) -> Right (remainingCode, updatedAst)
 parseElement (stripPrefix "return" -> Just restCode) ast =
     parseReturn restCode ast >>= \(remainingCode, updatedAst) -> Right (remainingCode, updatedAst)
@@ -63,11 +63,13 @@ parseCondition str ast =
             buildConditionNodes condition ifBody elifs elsePart >>= \ifNodes -> Right (restOfCode, ast ++ ifNodes)
 
 buildConditionNodes :: String -> String -> [(String, String)] -> Maybe String -> Either String [AstNode]
-buildConditionNodes cond ifBody [] Nothing =
+buildConditionNodes cond ifBody [] elseBody =
     parseConditionExpression cond
         >>= \ifCondAst ->
             parseDreamberd ifBody []
-                >>= \ifBodyAst -> return [If ifCondAst ifBodyAst []]
+                >>= \ifBodyAst ->
+                    maybe (Right []) (`parseDreamberd` []) elseBody
+                        >>= \elseBodyAst -> Right [If ifCondAst ifBodyAst elseBodyAst]
 buildConditionNodes cond ifBody ((elifCondition, elifBody) : elifs) elsePart =
     parseConditionExpression cond
         >>= \ifCondAst ->
@@ -75,10 +77,3 @@ buildConditionNodes cond ifBody ((elifCondition, elifBody) : elifs) elsePart =
                 >>= \ifBodyAst ->
                     buildConditionNodes elifCondition elifBody elifs elsePart
                         >>= \elifNodes -> return [If ifCondAst ifBodyAst elifNodes]
-buildConditionNodes cond ifBody [] (Just elseBody) =
-    parseConditionExpression cond
-        >>= \ifCondAst ->
-            parseDreamberd ifBody []
-                >>= \ifBodyAst ->
-                    parseDreamberd elseBody []
-                        >>= \elseBodyAst -> return [If ifCondAst ifBodyAst elseBodyAst]

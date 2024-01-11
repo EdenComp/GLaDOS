@@ -5,7 +5,7 @@ import Data.List (dropWhileEnd, isPrefixOf)
 import Text.Regex.Posix ((=~))
 
 bannedVariables :: [String]
-bannedVariables = ["if", "elif", "else", "true", "false", "return", "function", "int", "str", "bool"]
+bannedVariables = ["if", "elif", "else", "true", "false", "return", "fn", "int", "str", "bool"]
 
 getVariableName :: String -> Either String String
 getVariableName str = case str =~ "^[a-zA-Z_-]+$" :: (String, String, String) of

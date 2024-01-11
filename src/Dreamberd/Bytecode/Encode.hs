@@ -42,7 +42,15 @@ transpileInstruction (DefineEnv name value) =
           where
             nested = foldMap transpileInstruction insts
         (Variable val) -> toEnum 0x42 : transpileValue val
+transpileInstruction (RedefineEnv name value) =
+    toEnum 0x09 : transpileString name ++ case value of
+        (Function insts) -> toEnum 0x41 : transpileInt (length nested) ++ nested
+          where
+            nested = foldMap transpileInstruction insts
+        (Variable val) -> toEnum 0x42 : transpileValue val
 transpileInstruction (DefineEnvFromStack name) = toEnum 0x06 : transpileString name
+transpileInstruction (RedefineEnvFromStack name) = toEnum 0x0A : transpileString name
+transpileInstruction (EraseEnv name) = toEnum 0x0B : transpileString name
 transpileInstruction (Jump nb (Just True)) = toEnum 0x07 : transpileInt nb ++ [toEnum 0x51]
 transpileInstruction (Jump nb (Just False)) = toEnum 0x07 : transpileInt nb ++ [toEnum 0x52]
 transpileInstruction (Jump nb Nothing) = toEnum 0x07 : transpileInt nb ++ [toEnum 0x53]
