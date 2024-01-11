@@ -73,8 +73,8 @@ getScopedInstructions insts = insts ++ map VM.EraseEnv (mapMaybe getIdenfierFrom
     getIdenfierFromInst _ = Nothing
 
 compileIf :: [String] -> AST.AstNode -> [AST.AstNode] -> [AST.AstNode] -> Either String [VM.Insts]
-compileIf params (AST.Call op args) trueBody falseBody =
-    compileCall params op args
+compileIf params test trueBody falseBody =
+    ( conditionsInsts
         >>= \condition ->
             compileScopeNodes params trueBody []
                 >>= \trueInsts ->
@@ -88,24 +88,12 @@ compileIf params (AST.Call op args) trueBody falseBody =
                                             ++ trueInsts
                                             ++ [VM.Jump n Nothing]
                                             ++ falseInsts
-compileIf params test trueBody falseBody =
-    ( compileNode params test
-        >>= \condition ->
-            compileScopeNodes params trueBody []
-                >>= \trueInsts ->
-                    compileScopeNodes params falseBody []
-                        >>= \falseInsts ->
-                            Right $
-                                condition
-                                    ++ case length falseInsts of
-                                        0 -> VM.Jump (length trueInsts) (Just True) : trueInsts
-                                        n ->
-                                            [VM.Jump (length trueInsts + 1) $ Just False]
-                                                ++ trueInsts
-                                                ++ [VM.Jump n Nothing]
-                                                ++ falseInsts
     )
         <> Left "Unknown if type"
+  where
+    conditionsInsts = case test of
+        (AST.Call op args) -> compileCall params op args
+        _ -> compileNode params test
 
 compileBuiltinCall :: [String] -> String -> [AST.AstNode] -> Either String [VM.Insts]
 compileBuiltinCall params op [a, b] =
