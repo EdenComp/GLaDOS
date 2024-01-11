@@ -87,6 +87,7 @@ execInstruction env args stack insts (Push val) idx = exec env args (val : stack
 execInstruction env args stack insts (PushArg arg) idx
     | arg >= length args || arg < 0 = return (Left "Argument index out of bounds")
     | otherwise = exec env args ((args !! (length args - arg - 1)) : stack) insts (idx + 1)
+execInstruction env args stack insts (PushEnv "print") idx = exec env args (Symbol (FunctionName "print") : stack) insts (idx + 1)
 execInstruction env args stack insts (PushEnv name) idx = case findEnvValue name env of
     Just (Function _) -> exec env args (Symbol (FunctionName name) : stack) insts (idx + 1)
     Just (Variable v) -> exec env args (v : stack) insts (idx + 1)
