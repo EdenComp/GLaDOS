@@ -31,26 +31,21 @@ transpileValue (String str) = toEnum 0x13 : transpileString str
 transpileValue (Symbol call) = toEnum 0x14 : transpileCall call
 transpileValue Void = [toEnum 0x15]
 
+transpileEnvValue :: Maybe EnvValue -> [Char]
+transpileEnvValue Nothing = [toEnum 0x53]
+transpileEnvValue (Just (Function insts)) = toEnum 0x41 : transpileInt (length nested) ++ nested
+  where
+    nested = foldMap transpileInstruction insts
+transpileEnvValue (Just (Variable val)) = toEnum 0x42 : transpileValue val
+
 transpileInstruction :: Insts -> [Char]
 transpileInstruction (Push v) = toEnum 0x01 : transpileValue v
 transpileInstruction (PushArg idx) = toEnum 0x02 : transpileInt idx
 transpileInstruction (PushEnv env) = toEnum 0x03 : transpileString env
 transpileInstruction Call = [toEnum 0x04]
-transpileInstruction (DefineEnv name value) =
-    toEnum 0x05 : transpileString name ++ case value of
-        (Function insts) -> toEnum 0x41 : transpileInt (length nested) ++ nested
-          where
-            nested = foldMap transpileInstruction insts
-        (Variable val) -> toEnum 0x42 : transpileValue val
-transpileInstruction (RedefineEnv name value) =
-    toEnum 0x09 : transpileString name ++ case value of
-        (Function insts) -> toEnum 0x41 : transpileInt (length nested) ++ nested
-          where
-            nested = foldMap transpileInstruction insts
-        (Variable val) -> toEnum 0x42 : transpileValue val
-transpileInstruction (DefineEnvFromStack name) = toEnum 0x06 : transpileString name
-transpileInstruction (RedefineEnvFromStack name) = toEnum 0x0A : transpileString name
-transpileInstruction (EraseEnv name) = toEnum 0x0B : transpileString name
+transpileInstruction (DefineEnv name True value) = toEnum 0x05 : transpileString name ++ [toEnum 0x51] ++ transpileEnvValue value
+transpileInstruction (DefineEnv name False value) = toEnum 0x05 : transpileString name ++ [toEnum 0x52] ++ transpileEnvValue value
+transpileInstruction (EraseEnv name) = toEnum 0x06 : transpileString name
 transpileInstruction (Jump nb (Just True)) = toEnum 0x07 : transpileInt nb ++ [toEnum 0x51]
 transpileInstruction (Jump nb (Just False)) = toEnum 0x07 : transpileInt nb ++ [toEnum 0x52]
 transpileInstruction (Jump nb Nothing) = toEnum 0x07 : transpileInt nb ++ [toEnum 0x53]

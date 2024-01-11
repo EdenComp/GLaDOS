@@ -54,7 +54,7 @@ compileReturn params value = compileNode params value >>= \pushInst -> Right $ p
 compileFunction :: [String] -> String -> [String] -> [AST.AstNode] -> Either String [VM.Insts]
 compileFunction params name args body =
     compileNodes (args ++ params) body []
-        >>= \bodyInsts -> Right [VM.DefineEnv name $ VM.Function bodyInsts]
+        >>= \bodyInsts -> Right [VM.DefineEnv name False $ Just $ VM.Function bodyInsts]
 
 compileCall :: [String] -> String -> [AST.AstNode] -> Either String [VM.Insts]
 compileCall params "=" [_, AST.Identifier iden, value] = compileAssignation params iden value False
@@ -62,14 +62,13 @@ compileCall params "=" [AST.Identifier iden, value] = compileAssignation params 
 compileCall params [op, '='] [AST.Identifier iden, value]
     | op `elem` "+-*/" =
         compileBuiltinCall params [op] [AST.Identifier iden, value]
-            >>= \opInsts -> Right $ opInsts ++ [VM.RedefineEnvFromStack iden]
+            >>= \opInsts -> Right $ opInsts ++ [VM.DefineEnv iden True Nothing]
 compileCall params op args = compileBuiltinCall params op args <> compileCustomCall params op args
 
 getScopedInstructions :: [VM.Insts] -> [VM.Insts]
 getScopedInstructions insts = insts ++ map VM.EraseEnv (mapMaybe getIdenfierFromInst insts)
   where
-    getIdenfierFromInst (VM.DefineEnvFromStack iden) = Just iden
-    getIdenfierFromInst (VM.DefineEnv iden _) = Just iden
+    getIdenfierFromInst (VM.DefineEnv iden _ _) = Just iden
     getIdenfierFromInst _ = Nothing
 
 compileIf :: [String] -> AST.AstNode -> [AST.AstNode] -> [AST.AstNode] -> Either String [VM.Insts]
@@ -123,8 +122,8 @@ compileCustomCall :: [String] -> String -> [AST.AstNode] -> Either String [VM.In
 compileCustomCall params name args = mapM (compileNode params) args >>= \args' -> Right $ concat (reverse args') ++ [VM.PushEnv name, VM.Call]
 
 compileAssignation :: [String] -> String -> AST.AstNode -> Bool -> Either String [VM.Insts]
-compileAssignation params iden value False = compileNode params value >>= \pushInsts -> Right $ pushInsts ++ [VM.DefineEnvFromStack iden]
-compileAssignation params iden value True = compileNode params value >>= \pushInsts -> Right $ pushInsts ++ [VM.RedefineEnvFromStack iden]
+compileAssignation params iden value False = compileNode params value >>= \pushInsts -> Right $ pushInsts ++ [VM.DefineEnv iden False Nothing]
+compileAssignation params iden value True = compileNode params value >>= \pushInsts -> Right $ pushInsts ++ [VM.DefineEnv iden True Nothing]
 
 compileValuePush :: [String] -> AST.AstNode -> Either String VM.Insts
 compileValuePush _ (AST.Boolean b) = Right $ VM.Push $ VM.Bool b

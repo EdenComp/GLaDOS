@@ -26,8 +26,9 @@ testTypesTranspilation =
         , TestCase $ assertEqual "Transpile Instruction PushArg" (transpileInstruction (PushArg 1)) "\x02\x00\x00\x00\x01"
         , TestCase $ assertEqual "Transpile Instruction PushEnv" (transpileInstruction (PushEnv "test")) "\x03\x00\x00\x00\x04test"
         , TestCase $ assertEqual "Transpile Instruction Call" (transpileInstruction Call) "\x04"
-        , TestCase $ assertEqual "Transpile Instruction DefineEnv" (transpileInstruction (DefineEnv "test" (Function []))) "\x05\x00\x00\x00\x04test\x41\x00\x00\x00\x00"
-        , TestCase $ assertEqual "Transpile Instruction DefineEnvFromStack" (transpileInstruction (DefineEnvFromStack "test")) "\x06\x00\x00\x00\x04test"
+        , TestCase $ assertEqual "Transpile Instruction DefineEnv with value" (transpileInstruction (DefineEnv "test" False (Just (Function [])))) "\x05\x00\x00\x00\x04test\x52\x41\x00\x00\x00\x00"
+        , TestCase $ assertEqual "Transpile Instruction DefineEnv from stack" (transpileInstruction (DefineEnv "test" False Nothing)) "\x05\x00\x00\x00\x04test\x52\x53"
+        , TestCase $ assertEqual "Transpile Instruction EraseEnv" (transpileInstruction (EraseEnv "yo")) "\x06\x00\x00\x00\x02yo"
         , TestCase $ assertEqual "Transpile Instruction Jump" (transpileInstruction (Jump 1 Nothing)) "\x07\x00\x00\x00\x01\x53"
         , TestCase $ assertEqual "Transpile Instruction Ret" (transpileInstruction Ret) "\x08"
         ]

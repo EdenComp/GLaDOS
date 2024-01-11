@@ -59,10 +59,7 @@ data Insts
     | PushArg Int
     | PushEnv String
     | Call
-    | DefineEnv String EnvValue
-    | DefineEnvFromStack String
-    | RedefineEnv String EnvValue
-    | RedefineEnvFromStack String
+    | DefineEnv String Bool (Maybe EnvValue)
     | EraseEnv String
     | Jump Int (Maybe Bool)
     | Ret
@@ -86,32 +83,21 @@ execInstruction env args stack insts (PushArg arg) idx
     | arg >= length args || arg < 0 = return (Left "Argument index out of bounds")
     | otherwise = exec env args ((args !! (length args - arg - 1)) : stack) insts (idx + 1)
 execInstruction env args stack insts (PushEnv "print") idx = exec env args (Symbol (FunctionName "print") : stack) insts (idx + 1)
-execInstruction env args stack insts (PushEnv name) idx = case findEnvValue name env of
-    Just (Function _) -> exec env args (Symbol (FunctionName name) : stack) insts (idx + 1)
-    Just (Variable v) -> exec env args (v : stack) insts (idx + 1)
-    Nothing -> return (Left ("Environment " ++ name ++ " does not exist"))
+execInstruction env args stack insts (PushEnv name) idx =
+    case findEnvValue name env of
+        Just (Function _) -> exec env args (Symbol (FunctionName name) : stack) insts (idx + 1)
+        Just (Variable v) -> exec env args (v : stack) insts (idx + 1)
+        _ -> return (Left ("Environment " ++ name ++ " does not exist"))
 execInstruction env args stack insts (EraseEnv name) idx = case findEnvValue name env of
     Just _ -> exec (removeEnvValue name env) args stack insts (idx + 1)
     Nothing -> return (Left ("Environment " ++ name ++ " does not exist"))
-execInstruction env args stack insts (DefineEnv name var) idx = case findEnvValue name env of
-    Nothing -> exec (addEnvValue name var env) args stack insts (idx + 1)
-    Just _ -> return (Left ("Environment " ++ name ++ " already exists"))
-execInstruction env args (x : xs) insts (DefineEnvFromStack name) idx = case findEnvValue name env of
-    Nothing -> exec (addEnvValue name (Variable x) env) args xs insts (idx + 1)
-    Just _ -> return (Left ("Environment " ++ name ++ " already exists"))
-execInstruction env args (x : xs) insts (RedefineEnvFromStack name) idx = case findEnvValue name env of
-    Just _ -> exec (addEnvValue name (Variable x) env) args xs insts (idx + 1)
-    Nothing -> return (Left ("Environment " ++ name ++ " does not exist"))
-execInstruction env args stack insts (RedefineEnv name var) idx = case findEnvValue name env of
-    Just _ -> exec (addEnvValue name var env) args stack insts (idx + 1)
-    Nothing -> return (Left ("Environment " ++ name ++ " does not exist"))
+execInstruction env args stack insts (DefineEnv name redef val) idx = execDefineEnv env args stack insts idx name redef val
 execInstruction env args stack insts Call idx = do
     ret <- execCall env stack
     case ret of
         Left err -> return (Left err)
         Right newValues -> exec env args newValues insts (idx + 1)
 execInstruction env args stack insts (Jump num cond) idx = execJump env args stack insts idx num cond
-execInstruction _ _ [] _ x _ = return (Left ("Stack is empty for a " ++ show x ++ " instruction"))
 
 execCall :: [Env] -> [Value] -> IO (Either String [Value])
 execCall _ [] = return (Left "Stack is empty for a Call instruction")
@@ -136,6 +122,25 @@ execJump env args (x : xs) insts idx num (Just b)
     | toBool x == b = exec env args xs insts (idx + num + 1)
     | otherwise = exec env args xs insts (idx + 1)
 execJump _ _ _ _ _ _ _ = return (Left "Stack is empty for a conditional jump")
+
+execDefineEnv :: [Env] -> [Value] -> [Value] -> [Insts] -> Int -> String -> Bool -> Maybe EnvValue -> IO (Either String Value)
+execDefineEnv _ _ [] _ _ _ _ Nothing = return (Left "Stack is empty for a DefineEnv from stack instruction")
+execDefineEnv env args (x : xs) insts idx name False Nothing =
+    case findEnvValue name env of
+        Just _ -> return (Left ("Environment " ++ name ++ " already exists"))
+        Nothing -> exec (addEnvValue name (Variable x) env) args xs insts (idx + 1)
+execDefineEnv env args stack insts idx name False (Just val) =
+    case findEnvValue name env of
+        Just _ -> return (Left ("Environment " ++ name ++ " already exists"))
+        Nothing -> exec (addEnvValue name val env) args stack insts (idx + 1)
+execDefineEnv env args (x : xs) insts idx name True Nothing =
+    case findEnvValue name env of
+        Just _ -> exec (addEnvValue name (Variable x) env) args xs insts (idx + 1)
+        Nothing -> return (Left ("Environment " ++ name ++ " does not exist"))
+execDefineEnv env args stack insts idx name True (Just val) =
+    case findEnvValue name env of
+        Just _ -> exec (addEnvValue name val env) args stack insts (idx + 1)
+        Nothing -> return (Left ("Environment " ++ name ++ " does not exist"))
 
 execBuiltin :: [Value] -> Operator -> Either String [Value]
 execBuiltin (Number _ : Number 0 : _) Div = Left "Cannot divide by 0"
