@@ -7,8 +7,6 @@ module Dreamberd.Vm (
     Insts (..),
     Operator (..),
     Value (..),
-    removeEnvValue,
-    addEnvValue,
 ) where
 
 data Value
