@@ -26,7 +26,7 @@ jobs:
           enable-stack: true
           stack-version: ${{ env.STACK_VERSION }}
       - name: Compile
-        timeout-minutes: 2
+        timeout-minutes: 10
         run: make
       - name: Add binary to release
         uses: shogo82148/actions-upload-release-asset@v1
