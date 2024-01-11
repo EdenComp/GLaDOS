@@ -11,6 +11,7 @@ data AstNode
     | Return AstNode
     | Loop AstNode [AstNode] (Maybe AstNode) (Maybe AstNode)
     | List [AstNode]
+    deriving (Eq)
 
 instance Show AstNode where
     show (Number val) = show val
@@ -24,12 +25,6 @@ instance Show AstNode where
     show (Call name params) = "(Call " ++ name ++ " " ++ show params ++ ")"
     show (Loop test body initializer update) = "(Loop " ++ show test ++ " " ++ show body ++ " " ++ show initializer ++ " " ++ show update ++ ")"
     show (Return element) = "Return " ++ show element
-
-instance Eq AstNode where
-    (Number a) == (Number b) = a == b
-    (Boolean a) == (Boolean b) = a == b
-    (String a) == (String b) = a == b
-    _ == _ = False
 
 instance Ord AstNode where
     (Number a) `compare` (Number b) = a `compare` b
