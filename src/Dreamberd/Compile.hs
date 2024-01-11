@@ -14,6 +14,10 @@ compileNodes :: [String] -> [AST.AstNode] -> [VM.Insts] -> Either String [VM.Ins
 compileNodes _ [] insts = Right insts
 compileNodes params (curNode : nextNodes) insts = compileNode params curNode >>= \curInsts -> compileNodes params nextNodes (insts ++ curInsts)
 
+compileScopeNodes :: [String] -> [AST.AstNode] -> [VM.Insts] -> Either String [VM.Insts]
+compileScopeNodes _ [] insts = Right insts
+compileScopeNodes params (curNode : nextNodes) insts = compileNode params curNode >>= (\curInsts -> compileScopeNodes params nextNodes (insts ++ curInsts)) . getScopedInstructions
+
 compileNode :: [String] -> AST.AstNode -> Either String [VM.Insts]
 compileNode params (AST.Call op args) = compileCall params op args
 compileNode params (AST.If test trueBody falseBody) = compileIf params test trueBody falseBody
@@ -52,35 +56,53 @@ compileFunction params name args body =
         >>= \bodyInsts -> Right [VM.DefineEnv name $ VM.Function bodyInsts]
 
 compileCall :: [String] -> String -> [AST.AstNode] -> Either String [VM.Insts]
-compileCall params "=" [_, AST.Identifier iden, value] = compileAssignation params iden value
-compileCall params "=" [AST.Identifier iden, value] = compileAssignation params iden value
+compileCall params "=" [_, AST.Identifier iden, value] = compileAssignation params iden value False
+compileCall params "=" [AST.Identifier iden, value] = compileAssignation params iden value True
 compileCall params [op, '='] [AST.Identifier iden, value]
     | op `elem` "+-*/" =
         compileBuiltinCall params [op] [AST.Identifier iden, value]
-            >>= \opInsts -> Right $ opInsts ++ [VM.DefineEnvFromStack iden]
+            >>= \opInsts -> Right $ opInsts ++ [VM.RedefineEnvFromStack iden]
 compileCall params op args = compileBuiltinCall params op args <> compileCustomCall params op args
+
+getScopedInstructions :: [VM.Insts] -> [VM.Insts]
+getScopedInstructions insts = map getIdenfierFromInst insts >>= maybe [] (\iden -> [VM.EraseEnv iden])
+  where
+    getIdenfierFromInst (VM.DefineEnvFromStack iden) = Just iden
+    getIdenfierFromInst (VM.DefineEnv iden _) = Just iden
+    getIdenfierFromInst _ = Nothing
 
 compileIf :: [String] -> AST.AstNode -> [AST.AstNode] -> [AST.AstNode] -> Either String [VM.Insts]
 compileIf params (AST.Call op args) trueBody falseBody =
     compileCall params op args
-        >>= \call ->
-            compileNodes params trueBody []
+        >>= \condition ->
+            compileScopeNodes params trueBody []
                 >>= \trueInsts ->
-                    compileNodes params falseBody []
+                    compileScopeNodes params falseBody []
                         >>= \falseInsts ->
                             Right $
-                                call
-                                    ++ [VM.Jump (length trueInsts + 1) $ Just False]
-                                    ++ trueInsts
-                                    ++ [VM.Jump (length falseInsts) Nothing]
-                                    ++ falseInsts
+                                condition ++ case length falseInsts of
+                                    0 -> VM.Jump (length trueInsts) (Just False) : trueInsts
+                                    n ->
+                                        [VM.Jump (length trueInsts + 1) $ Just False]
+                                            ++ trueInsts
+                                            ++ [VM.Jump n Nothing]
+                                            ++ falseInsts
 compileIf params test trueBody falseBody =
     ( compileNode params test
-        >>= \testPush ->
-            compileNodes params trueBody []
+        >>= \condition ->
+            compileScopeNodes params trueBody []
                 >>= \trueInsts ->
-                    compileNodes params falseBody []
-                        >>= \falseInsts -> Right $ testPush ++ [VM.Jump (length trueInsts) Nothing] ++ trueInsts ++ falseInsts
+                    compileScopeNodes params falseBody []
+                        >>= \falseInsts ->
+                            Right $
+                                condition
+                                    ++ case length falseInsts of
+                                        0 -> VM.Jump (length trueInsts) (Just True) : trueInsts
+                                        n ->
+                                            [VM.Jump (length trueInsts + 1) $ Just False]
+                                                ++ trueInsts
+                                                ++ [VM.Jump n Nothing]
+                                                ++ falseInsts
     )
         <> Left "Unknown if type"
 
@@ -110,8 +132,9 @@ getBuiltinCallForOp _ = Left "Unknown builtin call"
 compileCustomCall :: [String] -> String -> [AST.AstNode] -> Either String [VM.Insts]
 compileCustomCall params name args = mapM (compileNode params) args >>= \args' -> Right $ concat (reverse args') ++ [VM.PushEnv name, VM.Call]
 
-compileAssignation :: [String] -> String -> AST.AstNode -> Either String [VM.Insts]
-compileAssignation params iden value = compileNode params value >>= \pushInsts -> Right $ pushInsts ++ [VM.DefineEnvFromStack iden]
+compileAssignation :: [String] -> String -> AST.AstNode -> Bool -> Either String [VM.Insts]
+compileAssignation params iden value False = compileNode params value >>= \pushInsts -> Right $ pushInsts ++ [VM.DefineEnvFromStack iden]
+compileAssignation params iden value True = compileNode params value >>= \pushInsts -> Right $ pushInsts ++ [VM.RedefineEnvFromStack iden]
 
 compileValuePush :: [String] -> AST.AstNode -> Either String VM.Insts
 compileValuePush _ (AST.Boolean b) = Right $ VM.Push $ VM.Bool b
