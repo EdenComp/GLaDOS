@@ -8,8 +8,8 @@ Here are all the definitions of the bytecode:
 - `0x02`: PushArg (+ Int)
 - `0x03`: PushEnv (+ String)
 - `0x04`: Call
-- `0x05`: DefineEnv (+ String and EnvValue)
-- `0x06`: DefineEnvFromStack (+ String)
+- `0x05`: DefineEnv (+ String, Bool and Bool and EnvValue if true)
+- `0x06`: EraseEnv
 - `0x07`: Jump (+ Int) (+ TriBool)
 - `0x08`: Ret
 

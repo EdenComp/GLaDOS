@@ -37,18 +37,26 @@ parseValue (c : bytes) = case fromEnum c of
     0x15 -> Right (Void, bytes)
     _ -> Left "Unknown value type"
 
-parseEnvValue :: [Char] -> Either String (EnvValue, [Char])
+parseEnvValue :: [Char] -> Either String (Maybe EnvValue, [Char])
 parseEnvValue [] = Left "No value provided"
 parseEnvValue (c : bytes)
     | fromEnum c == 0x41 = case parseInt bytes of
         Left err -> Left err
         Right (len, rest) -> case parseInstructions insts of
             Left err -> Left err
-            Right func -> if length rest < len then Left "Wrong function body length" else Right (Function func, rest')
+            Right func -> if length rest < len then Left "Wrong function body length" else Right (Just (Function func), rest')
           where
             (insts, rest') = splitAt len rest
-    | fromEnum c == 0x42 = parseValue bytes >>= \(val, rest) -> Right (Variable val, rest)
+    | fromEnum c == 0x42 = parseValue bytes >>= \(val, rest) -> Right (Just (Variable val), rest)
+    | fromEnum c == 0x53 = Right (Nothing, bytes)
     | otherwise = Left "Unknown value type"
+
+parseDefineEnv :: String -> [Char] -> Either String (Insts, [Char])
+parseDefineEnv _ [] = Left "No value provided"
+parseDefineEnv name (c : bytes) = case fromEnum c of
+    0x51 -> parseEnvValue bytes >>= \(val, rest) -> Right (DefineEnv name True val, rest)
+    0x52 -> parseEnvValue bytes >>= \(val, rest) -> Right (DefineEnv name False val, rest)
+    _ -> Left "Unknown define env"
 
 parseJump :: (Int, [Char]) -> Either String [Insts]
 parseJump (val, c : bytes) = case fromEnum c of
@@ -65,11 +73,8 @@ parseInstructions (c : bytes) = case fromEnum c of
     0x02 -> parseInt bytes >>= \(val, rest) -> pursueParsing (PushArg val) rest
     0x03 -> parseString bytes >>= \(val, rest) -> pursueParsing (PushEnv val) rest
     0x04 -> pursueParsing Call bytes
-    0x05 -> parseString bytes >>= \(name, rest) -> parseEnvValue rest >>= \(val, rest') -> pursueParsing (DefineEnv name val) rest'
-    0x09 -> parseString bytes >>= \(name, rest) -> parseEnvValue rest >>= \(val, rest') -> pursueParsing (RedefineEnv name val) rest'
-    0x06 -> parseString bytes >>= \(name, rest) -> pursueParsing (DefineEnvFromStack name) rest
-    0x0A -> parseString bytes >>= \(name, rest) -> pursueParsing (RedefineEnvFromStack name) rest
-    0x0B -> parseString bytes >>= \(name, rest) -> pursueParsing (EraseEnv name) rest
+    0x05 -> parseString bytes >>= uncurry parseDefineEnv >>= uncurry pursueParsing
+    0x06 -> parseString bytes >>= \(name, rest) -> pursueParsing (EraseEnv name) rest
     0x07 -> parseInt bytes >>= parseJump
     0x08 -> pursueParsing Ret bytes
     _ -> Left "Unknown instruction"
