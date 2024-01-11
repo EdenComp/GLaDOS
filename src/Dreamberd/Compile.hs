@@ -1,6 +1,5 @@
 module Dreamberd.Compile (
     compileAst,
-    compileCall,
 ) where
 
 import Data.List (elemIndex)
@@ -55,9 +54,10 @@ compileFunction params name args body =
 compileCall :: [String] -> String -> [AST.AstNode] -> Either String [VM.Insts]
 compileCall params "=" [_, AST.Identifier iden, value] = compileAssignation params iden value
 compileCall params "=" [AST.Identifier iden, value] = compileAssignation params iden value
-compileCall params [op, '='] [AST.Identifier iden, value] =
-    compileBuiltinCall params [op] [AST.Identifier iden, value]
-        >>= \opInsts -> Right $ opInsts ++ [VM.DefineEnvFromStack iden]
+compileCall params [op, '='] [AST.Identifier iden, value]
+    | op `elem` "+-*/" =
+        compileBuiltinCall params [op] [AST.Identifier iden, value]
+            >>= \opInsts -> Right $ opInsts ++ [VM.DefineEnvFromStack iden]
 compileCall params op args = compileBuiltinCall params op args <> compileCustomCall params op args
 
 compileIf :: [String] -> AST.AstNode -> [AST.AstNode] -> [AST.AstNode] -> Either String [VM.Insts]
