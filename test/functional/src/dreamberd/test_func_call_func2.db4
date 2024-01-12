@@ -1,0 +1,25 @@
+str bl = "
+";
+
+fn printLn(s) {
+    print(s);
+    print(bl);
+}
+
+fn main() {
+    fn printBarBaz() {
+        fn printBar() {
+            fn printFoo() {
+                printLn("foo");
+            }
+            printFoo();
+            printLn("bar");
+        }
+        printBar();
+        printLn("baz");
+    }
+    printBarBaz();
+    print("Purfect!");
+}
+
+main();

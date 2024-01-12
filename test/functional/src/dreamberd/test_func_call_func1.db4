@@ -1,0 +1,17 @@
+str bl = "
+";
+
+fn printLn(s) {
+    print(s);
+    print(bl);
+}
+
+fn main() {
+    fn printBar() {
+        printLn("bar");
+    }
+    printLn("foo");
+    printBar();
+}
+
+main();
