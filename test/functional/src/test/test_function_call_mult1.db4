@@ -1,0 +1,19 @@
+str breakline = "
+";
+
+fn printLn(s) {
+    print(s);
+    print(breakline);
+}
+
+fn main() {
+    str a = "Hello World!";
+    int b = 10;
+    bool c = true;
+
+    printLn(a);
+    printLn(b);
+    printLn(c);
+}
+
+main();
