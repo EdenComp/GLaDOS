@@ -1,0 +1,2 @@
+str a = "fn test() { return 1; };int i = test();print(i);";
+print(a);
