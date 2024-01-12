@@ -1,0 +1,16 @@
+str bl = "
+";
+int ret = 0;
+
+fn rec(i) {
+    if (i == 0) {
+        return 0;
+    }
+    print(i);
+    print(bl);
+    ret = i - 1;
+    rec(ret);
+}
+
+int a = 5;
+rec(a);
