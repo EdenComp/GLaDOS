@@ -1,0 +1,10 @@
+str breakline = "
+";
+
+fn printLn(s) {
+    print(s);
+    print(breakline);
+}
+
+str a = "Hello World!";
+printLn(a);

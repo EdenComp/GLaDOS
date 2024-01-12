@@ -1,0 +1,10 @@
+fn db_cmp(s, s2) {
+    return true;
+}
+
+int a = db_cmp("a", "b");
+int b = 5;
+
+a = b;
+
+print(a);
