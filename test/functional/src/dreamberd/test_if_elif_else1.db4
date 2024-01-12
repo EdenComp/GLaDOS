@@ -1,0 +1,43 @@
+fn printLn(s) {
+    str bl = "
+";
+    print(s);
+    print(bl);
+}
+
+fn foretAmazonienne(i) {
+    str a = "Bien le Bonjours voyageur";
+    str b = "Bienvenue dans la foret";
+    str c = "La foret de IF !!!";
+    str d = "Avec son fameux Modulo";
+
+    int mod = i % 4;
+
+    if (mod == 0) {
+        printLn(a);
+    } elif (mod == 1) {
+        printLn(b);
+    } elif (mod == 2) {
+        printLn(c);
+    } elif (mod == 3) {
+        printLn(d);
+    }
+}
+
+fn main {
+    int a = 0;
+    int b = 1;
+    int c = 2;
+    int d = 3;
+    int e = 4;
+    int f = 5;
+
+    foretAmazonienne(a);
+    foretAmazonienne(b);
+    foretAmazonienne(c);
+    foretAmazonienne(d);
+    foretAmazonienne(e);
+    foretAmazonienne(f);
+}
+
+main();
