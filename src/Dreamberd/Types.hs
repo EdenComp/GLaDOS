@@ -12,6 +12,7 @@ data AstNode
     | Return AstNode
     | Loop AstNode [AstNode] (Maybe AstNode) (Maybe AstNode)
     | List [AstNode]
+    | Import String
     deriving (Eq)
 
 data File a = File String a
@@ -29,3 +30,4 @@ instance Show AstNode where
     show (Call name params) = "(Call " ++ name ++ " " ++ show params ++ ")"
     show (Loop test body initializer update) = "(Loop " ++ show test ++ " " ++ show body ++ " " ++ show initializer ++ " " ++ show update ++ ")"
     show (Return element) = "Return " ++ show element
+    show (Import path) = "Import " ++ show path
