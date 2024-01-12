@@ -18,6 +18,10 @@ fclean: clean
 	$(RM) $(NAME)
 	$(RM) -r .stack-work
 
+install:
+	mkdir -p ~/.dreamberd
+	cp -r ./lib ~/.dreamberd/std
+
 re: fclean all
 
 tests_run:

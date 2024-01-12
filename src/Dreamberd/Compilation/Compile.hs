@@ -1,4 +1,4 @@
-module Dreamberd.Compile (
+module Dreamberd.Compilation.Compile (
     compileAst,
 ) where
 

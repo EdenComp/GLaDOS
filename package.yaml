@@ -10,6 +10,7 @@ description:         DreamBerd 4
 dependencies:
 - base >= 4.7 && < 5
 - cpu
+- directory
 - optparse-applicative
 - regex-posix
 
