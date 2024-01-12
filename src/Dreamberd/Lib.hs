@@ -62,6 +62,14 @@ compileToAst file =
     case parseDreamberd file of
         Right ast -> print ast
         Left err -> returnWithError err
+        
+compileToPreprocessedAst :: String -> IO ()
+compileToPreprocessedAst sourceCode =
+    case parseDreamberd sourceCode [] of
+        Right ast -> executePreprocessing ast >>= \case
+            Right ast' -> print ast'
+            Left err -> returnWithError err
+        Left err -> returnWithError err
 
 compileToPreprocessedAst :: File String -> IO ()
 compileToPreprocessedAst (File filename sourcecode) =
