@@ -85,10 +85,23 @@ if __name__ == "__main__":
          print(f"#                                              Ran {nb_tests} tests")
          print(f"# {nb_passed} passed :")
          for test in test_passed:
-            print(f"#   - {test}")
+            print(f"#   - {colored(test, 'green')}")
          print(f"#\n# {nb_failed} failed :")
          for test in test_failed:
-            print(f"#   - {test}")
+            print(f"#   - {colored(test, 'red')}")
+         print(f"#")
+         success_percentage = (nb_passed / nb_tests) * 100
+         failure_percentage = (nb_failed / nb_tests) * 100
+
+         success_percentage = round(success_percentage, 2)
+         failure_percentage = round(failure_percentage, 2)
+
+         success_bar = int(success_percentage) * '#'
+         failure_bar = int(failure_percentage) * '#'
+
+         print(f"# Success rate : {colored(success_percentage, 'green')}%")
+         print("# "+colored(success_bar, "green") + colored(failure_bar, "red"))
+         print(f"#")
          print(f"#\n##################################################################################################################\n")
          total_tests += nb_tests
          total_passed += nb_passed
