@@ -18,9 +18,10 @@ preprocessNodes :: [AstNode] -> [String] -> IO (Either String ([String], [AstNod
 preprocessNodes [] imports = return $ Right (imports, [])
 preprocessNodes (Import path : rest) imports =
     preprocessImport path imports >>= \case
-        Right (imports', nodes) -> preprocessNodes rest imports' >>= \case
-            Right (imports'', nodes') -> return $ Right (imports'', nodes ++ nodes')
-            Left err -> return $ Left err
+        Right (imports', nodes) ->
+            preprocessNodes rest imports' >>= \case
+                Right (imports'', nodes') -> return $ Right (imports'', nodes ++ nodes')
+                Left err -> return $ Left err
         Left err -> return $ Left err
 preprocessNodes (x : xs) imports =
     preprocessNodes xs imports >>= \case
