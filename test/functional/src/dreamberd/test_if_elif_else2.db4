@@ -1,0 +1,35 @@
+str bl = "
+";
+
+fn printLn(s) {
+    print(s);
+    print(bl);
+}
+
+fn intCmp(a, b) {
+    if (a == b) {
+        return "a == b";
+    } elif (a < b) {
+        return "a < b";
+    } else {
+        return "a > b";
+    }
+}
+
+fn main() {
+    int a = 1;
+    int b = 2;
+    int c = 3;
+
+    printLn(a);
+    printLn(b);
+    printLn(c);
+    str s = intCmp(a, b);
+    printLn(s);
+    str ss = intCmp(c, a);
+    printLn(ss);
+    str sss = intCmp(a, a);
+    printLn(sss);
+}
+
+main();
