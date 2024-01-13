@@ -2,6 +2,7 @@ module Dreamberd.Types (AstNode (..)) where
 
 data AstNode
     = Number Int
+    | Float Float
     | Boolean Bool
     | String String
     | Identifier String
@@ -15,6 +16,7 @@ data AstNode
 
 instance Show AstNode where
     show (Number val) = show val
+    show (Float val) = show val
     show (Boolean True) = "true"
     show (Boolean False) = "false"
     show (String string) = show string

@@ -16,12 +16,14 @@ Here are all the definitions of the bytecode:
 ## Values
 
 - `0x11` + 4 bytes: Int
-- `0x12` + 1 byte: Bool
-- `0x13`: String
-- `0x14` + (Symbol or function name): Symbol
-- `0x15`: Void
+- `0x12` + Integer + Int: Float
+- `0x13` + 1 byte: Bool
+- `0x14`: String
+- `0x15` + (Symbol or function name): Symbol
+- `0x16`: Void
 
 Strings: 4 bytes for length + string content
+Integer: 4 bytes for length + integral number as bits
 
 > :warning: Strings are not a value type in the language.
 
