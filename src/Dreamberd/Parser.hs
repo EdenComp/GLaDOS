@@ -2,8 +2,9 @@ module Dreamberd.Parser (parseDreamberd) where
 
 import Control.Applicative (Alternative (..))
 import Dreamberd.Types (AstNode (..), File (..))
+import Options.Applicative (optional)
 
-newtype Parser a = Parser {parse :: (String, String, (Int, Int)) -> Either String (a, (String, String, (Int, Int)))}
+newtype Parser a = Parser {parse :: (String, (String, Int, Int)) -> Either String (a, (String, (String, Int, Int)))}
 
 instance Functor Parser where
     fmap f (Parser p) = Parser $ \input ->
@@ -21,7 +22,7 @@ instance Applicative Parser where
             Left err -> Left err
 
 instance Alternative Parser where
-    empty = Parser $ \(fileName, remaining, (line, col)) -> Left ("'" ++ remaining ++ "' at " ++ fileName ++ ":" ++ show line ++ ":" ++ show col)
+    empty = Parser $ \(remaining, (fileName, line, col)) -> Left ("'" ++ remaining ++ "' at " ++ fileName ++ ":" ++ show line ++ ":" ++ show col)
     (Parser p1) <|> (Parser p2) = Parser $ \input ->
         case p1 input of
             Right (result, rest) -> Right (result, rest)
@@ -37,18 +38,18 @@ instance Monad Parser where
 parseChar :: Char -> Parser Char
 parseChar c = Parser parseFunction
   where
-    parseFunction (fileName, x : xs, (line, col))
-        | x == c = Right (x, (fileName, xs, case x of '\n' -> (line + 1, 1); _ -> (line, col + 1)))
+    parseFunction (x : xs, (fileName, line, col))
+        | x == c = Right (x, (xs, case x of '\n' -> (fileName, line + 1, 1); _ -> (fileName, line, col + 1)))
         | otherwise = Left $ fileName ++ ":" ++ show line ++ ":" ++ show col ++ ": Expected '" ++ [c] ++ "' but found '" ++ [x] ++ "'"
-    parseFunction (fileName, _, (line, col)) = Left $ fileName ++ ":" ++ show line ++ ":" ++ show col ++ ": Expected '" ++ [c] ++ "' but found end of file"
+    parseFunction (_, (fileName, line, col)) = Left $ fileName ++ ":" ++ show line ++ ":" ++ show col ++ ": Expected '" ++ [c] ++ "' but found end of file"
 
 parseAnythingBut :: String -> Parser Char
 parseAnythingBut chars = Parser parseFunction
   where
-    parseFunction (fileName, x : xs, (line, col))
+    parseFunction (x : xs, (fileName, line, col))
         | x `elem` chars = Left $ fileName ++ ":" ++ show line ++ ":" ++ show col ++ ": Expected any character unless not in " ++ chars ++ " but found '" ++ [x] ++ "'"
-        | otherwise = Right (x, (fileName, xs, case x of '\n' -> (line + 1, 1); _ -> (line, col + 1)))
-    parseFunction (fileName, _, (line, col)) = Left $ fileName ++ ":" ++ show line ++ ":" ++ show col ++ ": Expected any character unless not in " ++ chars ++ "but found end of file"
+        | otherwise = Right (x, (xs, case x of '\n' -> (fileName, line + 1, 1); _ -> (fileName, line, col + 1)))
+    parseFunction (_, (fileName, line, col)) = Left $ fileName ++ ":" ++ show line ++ ":" ++ show col ++ ": Expected any character unless not in " ++ chars ++ "but found end of file"
 
 parseAnyChar :: String -> Parser Char
 parseAnyChar = foldr ((<|>) . parseChar) empty
@@ -97,11 +98,24 @@ parseSome p = (:) <$> p <*> parseMany p
 
 parseStatement :: Parser AstNode
 parseStatement =
-    parseFunctionDeclaration
-        <|> parseIfStatement
-        <|> parseWhileLoop
-        <|> parseForLoop
-        <|> parseStatementExpression
+    dropLineComment
+        *> ( parseFunctionDeclaration
+                <|> parseIfStatement
+                <|> parseWhileLoop
+                <|> parseForLoop
+                <|> parseStatementExpression
+           )
+        <* dropLineComment
+
+dropLineComment :: Parser (Maybe ())
+dropLineComment =
+    optional
+        ( parseStripped
+            (parseString "//")
+            >> parseMany (parseAnythingBut "\n")
+            >> parseChar '\n'
+            >> return ()
+        )
 
 parseStatementExpression :: Parser AstNode
 parseStatementExpression =
@@ -226,10 +240,10 @@ parseFunctionCallArgs =
         <*> parseStripped (parseMany (parseChar ',' >> parseStripped parseExpression))
 
 parseDreamberd :: File String -> Either String [AstNode]
-parseDreamberd (File fileName sourceCode) = parseDreamberd' (fileName, sourceCode, (1, 1))
+parseDreamberd (File fileName sourceCode) = parseDreamberd' (sourceCode, (fileName, 1, 1))
 
-parseDreamberd' :: (String, String, (Int, Int)) -> Either String [AstNode]
-parseDreamberd' (_, "", _) = Right []
+parseDreamberd' :: (String, (String, Int, Int)) -> Either String [AstNode]
+parseDreamberd' ("", _) = Right []
 parseDreamberd' infos =
     parse parseStatement infos
         >>= \(result, rest) ->
@@ -241,7 +255,7 @@ parseFunctionDeclaration =
     parseStripped (parseString "fn")
         >> parseStripped parseIdentifierString
         >>= \identifier ->
-            parseEnclosed ("(", ")") (parseOrValue parseFunctionDeclarationArgs [])
+            parseOrValue (parseEnclosed ("(", ")") (parseOrValue parseFunctionDeclarationArgs [])) []
                 >>= \args ->
                     parseStripped parseScope
                         >>= \body -> return (Function identifier args body)
@@ -315,7 +329,7 @@ parseConditionalScope =
                 >>= \body -> return (condition, body)
 
 parseScope :: Parser [AstNode]
-parseScope = parseEnclosed ("{", "}") (parseMany parseStatement) >>= \nodes -> return nodes
+parseScope = parseEnclosed ("{", "}") (dropLineComment *> (parseMany parseStatement <* dropLineComment))
 
 parseEnclosed :: (String, String) -> Parser a -> Parser a
 parseEnclosed (open, close) p =
