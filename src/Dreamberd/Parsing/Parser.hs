@@ -1,7 +1,6 @@
 module Dreamberd.Parsing.Parser (Parser, parseChar, parseAnyChar, parseAnd, parseAndWith, parseMany, parseSome, parseDreamberd, parseIf) where
 
 import Control.Applicative (Alternative (..))
-import Debug.Trace (trace)
 import Dreamberd.Types (AstNode (..))
 
 newtype Parser a = Parser {parse :: (String, Int) -> Either String (a, (String, Int))}
@@ -39,7 +38,7 @@ parseChar :: Char -> Parser Char
 parseChar c = Parser f
   where
     f (x : xs, index)
-        | x == c = trace ("found " ++ [x] ++ " at " ++ show index ++ ", remaining: '" ++ xs ++ "'") Right (c, (xs, index + 1))
+        | x == c = Right (c, (xs, index + 1))
         | otherwise = Left $ "Expected '" ++ [c] ++ "' but found '" ++ [x] ++ "' at " ++ show index
     f (_, index) = Left $ "Expected '" ++ [c] ++ "' but found end of file at " ++ show index
 
@@ -67,7 +66,7 @@ parseMany p = Parser $ \input ->
         Right (results, rest) -> Right (results, rest)
         Left _ -> Right ([], input)
 
-parseIf :: Show a => Parser a -> (a -> Bool) -> Parser a
+parseIf :: (Show a) => Parser a -> (a -> Bool) -> Parser a
 parseIf p f = Parser $ \input ->
     case parse p input of
         Right (result, rest)
@@ -105,7 +104,7 @@ parseExpression = parseBinaryOperation <|> parseFunctionCall <|> parseUnaryOpera
 
 parseBinaryOperation :: Parser AstNode
 parseBinaryOperation =
-    parseStripped (parseAtom <|> parseChar '(' *> parseStripped parseExpression <* parseChar ')')
+    parseStripped (parseExpression <|> parseChar '(' *> parseStripped parseExpression <* parseChar ')')
         >>= \a ->
             parseStripped parseBinaryOperator
                 >>= \op ->
@@ -114,22 +113,29 @@ parseBinaryOperation =
                             return (Call op [a, b])
 parseUnaryOperation :: Parser AstNode
 parseUnaryOperation =
-    ( parseStripped (parseUnaryOperator <|> parseString "!")
+    ( parseStripped parseUnaryPrefixOperator
         >>= \op ->
             parseStripped parseAtom
                 >>= \operand -> return (Call op [operand])
     )
         <|> ( parseStripped parseAtom
                 >>= \operand ->
-                    parseStripped parseUnaryOperator
+                    parseStripped parseUnarySuffixOperator
                         >>= \op ->
                             return (Call op [operand])
             )
 
-parseUnaryOperator :: Parser String
-parseUnaryOperator =
+parseUnarySuffixOperator :: Parser String
+parseUnarySuffixOperator =
     parseString "--"
         <|> parseString "++"
+
+parseUnaryPrefixOperator :: Parser String
+parseUnaryPrefixOperator =
+    parseUnarySuffixOperator
+        <|> parseString "!"
+        <|> parseString "-"
+        <|> parseString "+"
 
 parseBinaryOperator :: Parser String
 parseBinaryOperator =
@@ -166,17 +172,12 @@ parseAtom = parseIdentifier <|> parseLiteral
 parseLiteral :: Parser AstNode
 parseLiteral = parseBoolean <|> parseStringLiteral <|> parseNumber
 
-parseNumber :: Parser AstNode
-parseNumber = Number <$> parseStripped (parsePositiveNumber <|> parseNegativeNumber)
-
-parsePositiveNumber :: Parser Int
-parsePositiveNumber = parseSome (parseAnyChar ['0' .. '9']) >>= \num -> return $ read num
-
-parseNegativeNumber :: Parser Int
-parseNegativeNumber = (\n -> (-n)) <$> (parseStripped (parseChar '-') >> parseStripped parsePositiveNumber)
-
 parseBoolean :: Parser AstNode
-parseBoolean = parseString "true" <|> parseString "false" >>= \str -> return $ Boolean $ str == "true"
+parseBoolean =
+    parseString "true" <|> parseString "true" >>= \value -> return $ Boolean $ value == "true"
+
+parseNumber :: Parser AstNode
+parseNumber = Number <$> parseStripped (parseSome (parseAnyChar ['0' .. '9']) >>= \num -> return (read num :: Int))
 
 parseStringLiteral :: Parser AstNode
 parseStringLiteral = parseChar '"' >> parseMany (parseAnyChar $ ['a' .. 'z'] ++ ['A' .. 'Z'] ++ ['_'] ++ ['0' .. '9']) >>= \str -> parseChar '"' >> return (String str)
