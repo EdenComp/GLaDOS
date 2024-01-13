@@ -1,14 +1,30 @@
 module Dreamberd.Bytecode.Decode (
     getFromBytecode,
+    parseValue,
+    parseInteger,
+    parseInta,
 ) where
 
+import Data.Bits (shiftL, (.|.))
+import Data.Char (ord)
 import Dreamberd.Vm (Call (..), EnvValue (..), Insts (..), Value (..))
 
+parseInta :: [Char] -> Either String (Int, [Char])
+parseInta = parseInt
+
 parseInt :: [Char] -> Either String (Int, [Char])
-parseInt (b1 : b2 : b3 : b4 : rest) = Right (val, rest)
-  where
-    val = fromEnum b1 * 256 * 256 * 256 + fromEnum b2 * 256 * 256 + fromEnum b3 * 256 + fromEnum b4
+parseInt (b1 : b2 : b3 : b4 : b5 : b6 : b7 : b8 : rest) = Right ((ord b1 `shiftL` 56) .|. (ord b2 `shiftL` 48) .|. (ord b3 `shiftL` 40) .|. (ord b4 `shiftL` 32) .|. (ord b5 `shiftL` 24) .|. (ord b6 `shiftL` 16) .|. (ord b7 `shiftL` 8) .|. ord b8, rest)
 parseInt _ = Left "Not enough space for an int"
+
+parseInteger' :: Int -> [Char] -> Either String (Integer, [Char])
+parseInteger' 0 bytes = Right (0, bytes)
+parseInteger' size (b : bytes) = parseInteger' (size - 1) bytes >>= \(val, rest) -> Right (fromIntegral (fromEnum b) * (256 ^ (size - 1)) + val, rest)
+parseInteger' _ _ = Left "Not enough space for an integer"
+
+parseInteger :: [Char] -> Either String (Integer, [Char])
+parseInteger (c : bytes) | fromEnum c == 0x51 = parseInt bytes >>= uncurry parseInteger'
+                         | fromEnum c == 0x52 = parseInt bytes >>= \(size, rest) -> parseInteger' size rest >>= \(val, rest') -> Right (-val, rest')
+parseInteger _ = Left "Not enough space for an integer"
 
 parseString :: [Char] -> Either String (String, [Char])
 parseString bytes =
@@ -26,15 +42,16 @@ parseCall (c : bytes)
 
 parseValue :: [Char] -> Either String (Value, [Char])
 parseValue [] = Left "No value provided"
-parseValue (c : val : bytes) | fromEnum c == 0x12 = case fromEnum val of
+parseValue (c : val : bytes) | fromEnum c == 0x13 = case fromEnum val of
     0 -> Right (Bool False, bytes)
     1 -> Right (Bool True, bytes)
     _ -> Left "Unknown value for type Bool"
 parseValue (c : bytes) = case fromEnum c of
     0x11 -> parseInt bytes >>= \(val, rest) -> Right (Number val, rest)
-    0x13 -> parseString bytes >>= \(val, rest) -> Right (String val, rest)
-    0x14 -> parseCall bytes >>= \(val, rest) -> Right (Symbol val, rest)
-    0x15 -> Right (Void, bytes)
+    0x12 -> parseInteger bytes >>= \(l, rest) -> parseInt rest >>= \(r, rest') -> Right (Float (encodeFloat l r), rest')
+    0x14 -> parseString bytes >>= \(val, rest) -> Right (String val, rest)
+    0x15 -> parseCall bytes >>= \(val, rest) -> Right (Symbol val, rest)
+    0x16 -> Right (Void, bytes)
     _ -> Left "Unknown value type"
 
 parseEnvValue :: [Char] -> Either String (Maybe EnvValue, [Char])

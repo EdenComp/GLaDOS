@@ -9,8 +9,11 @@ module Dreamberd.Vm (
     Value (..),
 ) where
 
+import Data.Fixed (mod')
+
 data Value
     = Number Int
+    | Float Double
     | Bool Bool
     | String String
     | Symbol Call
@@ -19,6 +22,7 @@ data Value
 
 instance Show Value where
     show (Number nbr) = show nbr
+    show (Float nbr) = show nbr
     show (Bool b) = show b
     show (String str) = str
     show (Symbol sym) = show sym
@@ -145,12 +149,26 @@ execDefineEnv env args stack insts idx name True (Just val) =
 execBuiltin :: [Value] -> Operator -> Either String [Value]
 execBuiltin (Number _ : Number 0 : _) Div = Left "Cannot divide by 0"
 execBuiltin (Number _ : Number 0 : _) Mod = Left "Cannot divide by 0"
+execBuiltin (Float _ : Float 0 : _) Div = Left "Cannot divide by 0"
+execBuiltin (Float _ : Float 0 : _) Mod = Left "Cannot divide by 0"
 execBuiltin (Number l : Number r : xs) op = case op of
     Add -> Right (Number (l + r) : xs)
     Sub -> Right (Number (l - r) : xs)
     Mul -> Right (Number (l * r) : xs)
     Div -> Right (Number (div l r) : xs)
     Mod -> Right (Number (mod l r) : xs)
+    Eq -> Right (Bool (l == r) : xs)
+    Neq -> Right (Bool (l /= r) : xs)
+    Less -> Right (Bool (l < r) : xs)
+    LessOrEqual -> Right (Bool (l <= r) : xs)
+    Greater -> Right (Bool (l > r) : xs)
+    GreaterOrEqual -> Right (Bool (l >= r) : xs)
+execBuiltin (Float l : Float r : xs) op = case op of
+    Add -> Right (Float (l + r) : xs)
+    Sub -> Right (Float (l - r) : xs)
+    Mul -> Right (Float (l * r) : xs)
+    Div -> Right (Float (l / r) : xs)
+    Mod -> Right (Float (mod' l r) : xs)
     Eq -> Right (Bool (l == r) : xs)
     Neq -> Right (Bool (l /= r) : xs)
     Less -> Right (Bool (l < r) : xs)
