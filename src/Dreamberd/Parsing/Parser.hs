@@ -121,10 +121,10 @@ parseUnaryOperator =
 parseBinaryOperator :: Parser String
 parseBinaryOperator =
     parseInfixFunctionIdentifierString
-        <|> parseString "+="
-        <|> parseString "-="
         <|> parseString "*="
         <|> parseString "/="
+        <|> parseString "+="
+        <|> parseString "-="
         <|> parseString "%="
         <|> parseString "=="
         <|> parseString "!="
@@ -138,10 +138,10 @@ parseBinaryOperator =
         <|> parseString "**"
         <|> parseString "^"
         <|> parseString "="
-        <|> parseString "+"
-        <|> parseString "-"
         <|> parseString "*"
         <|> parseString "/"
+        <|> parseString "+"
+        <|> parseString "-"
         <|> parseString "%"
 
 parseInfixFunctionIdentifierString :: Parser String
