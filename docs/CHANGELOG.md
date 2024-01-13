@@ -1,3 +1,34 @@
+<a name="v0.8.0"></a>
+# [v0.8.0 🌈](https://github.com/EdenComp/GLaDOS/releases/tag/v0.8.0) - 13 Jan 2024
+
+## Changes
+
+Basic BNF, functional tests, parsing refactoring and various improvements
+
+## 🚀 Features
+
+- Unit tests on new VM and bytecode features [@EdenComp](https://github.com/EdenComp) ([#77](https://github.com/EdenComp/GLaDOS/issues/77))
+- Full BNF with documentation integration [@RezaRahemtola](https://github.com/RezaRahemtola) ([#78](https://github.com/EdenComp/GLaDOS/issues/78))
+- Update: make more Functional tests [@Tomi-Tom](https://github.com/Tomi-Tom) ([#73](https://github.com/EdenComp/GLaDOS/issues/73))
+- Float handling in VM and Bytecode [@EdenComp](https://github.com/EdenComp) ([#75](https://github.com/EdenComp/GLaDOS/issues/75))
+- Setup functional tests for compile + exec [@Tomi-Tom](https://github.com/Tomi-Tom) ([#72](https://github.com/EdenComp/GLaDOS/issues/72))
+- Refactor DefineEnv VM instructions [@EdenComp](https://github.com/EdenComp) ([#70](https://github.com/EdenComp/GLaDOS/issues/70))
+- Compilation: Builtin modulo operator [@Croos3r](https://github.com/Croos3r) ([#71](https://github.com/EdenComp/GLaDOS/issues/71))
+
+## 🐛 Bug Fixes
+
+- Parsing: refactoring of the mess [@Croos3r](https://github.com/Croos3r) ([#76](https://github.com/EdenComp/GLaDOS/issues/76))
+- PushEnv now working for print [@EdenComp](https://github.com/EdenComp) ([#67](https://github.com/EdenComp/GLaDOS/issues/67))
+- Fix CI: Timeout on release binary compilation [@RezaRahemtola](https://github.com/RezaRahemtola) ([#69](https://github.com/EdenComp/GLaDOS/issues/69))
+
+## 📄 Documentation
+
+- Full BNF with documentation integration [@RezaRahemtola](https://github.com/RezaRahemtola) ([#78](https://github.com/EdenComp/GLaDOS/issues/78))
+- Update changelog for "v0.7.0" [@github-actions](https://github.com/github-actions) ([#68](https://github.com/EdenComp/GLaDOS/issues/68))
+
+[Changes][v0.8.0]
+
+
 <a name="v0.7.0"></a>
 # [v0.7.0 🌈](https://github.com/EdenComp/GLaDOS/releases/tag/v0.7.0) - 11 Jan 2024
 
@@ -190,6 +221,7 @@ Project setup with CI, evaluation of SExpr and documentation
 [Changes][v0.1.0]
 
 
+[v0.8.0]: https://github.com/EdenComp/GLaDOS/compare/v0.7.0...v0.8.0
 [v0.7.0]: https://github.com/EdenComp/GLaDOS/compare/v0.6.0...v0.7.0
 [v0.6.0]: https://github.com/EdenComp/GLaDOS/compare/v0.5.0...v0.6.0
 [v0.5.0]: https://github.com/EdenComp/GLaDOS/compare/v0.4.0...v0.5.0

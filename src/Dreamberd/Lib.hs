@@ -9,20 +9,21 @@ module Dreamberd.Lib (
 import Dreamberd.Bytecode.Decode (getFromBytecode)
 import Dreamberd.Bytecode.Encode (transpileIntoBytecode)
 import Dreamberd.Compile (compileAst)
-import Dreamberd.Parsing.Main (parseDreamberd)
+import Dreamberd.Parser (parseDreamberd)
+import Dreamberd.Types (File (..))
 import Dreamberd.Vm (Insts (..), execVM)
 import System.Exit (ExitCode (ExitFailure), exitWith)
 
-compileDreamberdCode :: String -> String -> IO ()
-compileDreamberdCode sourceCode outputFile =
-    case parseDreamberd sourceCode [] of
+compileDreamberdCode :: File String -> String -> IO ()
+compileDreamberdCode file outputFile =
+    case parseDreamberd file of
         Right ast -> case compileAst ast of
             Right insts -> writeFile outputFile (transpileIntoBytecode insts)
             Left err -> returnWithError err
         Left err -> returnWithError err
 
-executeDreamberdBytecode :: [Char] -> IO ()
-executeDreamberdBytecode bytes =
+executeDreamberdBytecode :: File [Char] -> IO ()
+executeDreamberdBytecode (File _ bytes) =
     case getFromBytecode bytes of
         Right insts -> executeDreamberdInsts insts
         Left err -> returnWithError err
@@ -34,23 +35,23 @@ executeDreamberdInsts insts = do
         Right val -> print val
         Left err -> returnWithError err
 
-runDreamberdCode :: String -> IO ()
-runDreamberdCode sourceCode =
-    case parseDreamberd sourceCode [] of
+runDreamberdCode :: File String -> IO ()
+runDreamberdCode file =
+    case parseDreamberd file of
         Right ast -> case compileAst ast of
             Right insts -> executeDreamberdInsts insts
             Left err -> returnWithError err
         Left err -> returnWithError err
 
-compileToAst :: String -> IO ()
-compileToAst sourceCode =
-    case parseDreamberd sourceCode [] of
+compileToAst :: File String -> IO ()
+compileToAst file =
+    case parseDreamberd file of
         Right ast -> print ast
         Left err -> returnWithError err
 
-compileToVm :: String -> IO ()
-compileToVm sourceCode =
-    case parseDreamberd sourceCode [] of
+compileToVm :: File String -> IO ()
+compileToVm file =
+    case parseDreamberd file of
         Right ast -> case compileAst ast of
             Right insts -> print insts
             Left err -> returnWithError err

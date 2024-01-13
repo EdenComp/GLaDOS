@@ -1,0 +1,22 @@
+int MIN = 0;
+int MAX = 5;
+str bl = "
+";
+
+fn printLn(s) {
+    print(s);
+    print(bl);
+}
+
+fn main() {
+    str s = "Hello World";
+    int i = MIN;
+    while(i < MAX) {
+        print(s);
+        printLn(i);
+        i = i + 1;
+    }
+    printLn("Done");
+}
+
+main();
