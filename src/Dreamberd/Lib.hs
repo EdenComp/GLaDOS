@@ -9,7 +9,7 @@ module Dreamberd.Lib (
 import Dreamberd.Bytecode.Decode (getFromBytecode)
 import Dreamberd.Bytecode.Encode (transpileIntoBytecode)
 import Dreamberd.Compile (compileAst)
-import Dreamberd.Parsing.Parser (parseDreamberd)
+import Dreamberd.Parser (parseDreamberd)
 import Dreamberd.Types (File (..))
 import Dreamberd.Vm (Insts (..), execVM)
 import System.Exit (ExitCode (ExitFailure), exitWith)

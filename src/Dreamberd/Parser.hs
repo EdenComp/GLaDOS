@@ -1,4 +1,4 @@
-module Dreamberd.Parsing.Parser (Parser, parseChar, parseAnyChar, parseAnd, parseAndWith, parseMany, parseSome, parseDreamberd) where
+module Dreamberd.Parser (parseDreamberd) where
 
 import Control.Applicative (Alternative (..))
 import Dreamberd.Types (AstNode (..), File (..))
@@ -42,12 +42,6 @@ parseChar c = Parser parseFunction
         | otherwise = Left $ fileName ++ ":" ++ show line ++ ":" ++ show col ++ ": Expected '" ++ [c] ++ "' but found '" ++ [x] ++ "'"
     parseFunction (fileName, _, (line, col)) = Left $ fileName ++ ":" ++ show line ++ ":" ++ show col ++ ": Expected '" ++ [c] ++ "' but found end of file"
 
-parseAnything :: Parser Char
-parseAnything = Parser parseFunction
-  where
-    parseFunction (fileName, x : xs, (line, col)) = Right (x, (fileName, xs, case x of '\n' -> (line + 1, 1); _ -> (line, col + 1)))
-    parseFunction (fileName, _, (line, col)) = Left $ fileName ++ ":" ++ show line ++ ":" ++ show col ++ ": Expected any character but found end of file at"
-
 parseAnythingBut :: String -> Parser Char
 parseAnythingBut chars = Parser parseFunction
   where
@@ -82,9 +76,6 @@ parseSomeWhiteSpaces = parseSome $ parseAnyChar " \n\t"
 
 parseManyWhiteSpaces :: Parser String
 parseManyWhiteSpaces = parseMany $ parseAnyChar " \n\t"
-
-parseAnd :: Parser a -> Parser b -> Parser (a, b)
-parseAnd p1 p2 = (,) <$> p1 <*> p2
 
 parseAndWith :: (a -> b -> c) -> Parser a -> Parser b -> Parser c
 parseAndWith f p1 p2 = f <$> p1 <*> p2
@@ -121,11 +112,11 @@ parseStatementExpression =
         <* parseStripped (parseChar ';')
 
 parseExpression :: Parser AstNode
-parseExpression = parseBinaryOperation <|> parseUnaryOperation <|> parseAtom <|> parseEnclosed ("(", ")") parseExpression
+parseExpression = parseBinaryOperation <|> parseUnaryOperation <|> parseAtom
 
 parseBinaryOperation :: Parser AstNode
 parseBinaryOperation =
-    parseStripped (parseAtom <|> parseEnclosed ("(", ")") parseAtom)
+    parseStripped parseAtom
         >>= \a ->
             parseStripped parseBinaryOperator
                 >>= \op ->
@@ -188,7 +179,7 @@ parseInfixFunctionIdentifierString :: Parser String
 parseInfixFunctionIdentifierString = parseChar '`' *> parseIdentifierString <* parseChar '`'
 
 parseAtom :: Parser AstNode
-parseAtom = parseFunctionCall <|> parseLiteral <|> parseIdentifier
+parseAtom = parseEnclosed ("(", ")") parseExpression <|> parseFunctionCall <|> parseLiteral <|> parseIdentifier
 
 parseLiteral :: Parser AstNode
 parseLiteral = parseBoolean <|> parseStringLiteral <|> parseNumber
@@ -225,7 +216,7 @@ parseFunctionCall :: Parser AstNode
 parseFunctionCall =
     parseStripped parseIdentifierString
         >>= \identifier ->
-            parseEnclosed ("(", ")") (parseStripped (parseOrValue parseFunctionCallArgs []))
+            parseEnclosed ("(", ")") (parseOrValue parseFunctionCallArgs [])
                 >>= \args -> return (Call identifier args)
 
 parseFunctionCallArgs :: Parser [AstNode]
@@ -250,7 +241,7 @@ parseFunctionDeclaration =
     parseStripped (parseString "fn")
         >> parseStripped parseIdentifierString
         >>= \identifier ->
-            parseEnclosed ("(", ")") (parseStripped (parseOrValue parseFunctionDeclarationArgs []))
+            parseEnclosed ("(", ")") (parseOrValue parseFunctionDeclarationArgs [])
                 >>= \args ->
                     parseStripped parseScope
                         >>= \body -> return (Function identifier args body)
