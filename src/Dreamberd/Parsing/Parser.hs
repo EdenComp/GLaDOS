@@ -226,11 +226,8 @@ parseFunctionDeclaration =
                 >> parseStripped (parseOrValue parseFunctionDeclarationArgs [])
                 >>= \args ->
                     parseStripped (parseChar ')')
-                        >> parseStripped (parseChar '{')
-                        >> parseStripped (parseSome parseStatement)
-                        >>= \body ->
-                            parseStripped (parseChar '}')
-                                >> return (Function identifier args body)
+                        >> parseStripped parseScope
+                        >>= \body -> return (Function identifier args body)
 
 parseFunctionDeclarationArgs :: Parser [String]
 parseFunctionDeclarationArgs =
