@@ -66,14 +66,6 @@ parseMany p = Parser $ \input ->
         Right (results, rest) -> Right (results, rest)
         Left _ -> Right ([], input)
 
-parseIf :: (Show a) => Parser a -> (a -> Bool) -> Parser a
-parseIf p f = Parser $ \input ->
-    case parse p input of
-        Right (result, rest)
-            | f result -> Right (result, rest)
-            | otherwise -> Left (show result ++ "does not match the predicate")
-        Left err -> Left err
-
 parseOrValue :: Parser a -> a -> Parser a
 parseOrValue p v = Parser $ \input ->
     case parse p input of
@@ -100,7 +92,7 @@ parseStatementExpression =
         <* parseStripped (parseChar ';')
 
 parseExpression :: Parser AstNode
-parseExpression = parseBinaryOperation <|> parseFunctionCall <|> parseUnaryOperation <|> parseAtom <|> (parseEnclosed ("(", ")") parseExpression)
+parseExpression = parseBinaryOperation <|> parseFunctionCall <|> parseUnaryOperation <|> parseAtom <|> parseEnclosed ("(", ")") parseExpression
 
 parseBinaryOperation :: Parser AstNode
 parseBinaryOperation =
