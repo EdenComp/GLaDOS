@@ -8,7 +8,7 @@ import qualified Dreamberd.Vm as VM
 
 testDreamberdTypes :: Test
 testDreamberdTypes =
-    TestList 
+    TestList
         [ testAstTypes
         , testVmTypes
         , testVmTypesComparison
