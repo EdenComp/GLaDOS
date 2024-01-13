@@ -5,4 +5,3 @@ fn test()
 }
 int i = test();
 print(i);
-
