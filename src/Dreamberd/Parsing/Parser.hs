@@ -3,7 +3,7 @@ module Dreamberd.Parsing.Parser (Parser, parseChar, parseAnyChar, parseAnd, pars
 import Control.Applicative (Alternative (..))
 import Dreamberd.Types (AstNode (..))
 
-newtype Parser a = Parser {parse :: (String, Int) -> Either String (a, (String, Int))}
+newtype Parser a = Parser {parse :: (String, (Int, Int)) -> Either String (a, (String, (Int, Int)))}
 
 instance Functor Parser where
     fmap f (Parser p) = Parser $ \input ->
@@ -37,13 +37,29 @@ instance Monad Parser where
 parseChar :: Char -> Parser Char
 parseChar c = Parser f
   where
-    f (x : xs, index)
-        | x == c = Right (c, (xs, index + 1))
-        | otherwise = Left $ "Expected '" ++ [c] ++ "' but found '" ++ [x] ++ "' at " ++ show index
-    f (_, index) = Left $ "Expected '" ++ [c] ++ "' but found end of file at " ++ show index
+    f (x : xs, (line, col))
+        | x == '\n' = Right (x, (xs, (line + 1, 0)))
+        | x == c = Right (c, (xs, (line, col + 1)))
+        | otherwise = Left $ "Expected '" ++ [c] ++ "' but found '" ++ [x] ++ "' at " ++ show line ++ ":" ++ show col
+    f (_, (line, col)) = Left $ "Expected '" ++ [c] ++ "' but found end of file at " ++ show line ++ ":" ++ show col
 
 parseAnyChar :: String -> Parser Char
 parseAnyChar = foldr ((<|>) . parseChar) empty
+
+parseEscapeSequence :: Parser Char
+parseEscapeSequence =
+    ( parseString "\\\""
+        >> return '\"'
+    )
+        <|> ( parseString "\\\\"
+                >> return '\\'
+            )
+        <|> ( parseString "\\n"
+                >> return '\n'
+            )
+        <|> ( parseString "\\t"
+                >> return '\t'
+            )
 
 parseString :: String -> Parser String
 parseString = traverse parseChar
@@ -172,7 +188,7 @@ parseNumber :: Parser AstNode
 parseNumber = Number <$> parseStripped (parseSome (parseAnyChar ['0' .. '9']) >>= \num -> return (read num :: Int))
 
 parseStringLiteral :: Parser AstNode
-parseStringLiteral = parseChar '"' >> parseMany (parseAnyChar $ ['a' .. 'z'] ++ ['A' .. 'Z'] ++ ['_'] ++ ['0' .. '9']) >>= \str -> parseChar '"' >> return (String str)
+parseStringLiteral = parseChar '"' >> parseMany (parseAnyChar (['a' .. 'z'] ++ ['A' .. 'Z'] ++ ['_', ' '] ++ ['0' .. '9']) <|> parseEscapeSequence) >>= \str -> parseChar '"' >> return (String str)
 
 parseVariableDeclaration :: Parser AstNode
 parseVariableDeclaration =
@@ -208,7 +224,7 @@ parseFunctionCallArgs =
 
 parseDreamberd :: String -> Either String [AstNode]
 parseDreamberd "" = Right []
-parseDreamberd sourceCode = fst <$> parse (parseStripped (parseSome parseStatement)) (sourceCode, 0)
+parseDreamberd sourceCode = fst <$> parse (parseStripped (parseSome parseStatement)) (sourceCode, (0, 0))
 
 parseFunctionDeclaration :: Parser AstNode
 parseFunctionDeclaration =
