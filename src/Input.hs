@@ -3,10 +3,11 @@ module Input (
     processInput,
 ) where
 
+import Dreamberd.Types (File (..))
 import System.IO (isEOF)
 
-processFile :: (String -> IO ()) -> FilePath -> IO ()
-processFile func fileName = readFile fileName >>= func
+processFile :: (File String -> IO ()) -> FilePath -> IO ()
+processFile func fileName = readFile fileName >>= \sourceCode -> func (File fileName sourceCode)
 
 processInput :: (String -> IO ()) -> IO ()
 processInput func = getUserInput func ""

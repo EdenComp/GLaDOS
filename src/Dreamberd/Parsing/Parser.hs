@@ -1,9 +1,9 @@
 module Dreamberd.Parsing.Parser (Parser, parseChar, parseAnyChar, parseAnd, parseAndWith, parseMany, parseSome, parseDreamberd) where
 
 import Control.Applicative (Alternative (..))
-import Dreamberd.Types (AstNode (..))
+import Dreamberd.Types (AstNode (..), File (..))
 
-newtype Parser a = Parser {parse :: (String, (Int, Int)) -> Either String (a, (String, (Int, Int)))}
+newtype Parser a = Parser {parse :: (String, String, (Int, Int)) -> Either String (a, (String, String, (Int, Int)))}
 
 instance Functor Parser where
     fmap f (Parser p) = Parser $ \input ->
@@ -21,7 +21,7 @@ instance Applicative Parser where
             Left err -> Left err
 
 instance Alternative Parser where
-    empty = Parser $ \(remaining, index) -> Left ("'" ++ remaining ++ "' at " ++ show index)
+    empty = Parser $ \(fileName, remaining, (line, col)) -> Left ("'" ++ remaining ++ "' at " ++ fileName ++ ":" ++ show line ++ ":" ++ show col)
     (Parser p1) <|> (Parser p2) = Parser $ \input ->
         case p1 input of
             Right (result, rest) -> Right (result, rest)
@@ -35,13 +35,12 @@ instance Monad Parser where
             Left err -> Left err
 
 parseChar :: Char -> Parser Char
-parseChar c = Parser f
+parseChar c = Parser parseFunction
   where
-    f (x : xs, (line, col))
-        | x == '\n' = Right (x, (xs, (line + 1, 0)))
-        | x == c = Right (c, (xs, (line, col + 1)))
-        | otherwise = Left $ "Expected '" ++ [c] ++ "' but found '" ++ [x] ++ "' at " ++ show line ++ ":" ++ show col
-    f (_, (line, col)) = Left $ "Expected '" ++ [c] ++ "' but found end of file at " ++ show line ++ ":" ++ show col
+    parseFunction (fileName, x : xs, (line, col))
+        | x == c = Right (x, (fileName, xs, case x of '\n' -> (line + 1, 1); _ -> (line, col + 1)))
+        | otherwise = Left $ fileName ++ ":" ++ "Expected '" ++ [c] ++ "' but found '" ++ [x] ++ "' at " ++ show line ++ ":" ++ show col
+    parseFunction (fileName, _, (line, col)) = Left $ fileName ++ ":" ++ "Expected '" ++ [c] ++ "' but found end of file at " ++ show line ++ ":" ++ show col
 
 parseAnyChar :: String -> Parser Char
 parseAnyChar = foldr ((<|>) . parseChar) empty
@@ -222,9 +221,16 @@ parseFunctionCallArgs =
             parseStripped (parseMany (parseChar ',' >> parseExpression))
                 >>= \rest -> return (firstArg : rest)
 
-parseDreamberd :: String -> Either String [AstNode]
-parseDreamberd "" = Right []
-parseDreamberd sourceCode = fst <$> parse (parseStripped (parseSome parseStatement)) (sourceCode, (0, 0))
+parseDreamberd :: File String -> Either String [AstNode]
+parseDreamberd (File fileName sourceCode) = parseDreamberd' (fileName, sourceCode, (1, 1))
+
+parseDreamberd' :: (String, String, (Int, Int)) -> Either String [AstNode]
+parseDreamberd' (_, "", _) = Right []
+parseDreamberd' infos =
+    parse parseStatement infos
+        >>= \(result, rest) ->
+            parseDreamberd' rest
+                >>= \results -> Right (result : results)
 
 parseFunctionDeclaration :: Parser AstNode
 parseFunctionDeclaration =
