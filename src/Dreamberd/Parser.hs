@@ -2,7 +2,6 @@ module Dreamberd.Parser (parseDreamberd) where
 
 import Control.Applicative (Alternative (..))
 import Dreamberd.Types (AstNode (..), File (..))
-import Options.Applicative (optional)
 
 newtype Parser a = Parser {parse :: (String, (String, Int, Int)) -> Either String (a, (String, (String, Int, Int)))}
 
@@ -43,13 +42,13 @@ parseChar c = Parser parseFunction
         | otherwise = Left $ fileName ++ ":" ++ show line ++ ":" ++ show col ++ ": Expected '" ++ [c] ++ "' but found '" ++ [x] ++ "'"
     parseFunction (_, (fileName, line, col)) = Left $ fileName ++ ":" ++ show line ++ ":" ++ show col ++ ": Expected '" ++ [c] ++ "' but found end of file"
 
-parseAnythingBut :: String -> Parser Char
-parseAnythingBut chars = Parser parseFunction
+parseAnythingBut :: Char -> Parser Char
+parseAnythingBut c = Parser parseFunction
   where
     parseFunction (x : xs, (fileName, line, col))
-        | x `elem` chars = Left $ fileName ++ ":" ++ show line ++ ":" ++ show col ++ ": Expected any character unless not in " ++ chars ++ " but found '" ++ [x] ++ "'"
+        | x == c = Left $ fileName ++ ":" ++ show line ++ ":" ++ show col ++ ": Expected any character but not [" ++ [c] ++ "] but found '" ++ [x] ++ "'"
         | otherwise = Right (x, (xs, case x of '\n' -> (fileName, line + 1, 1); _ -> (fileName, line, col + 1)))
-    parseFunction (_, (fileName, line, col)) = Left $ fileName ++ ":" ++ show line ++ ":" ++ show col ++ ": Expected any character unless not in " ++ chars ++ "but found end of file"
+    parseFunction (_, (fileName, line, col)) = Left $ fileName ++ ":" ++ show line ++ ":" ++ show col ++ ": Expected any character but not [ " ++ [c] ++ "] but found end of file"
 
 parseAnyChar :: String -> Parser Char
 parseAnyChar = foldr ((<|>) . parseChar) empty
@@ -98,23 +97,25 @@ parseSome p = (:) <$> p <*> parseMany p
 
 parseStatement :: Parser AstNode
 parseStatement =
-    dropLineComment
+    parseLineComments
         *> ( parseFunctionDeclaration
                 <|> parseIfStatement
                 <|> parseWhileLoop
                 <|> parseForLoop
                 <|> parseStatementExpression
            )
-        <* dropLineComment
+        <* parseLineComments
 
-dropLineComment :: Parser (Maybe ())
-dropLineComment =
-    optional
-        ( parseStripped
-            (parseString "//")
-            >> parseMany (parseAnythingBut "\n")
-            >> parseChar '\n'
-            >> return ()
+parseLineComments :: Parser [String]
+parseLineComments =
+    parseMany
+        ( parseManyWhiteSpaces
+            >> parseString "//"
+            >> parseMany (parseAnythingBut '\n')
+            >>= \comment ->
+                parseMany (parseAnyChar " \t")
+                    >> parseChar '\n'
+                    >> return comment
         )
 
 parseStatementExpression :: Parser AstNode
@@ -130,7 +131,8 @@ parseExpression = parseBinaryOperation <|> parseUnaryOperation <|> parseAtom
 
 parseBinaryOperation :: Parser AstNode
 parseBinaryOperation =
-    parseStripped parseAtom
+    parseStripped
+        parseAtom
         >>= \a ->
             parseStripped parseBinaryOperator
                 >>= \op ->
@@ -206,7 +208,7 @@ parseNumber :: Parser AstNode
 parseNumber = Number <$> parseStripped (parseSome (parseAnyChar ['0' .. '9']) >>= \num -> return (read num :: Int))
 
 parseStringLiteral :: Parser AstNode
-parseStringLiteral = parseChar '\"' *> (String <$> parseMany (parseEscapeSequence <|> parseAnythingBut "\"")) <* parseChar '\"'
+parseStringLiteral = parseChar '\"' *> (String <$> parseMany (parseEscapeSequence <|> parseAnythingBut '\"')) <* parseChar '\"'
 
 parseVariableDeclaration :: Parser AstNode
 parseVariableDeclaration =
@@ -278,7 +280,7 @@ parseIfStatement =
     parseStripped (parseString "if")
         >> parseStripped parseConditionalScope
         >>= \(condition, body) ->
-            parseStripped (((: []) <$> parseElifStatement) <|> parseOrValue parseElseStatement [])
+            parseStripped ((: []) <$> parseElifStatement <|> parseOrValue parseElseStatement [])
                 >>= \elseBody -> return (If condition body elseBody)
 
 parseElifStatement :: Parser AstNode
@@ -329,7 +331,7 @@ parseConditionalScope =
                 >>= \body -> return (condition, body)
 
 parseScope :: Parser [AstNode]
-parseScope = parseEnclosed ("{", "}") (dropLineComment *> (parseMany parseStatement <* dropLineComment))
+parseScope = parseEnclosed ("{", "}") (parseLineComments *> parseMany parseStatement <* parseLineComments)
 
 parseEnclosed :: (String, String) -> Parser a -> Parser a
 parseEnclosed (open, close) p =
