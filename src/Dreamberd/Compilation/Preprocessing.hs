@@ -4,13 +4,13 @@ module Dreamberd.Compilation.Preprocessing (
     executePreprocessing,
 ) where
 
-import Dreamberd.Parsing.Main (parseDreamberd)
-import Dreamberd.Types (AstNode (..))
+import Dreamberd.Parser (parseDreamberd)
+import Dreamberd.Types (AstNode (..), File (..))
 import System.Directory (getCurrentDirectory, getHomeDirectory)
 
-executePreprocessing :: [AstNode] -> IO (Either String [AstNode])
-executePreprocessing nodes =
-    preprocessNodes nodes [] >>= \case
+executePreprocessing :: File [AstNode] -> IO (Either String [AstNode])
+executePreprocessing (File filename nodes) =
+    preprocessNodes nodes [filename] >>= \case
         Left err -> return $ Left err
         Right (_, nodes') -> return $ Right nodes'
 
@@ -50,6 +50,6 @@ resolveImport lib path imports = do
         else return $ Right (path : imports, file)
 
 importFile :: String -> ([String], String) -> IO (Either String ([String], [AstNode]))
-importFile lib (imports, code) = case parseDreamberd code [] of
+importFile lib (imports, code) = case parseDreamberd (File lib code) of
     Right ast -> preprocessNodes ast imports
     Left err -> return $ Left ("Error while importing " ++ lib ++ ": " ++ err)
