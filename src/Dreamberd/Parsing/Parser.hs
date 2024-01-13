@@ -201,7 +201,7 @@ parseNumber :: Parser AstNode
 parseNumber = Number <$> parseStripped (parseSome (parseAnyChar ['0' .. '9']) >>= \num -> return (read num :: Int))
 
 parseStringLiteral :: Parser AstNode
-parseStringLiteral = parseEnclosed ("\"", "\"") (String <$> parseMany (parseEscapeSequence <|> parseAnythingBut "\""))
+parseStringLiteral = parseChar '\"' *> (String <$> parseMany (parseEscapeSequence <|> parseAnythingBut "\"")) <* parseChar '\"'
 
 parseVariableDeclaration :: Parser AstNode
 parseVariableDeclaration =
