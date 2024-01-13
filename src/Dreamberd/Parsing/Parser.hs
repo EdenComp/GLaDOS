@@ -248,25 +248,23 @@ parseReturn =
 parseIfStatement :: Parser AstNode
 parseIfStatement =
     parseStripped (parseString "if")
-        >> parseStripped (parseChar '(')
-        >> parseStripped parseExpression
-        >>= \condition ->
-            parseStripped (parseChar ')')
-                >> parseStripped (parseChar '{')
-                >> parseStripped (parseSome parseStatement)
-                >>= \body ->
-                    parseStripped (parseChar '}')
-                        >> parseStripped (parseOrValue parseElseStatement [])
-                        >>= \elseBody -> return (If condition body elseBody)
+        >> parseStripped parseConditionalScope
+        >>= \(condition, body) ->
+            parseStripped (((: []) <$> parseElifStatement) <|> parseOrValue parseElseStatement [])
+                >>= \elseBody -> return (If condition body elseBody)
+
+parseElifStatement :: Parser AstNode
+parseElifStatement =
+    parseStripped (parseString "elif")
+        >> parseConditionalScope
+        >>= \(condition, body) ->
+            parseStripped (((: []) <$> parseElifStatement) <|> parseOrValue parseElseStatement [])
+                >>= \nextBody -> return (If condition body nextBody)
 
 parseElseStatement :: Parser [AstNode]
 parseElseStatement =
     parseStripped (parseString "else")
-        >> parseStripped (parseChar '{')
-        >> parseStripped (parseSome parseStatement)
-        >>= \elseBody ->
-            parseStripped (parseChar '}')
-                >> return elseBody
+        >> parseStripped parseScope
 
 parseStripped :: Parser a -> Parser a
 parseStripped p = parseManyWhiteSpaces *> p <* parseManyWhiteSpaces
@@ -274,15 +272,9 @@ parseStripped p = parseManyWhiteSpaces *> p <* parseManyWhiteSpaces
 parseWhileLoop :: Parser AstNode
 parseWhileLoop =
     parseStripped (parseString "while")
-        >> parseStripped (parseChar '(')
-        >> parseStripped parseExpression
-        >>= \condition ->
-            parseStripped (parseChar ')')
-                >> parseStripped (parseChar '{')
-                >> parseStripped (parseSome parseStatement)
-                >>= \body ->
-                    parseStripped (parseChar '}')
-                        >> return (Loop condition body Nothing Nothing)
+        >> parseStripped parseConditionalScope
+        >>= \(condition, body) ->
+            return (Loop condition body Nothing Nothing)
 
 parseForLoop :: Parser AstNode
 parseForLoop =
@@ -295,8 +287,20 @@ parseForLoop =
                     parseStripped parseExpression
                         >>= \updateNode ->
                             parseStripped (parseChar ')')
-                                >> parseStripped (parseChar '{')
-                                >> parseStripped (parseSome parseStatement)
-                                >>= \body ->
-                                    parseStripped (parseChar '}')
-                                        >> return (Loop condition body (Just initNode) (Just updateNode))
+                                >> parseStripped parseScope
+                                >>= \body -> return (Loop condition body (Just initNode) (Just updateNode))
+
+parseConditionalScope :: Parser (AstNode, [AstNode])
+parseConditionalScope =
+    parseStripped (parseChar '(')
+        >> parseStripped parseExpression
+        >>= \condition ->
+            parseStripped (parseChar ')')
+                >> parseStripped parseScope
+                >>= \body -> return (condition, body)
+
+parseScope :: Parser [AstNode]
+parseScope =
+    parseStripped (parseChar '{')
+        >> parseStripped (parseMany parseStatement)
+        >>= \nodes -> parseStripped (parseChar '}') >> return nodes
