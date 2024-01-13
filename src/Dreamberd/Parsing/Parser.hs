@@ -1,10 +1,10 @@
-module Dreamberd.Parsing.Parser (Parser, parseChar, parseAnyChar, parseAnd, parseAndWith, parseMany, parseSome, parseDreamberd, parseIf) where
+module Dreamberd.Parsing.Parser (Parser, parseChar, parseAnyChar, parseAnd, parseAndWith, parseMany, parseSome, parseDreamberd, parseIf, parseNumber, parser) where
 
 import Control.Applicative (Alternative (..))
 import Debug.Trace (trace)
 import Dreamberd.Types (AstNode (..))
 
-newtype Parser a = Parser {prout :: (String, Int) -> Either String (a, (String, Int))}
+newtype Parser a = Parser {parser :: (String, Int) -> Either String (a, (String, Int))}
 
 instance Functor Parser where
     fmap f (Parser p) = Parser $ \input ->
@@ -32,14 +32,14 @@ instance Monad Parser where
     return = pure
     (Parser p) >>= f = Parser $ \input ->
         case p input of
-            Right (result, rest) -> prout (f result) rest
+            Right (result, rest) -> parser (f result) rest
             Left err -> Left err
 
 parseChar :: Char -> Parser Char
 parseChar c = Parser f
   where
     f (x : xs, index)
-        | x == c = trace ("found " ++ [x] ++ " at " ++ show index ++ ", remaining: '" ++ xs ++ "'") Right (c, (xs, index + 1))
+        | x == c = Right (c, (xs, index + 1))
         | otherwise = Left $ "Expected '" ++ [c] ++ "' but found '" ++ [x] ++ "' at " ++ show index
     f (_, index) = Left $ "Expected '" ++ [c] ++ "' but found end of file at " ++ show index
 
@@ -63,13 +63,13 @@ parseAndWith f p1 p2 = f <$> p1 <*> p2
 
 parseMany :: Parser a -> Parser [a]
 parseMany p = Parser $ \input ->
-    case prout (parseSome p) input of
+    case parser (parseSome p) input of
         Right (results, rest) -> Right (results, rest)
         Left _ -> Right ([], input)
 
 parseIf :: Show a => Parser a -> (a -> Bool) -> Parser a
 parseIf p f = Parser $ \input ->
-    case prout p input of
+    case parser p input of
         Right (result, rest)
             | f result -> Right (result, rest)
             | otherwise -> Left (show result ++ "does not match the predicate")
@@ -77,7 +77,7 @@ parseIf p f = Parser $ \input ->
 
 parseOrValue :: Parser a -> a -> Parser a
 parseOrValue p v = Parser $ \input ->
-    case prout p input of
+    case parser p input of
         Right (result, rest) -> Right (result, rest)
         Left _ -> Right (v, input)
 
@@ -197,7 +197,7 @@ parseFunctionCallArgs =
                 >>= \rest -> return (firstArg : rest)
 
 parseDreamberd :: String -> Either String [AstNode]
-parseDreamberd sourceCode = fst <$> prout (parseStripped (parseSome parseStatement)) (sourceCode, 0)
+parseDreamberd sourceCode = fst <$> parser (parseStripped (parseSome parseStatement)) (sourceCode, 0)
 
 parseFunctionDeclaration :: Parser AstNode
 parseFunctionDeclaration =
