@@ -1,10 +1,9 @@
 module Dreamberd.Parsing.Parser (Parser, parseChar, parseAnyChar, parseAnd, parseAndWith, parseMany, parseSome, parseDreamberd, parseIf, parseNumber, parser) where
 
 import Control.Applicative (Alternative (..))
-import Debug.Trace (trace)
 import Dreamberd.Types (AstNode (..))
 
-newtype Parser a = Parser {parser :: (String, Int) -> Either String (a, (String, Int))}
+newtype Parser a = Parser {parse :: (String, Int) -> Either String (a, (String, Int))}
 
 instance Functor Parser where
     fmap f (Parser p) = Parser $ \input ->
@@ -32,7 +31,7 @@ instance Monad Parser where
     return = pure
     (Parser p) >>= f = Parser $ \input ->
         case p input of
-            Right (result, rest) -> parser (f result) rest
+            Right (result, rest) -> parse (f result) rest
             Left err -> Left err
 
 parseChar :: Char -> Parser Char
@@ -63,13 +62,13 @@ parseAndWith f p1 p2 = f <$> p1 <*> p2
 
 parseMany :: Parser a -> Parser [a]
 parseMany p = Parser $ \input ->
-    case parser (parseSome p) input of
+    case parse (parseSome p) input of
         Right (results, rest) -> Right (results, rest)
         Left _ -> Right ([], input)
 
-parseIf :: Show a => Parser a -> (a -> Bool) -> Parser a
+parseIf :: (Show a) => Parser a -> (a -> Bool) -> Parser a
 parseIf p f = Parser $ \input ->
-    case parser p input of
+    case parse p input of
         Right (result, rest)
             | f result -> Right (result, rest)
             | otherwise -> Left (show result ++ "does not match the predicate")
@@ -77,7 +76,7 @@ parseIf p f = Parser $ \input ->
 
 parseOrValue :: Parser a -> a -> Parser a
 parseOrValue p v = Parser $ \input ->
-    case parser p input of
+    case parse p input of
         Right (result, rest) -> Right (result, rest)
         Left _ -> Right (v, input)
 
@@ -85,14 +84,27 @@ parseSome :: Parser a -> Parser [a]
 parseSome p = (:) <$> p <*> parseMany p
 
 parseStatement :: Parser AstNode
-parseStatement = (parseFunctionDeclaration <|> parseIfStatement <|> parseReturn <|> parseVariableDeclaration <|> parseExpression) <* parseStripped (parseChar ';')
+parseStatement =
+    parseFunctionDeclaration
+        <|> parseIfStatement
+        <|> parseWhileLoop
+        <|> parseForLoop
+        <|> parseStatementExpression
+
+parseStatementExpression :: Parser AstNode
+parseStatementExpression =
+    ( parseVariableDeclaration
+        <|> parseReturn
+        <|> parseExpression
+    )
+        <* parseStripped (parseChar ';')
 
 parseExpression :: Parser AstNode
-parseExpression = parseUnaryOperation <|> parseBinaryOperation <|> parseFunctionCall <|> parseAtom
+parseExpression = parseBinaryOperation <|> parseFunctionCall <|> parseUnaryOperation <|> parseAtom <|> (parseChar '(' *> parseStripped parseExpression <* parseChar ')')
 
 parseBinaryOperation :: Parser AstNode
 parseBinaryOperation =
-    parseAtom
+    parseStripped (parseExpression <|> parseChar '(' *> parseStripped parseExpression <* parseChar ')')
         >>= \a ->
             parseStripped parseBinaryOperator
                 >>= \op ->
@@ -101,43 +113,55 @@ parseBinaryOperation =
                             return (Call op [a, b])
 parseUnaryOperation :: Parser AstNode
 parseUnaryOperation =
-    ( parseStripped (parseUnaryOperator <|> parseString "!")
+    ( parseStripped parseUnaryPrefixOperator
         >>= \op ->
             parseStripped parseAtom
                 >>= \operand -> return (Call op [operand])
     )
-        <|> parseStripped parseAtom
-        >>= \operand ->
-            parseStripped parseUnaryOperator
-                >>= \op -> return (Call op [operand])
+        <|> ( parseStripped parseAtom
+                >>= \operand ->
+                    parseStripped parseUnarySuffixOperator
+                        >>= \op ->
+                            return (Call op [operand])
+            )
 
-parseUnaryOperator :: Parser String
-parseUnaryOperator =
+parseUnarySuffixOperator :: Parser String
+parseUnarySuffixOperator =
     parseString "--"
         <|> parseString "++"
 
+parseUnaryPrefixOperator :: Parser String
+parseUnaryPrefixOperator =
+    parseUnarySuffixOperator
+        <|> parseString "!"
+        <|> parseString "-"
+        <|> parseString "+"
+
 parseBinaryOperator :: Parser String
 parseBinaryOperator =
-    parseString "+"
-        <|> parseString "-"
-        <|> parseString "*"
-        <|> parseString "/"
-        <|> parseString "%"
+    parseInfixFunctionIdentifierString
+        <|> parseString "*="
+        <|> parseString "/="
+        <|> parseString "+="
+        <|> parseString "-="
+        <|> parseString "%="
         <|> parseString "=="
         <|> parseString "!="
         <|> parseString "<"
         <|> parseString ">"
         <|> parseString "<="
         <|> parseString ">="
-        <|> parseString "="
+        <|> parseString "%="
         <|> parseString "&&"
         <|> parseString "||"
-        <|> parseString "+="
-        <|> parseString "-="
-        <|> parseString "*="
-        <|> parseString "/="
-        <|> parseString "%="
-        <|> parseInfixFunctionIdentifierString
+        <|> parseString "**"
+        <|> parseString "^"
+        <|> parseString "="
+        <|> parseString "*"
+        <|> parseString "/"
+        <|> parseString "+"
+        <|> parseString "-"
+        <|> parseString "%"
 
 parseInfixFunctionIdentifierString :: Parser String
 parseInfixFunctionIdentifierString = parseChar '`' *> parseIdentifierString <* parseChar '`'
@@ -148,17 +172,12 @@ parseAtom = parseIdentifier <|> parseLiteral
 parseLiteral :: Parser AstNode
 parseLiteral = parseBoolean <|> parseStringLiteral <|> parseNumber
 
-parseNumber :: Parser AstNode
-parseNumber = Number <$> parseStripped (parsePositiveNumber <|> parseNegativeNumber)
-
-parsePositiveNumber :: Parser Int
-parsePositiveNumber = parseSome (parseAnyChar ['0' .. '9']) >>= \num -> return $ read num
-
-parseNegativeNumber :: Parser Int
-parseNegativeNumber = (\n -> (-n)) <$> (parseStripped (parseChar '-') >> parseStripped parsePositiveNumber)
-
 parseBoolean :: Parser AstNode
-parseBoolean = parseString "true" <|> parseString "false" >>= \str -> return $ Boolean $ str == "true"
+parseBoolean =
+    parseString "true" <|> parseString "true" >>= \value -> return $ Boolean $ value == "true"
+
+parseNumber :: Parser AstNode
+parseNumber = Number <$> parseStripped (parseSome (parseAnyChar ['0' .. '9']) >>= \num -> return (read num :: Int))
 
 parseStringLiteral :: Parser AstNode
 parseStringLiteral = parseChar '"' >> parseMany (parseAnyChar $ ['a' .. 'z'] ++ ['A' .. 'Z'] ++ ['_'] ++ ['0' .. '9']) >>= \str -> parseChar '"' >> return (String str)
@@ -197,7 +216,7 @@ parseFunctionCallArgs =
                 >>= \rest -> return (firstArg : rest)
 
 parseDreamberd :: String -> Either String [AstNode]
-parseDreamberd sourceCode = fst <$> parser (parseStripped (parseSome parseStatement)) (sourceCode, 0)
+parseDreamberd sourceCode = fst <$> parse (parseStripped (parseSome parseStatement)) (sourceCode, 0)
 
 parseFunctionDeclaration :: Parser AstNode
 parseFunctionDeclaration =
@@ -208,11 +227,8 @@ parseFunctionDeclaration =
                 >> parseStripped (parseOrValue parseFunctionDeclarationArgs [])
                 >>= \args ->
                     parseStripped (parseChar ')')
-                        >> parseStripped (parseChar '{')
-                        >> parseStripped (parseSome parseStatement)
-                        >>= \body ->
-                            parseStripped (parseChar '}')
-                                >> return (Function identifier args body)
+                        >> parseStripped parseScope
+                        >>= \body -> return (Function identifier args body)
 
 parseFunctionDeclarationArgs :: Parser [String]
 parseFunctionDeclarationArgs =
@@ -230,25 +246,59 @@ parseReturn =
 parseIfStatement :: Parser AstNode
 parseIfStatement =
     parseStripped (parseString "if")
-        >> parseStripped (parseChar '(')
-        >> parseStripped parseExpression
-        >>= \condition ->
-            parseStripped (parseChar ')')
-                >> parseStripped (parseChar '{')
-                >> parseStripped (parseSome parseStatement)
-                >>= \body ->
-                    parseStripped (parseChar '}')
-                        >> parseStripped (parseOrValue parseElseStatement [])
-                        >>= \elseBody -> return (If condition body elseBody)
+        >> parseStripped parseConditionalScope
+        >>= \(condition, body) ->
+            parseStripped (((: []) <$> parseElifStatement) <|> parseOrValue parseElseStatement [])
+                >>= \elseBody -> return (If condition body elseBody)
+
+parseElifStatement :: Parser AstNode
+parseElifStatement =
+    parseStripped (parseString "elif")
+        >> parseConditionalScope
+        >>= \(condition, body) ->
+            parseStripped (((: []) <$> parseElifStatement) <|> parseOrValue parseElseStatement [])
+                >>= \nextBody -> return (If condition body nextBody)
 
 parseElseStatement :: Parser [AstNode]
 parseElseStatement =
     parseStripped (parseString "else")
-        >> parseStripped (parseChar '{')
-        >> parseStripped (parseSome parseStatement)
-        >>= \elseBody ->
-            parseStripped (parseChar '}')
-                >> return elseBody
+        >> parseStripped parseScope
 
 parseStripped :: Parser a -> Parser a
 parseStripped p = parseManyWhiteSpaces *> p <* parseManyWhiteSpaces
+
+parseWhileLoop :: Parser AstNode
+parseWhileLoop =
+    parseStripped (parseString "while")
+        >> parseStripped parseConditionalScope
+        >>= \(condition, body) ->
+            return (Loop condition body Nothing Nothing)
+
+parseForLoop :: Parser AstNode
+parseForLoop =
+    parseStripped (parseString "for")
+        >> parseStripped (parseChar '(')
+        >> parseStripped parseStatement
+        >>= \initNode ->
+            parseStripped parseStatementExpression
+                >>= \condition ->
+                    parseStripped parseExpression
+                        >>= \updateNode ->
+                            parseStripped (parseChar ')')
+                                >> parseStripped parseScope
+                                >>= \body -> return (Loop condition body (Just initNode) (Just updateNode))
+
+parseConditionalScope :: Parser (AstNode, [AstNode])
+parseConditionalScope =
+    parseStripped (parseChar '(')
+        >> parseStripped parseExpression
+        >>= \condition ->
+            parseStripped (parseChar ')')
+                >> parseStripped parseScope
+                >>= \body -> return (condition, body)
+
+parseScope :: Parser [AstNode]
+parseScope =
+    parseStripped (parseChar '{')
+        >> parseStripped (parseMany parseStatement)
+        >>= \nodes -> parseStripped (parseChar '}') >> return nodes
