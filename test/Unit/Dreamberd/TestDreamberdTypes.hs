@@ -48,7 +48,7 @@ testVmTypes =
         , TestCase (assertEqual "Symbol" (show (VM.Symbol (VM.FunctionName "foo"))) "FunctionName \"foo\"")
         , TestCase (assertEqual "Void" (show VM.Void) "")
         , TestCase (assertEqual "EnvValue" (show (VM.Variable (VM.String "test"))) "Variable test")
-        , TestCase (assertEqual "Env" (show (VM.Env{identifier = "salut", value = VM.Variable (VM.String "hello")})) "Env {identifier = \"salut\", value = Variable hello}")
+        , TestCase (assertEqual "Env" (show (VM.Env{identifier = "salut", value = VM.Variable (VM.String "hello"), scope = 1})) "Env {identifier = \"salut\", value = Variable hello, scope = 1}")
         , TestCase (assertEqual "Push" (show (VM.Push (VM.Number 42))) "Push 42")
         ]
 
