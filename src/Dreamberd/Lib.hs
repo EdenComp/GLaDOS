@@ -11,7 +11,7 @@ import Dreamberd.Bytecode.Encode (transpileIntoBytecode)
 import Dreamberd.Compile (compileAst)
 import Dreamberd.Parser (parseDreamberd)
 import Dreamberd.Types (File (..))
-import Dreamberd.Vm (Insts (..), execVM)
+import Dreamberd.Vm (Insts (..), Value (..), execVM)
 import System.Exit (ExitCode (ExitFailure), exitWith)
 
 compileDreamberdCode :: File String -> String -> IO ()
@@ -32,7 +32,11 @@ executeDreamberdInsts :: [Insts] -> IO ()
 executeDreamberdInsts insts = do
     ret <- execVM insts
     case ret of
-        Right val -> print val
+        Right Void -> return ()
+        Right (Number nb) -> exitWith (ExitFailure nb)
+        Right (Float nb) -> exitWith (ExitFailure (floor nb))
+        Right (Bool b) -> exitWith (ExitFailure $ fromEnum b)
+        Right val -> putStrLn ("Warning: main scope returned a non-numerical value: " ++ show val)
         Left err -> returnWithError err
 
 runDreamberdCode :: File String -> IO ()
