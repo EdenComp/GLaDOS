@@ -9,13 +9,13 @@ module Dreamberd.Lib (
 import Dreamberd.Bytecode.Decode (getFromBytecode)
 import Dreamberd.Bytecode.Encode (transpileIntoBytecode)
 import Dreamberd.Compile (compileAst)
-import Dreamberd.Parsing.Main (parseDreamberd)
+import Dreamberd.Parsing.Parser (parseDreamberd)
 import Dreamberd.Vm (Insts (..), execVM)
 import System.Exit (ExitCode (ExitFailure), exitWith)
 
 compileDreamberdCode :: String -> String -> IO ()
 compileDreamberdCode sourceCode outputFile =
-    case parseDreamberd sourceCode [] of
+    case parseDreamberd sourceCode of
         Right ast -> case compileAst ast of
             Right insts -> writeFile outputFile (transpileIntoBytecode insts)
             Left err -> returnWithError err
@@ -36,7 +36,7 @@ executeDreamberdInsts insts = do
 
 runDreamberdCode :: String -> IO ()
 runDreamberdCode sourceCode =
-    case parseDreamberd sourceCode [] of
+    case parseDreamberd sourceCode of
         Right ast -> case compileAst ast of
             Right insts -> executeDreamberdInsts insts
             Left err -> returnWithError err
@@ -44,13 +44,13 @@ runDreamberdCode sourceCode =
 
 compileToAst :: String -> IO ()
 compileToAst sourceCode =
-    case parseDreamberd sourceCode [] of
+    case parseDreamberd sourceCode of
         Right ast -> print ast
         Left err -> returnWithError err
 
 compileToVm :: String -> IO ()
 compileToVm sourceCode =
-    case parseDreamberd sourceCode [] of
+    case parseDreamberd sourceCode of
         Right ast -> case compileAst ast of
             Right insts -> print insts
             Left err -> returnWithError err
