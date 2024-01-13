@@ -1,9 +1,8 @@
 module Unit.Dreamberd.TestDreamberdParsing (testDreamberdParsing) where
 
 import Dreamberd.Types (AstNode (Boolean, Call, Function, Identifier, If, Loop, Number, Return, String), File (File))
-import Dreamberd.Parser (Parser, parseChar, parseAnyChar, parseAndWith, parseMany, parseSome, parse, parseDreamberd, parseNumber)
+import Dreamberd.Parser ( parseChar, parseAndWith, parseMany, parse, parseDreamberd, parseNumber)
 import Test.HUnit (Test (..), assertEqual, assertBool)
-import Data.Either (isLeft)
 
 testDreamberdParsing :: Test
 testDreamberdParsing = TestList [testParseNumber, testParseDreamberd, testParseAndWith, testParseMany]
