@@ -96,7 +96,7 @@ parseExpression = parseBinaryOperation <|> parseFunctionCall <|> parseUnaryOpera
 
 parseBinaryOperation :: Parser AstNode
 parseBinaryOperation =
-    parseStripped (parseExpression <|> parseEnclosed ("(", ")") parseExpression)
+    parseStripped (parseAtom <|> parseEnclosed ("(", ")") parseAtom)
         >>= \a ->
             parseStripped parseBinaryOperator
                 >>= \op ->
