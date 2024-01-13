@@ -15,7 +15,7 @@ Here are all the definitions of the bytecode:
 
 ## Values
 
-- `0x11` + 4 bytes: Int
+- `0x11` + 8 bytes: Int
 - `0x12` + Integer + Int: Float
 - `0x13` + 1 byte: Bool
 - `0x14`: String
