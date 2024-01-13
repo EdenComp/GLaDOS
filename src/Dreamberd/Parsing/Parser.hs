@@ -85,7 +85,20 @@ parseSome :: Parser a -> Parser [a]
 parseSome p = (:) <$> p <*> parseMany p
 
 parseStatement :: Parser AstNode
-parseStatement = (parseFunctionDeclaration <|> parseIfStatement <|> parseReturn <|> parseVariableDeclaration <|> parseExpression) <* parseStripped (parseChar ';')
+parseStatement =
+    parseFunctionDeclaration
+        <|> parseIfStatement
+        <|> parseWhileLoop
+        <|> parseForLoop
+        <|> parseStatementExpression
+
+parseStatementExpression :: Parser AstNode
+parseStatementExpression =
+    ( parseVariableDeclaration
+        <|> parseReturn
+        <|> parseExpression
+    )
+        <* parseStripped (parseChar ';')
 
 parseExpression :: Parser AstNode
 parseExpression = parseBinaryOperation <|> parseFunctionCall <|> parseUnaryOperation <|> parseAtom <|> (parseChar '(' *> parseStripped parseExpression <* parseChar ')')
@@ -257,3 +270,33 @@ parseElseStatement =
 
 parseStripped :: Parser a -> Parser a
 parseStripped p = parseManyWhiteSpaces *> p <* parseManyWhiteSpaces
+
+parseWhileLoop :: Parser AstNode
+parseWhileLoop =
+    parseStripped (parseString "while")
+        >> parseStripped (parseChar '(')
+        >> parseStripped parseExpression
+        >>= \condition ->
+            parseStripped (parseChar ')')
+                >> parseStripped (parseChar '{')
+                >> parseStripped (parseSome parseStatement)
+                >>= \body ->
+                    parseStripped (parseChar '}')
+                        >> return (Loop condition body Nothing Nothing)
+
+parseForLoop :: Parser AstNode
+parseForLoop =
+    parseStripped (parseString "for")
+        >> parseStripped (parseChar '(')
+        >> parseStripped parseStatement
+        >>= \initNode ->
+            parseStripped parseStatementExpression
+                >>= \condition ->
+                    parseStripped parseExpression
+                        >>= \updateNode ->
+                            parseStripped (parseChar ')')
+                                >> parseStripped (parseChar '{')
+                                >> parseStripped (parseSome parseStatement)
+                                >>= \body ->
+                                    parseStripped (parseChar '}')
+                                        >> return (Loop condition body (Just initNode) (Just updateNode))
