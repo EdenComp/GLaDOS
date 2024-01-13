@@ -49,7 +49,7 @@ executeDreamberdInsts insts = do
 runDreamberdCode :: File String -> IO ()
 runDreamberdCode (File filename sourcecode) =
     case parseDreamberd (File filename sourcecode) of
-        Right ast -> 
+        Right ast ->
             executePreprocessing (File filename ast) >>= \case
                 Right ast' -> case compileAst ast' of
                     Right insts -> executeDreamberdInsts insts
@@ -75,7 +75,7 @@ compileToPreprocessedAst (File filename sourcecode) =
 compileToVm :: File String -> IO ()
 compileToVm (File filename sourcecode) =
     case parseDreamberd (File filename sourcecode) of
-        Right ast -> 
+        Right ast ->
             executePreprocessing (File filename ast) >>= \case
                 Right ast' -> case compileAst ast' of
                     Right insts -> print insts
