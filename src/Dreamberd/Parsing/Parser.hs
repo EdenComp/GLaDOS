@@ -207,6 +207,7 @@ parseFunctionCallArgs =
                 >>= \rest -> return (firstArg : rest)
 
 parseDreamberd :: String -> Either String [AstNode]
+parseDreamberd "" = Right []
 parseDreamberd sourceCode = fst <$> parse (parseStripped (parseSome parseStatement)) (sourceCode, 0)
 
 parseFunctionDeclaration :: Parser AstNode
