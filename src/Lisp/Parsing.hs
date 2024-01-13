@@ -43,13 +43,6 @@ instance Alternative Parser where
             Just (result, rest) -> Just (result, rest)
             Nothing -> p2 input
 
-instance Monad Parser where
-    return = pure
-    (Parser p) >>= f = Parser $ \input ->
-        case p input of
-            Just (result, rest) -> parse (f result) rest
-            Nothing -> Nothing
-
 parseChar :: Char -> Parser Char
 parseChar c = Parser f
   where
