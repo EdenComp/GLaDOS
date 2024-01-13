@@ -42,6 +42,20 @@ parseChar c = Parser parseFunction
         | otherwise = Left $ fileName ++ ":" ++ "Expected '" ++ [c] ++ "' but found '" ++ [x] ++ "' at " ++ show line ++ ":" ++ show col
     parseFunction (fileName, _, (line, col)) = Left $ fileName ++ ":" ++ "Expected '" ++ [c] ++ "' but found end of file at " ++ show line ++ ":" ++ show col
 
+parseAnything :: Parser Char
+parseAnything = Parser parseFunction
+  where
+    parseFunction (fileName, x : xs, (line, col)) = Right (x, (fileName, xs, case x of '\n' -> (line + 1, 1); _ -> (line, col + 1)))
+    parseFunction (fileName, _, (line, col)) = Left $ fileName ++ ":" ++ "Expected any character but found end of file at " ++ show line ++ ":" ++ show col
+
+parseAnythingBut :: String -> Parser Char
+parseAnythingBut chars = Parser parseFunction
+  where
+    parseFunction (fileName, x : xs, (line, col))
+        | x `elem` chars = Left $ fileName ++ ":" ++ "Expected any character unless not in " ++ chars ++ " but found '" ++ [x] ++ "' at " ++ show line ++ ":" ++ show col
+        | otherwise = Right (x, (fileName, xs, case x of '\n' -> (line + 1, 1); _ -> (line, col + 1)))
+    parseFunction (fileName, _, (line, col)) = Left $ fileName ++ ":" ++ "Expected any character unless not in " ++ chars ++ "but found end of file at " ++ show line ++ ":" ++ show col
+
 parseAnyChar :: String -> Parser Char
 parseAnyChar = foldr ((<|>) . parseChar) empty
 
@@ -154,14 +168,14 @@ parseBinaryOperator =
         <|> parseString "%="
         <|> parseString "=="
         <|> parseString "!="
-        <|> parseString "<"
-        <|> parseString ">"
         <|> parseString "<="
         <|> parseString ">="
         <|> parseString "%="
         <|> parseString "&&"
         <|> parseString "||"
         <|> parseString "**"
+        <|> parseString "<"
+        <|> parseString ">"
         <|> parseString "^"
         <|> parseString "="
         <|> parseString "*"
@@ -174,20 +188,20 @@ parseInfixFunctionIdentifierString :: Parser String
 parseInfixFunctionIdentifierString = parseChar '`' *> parseIdentifierString <* parseChar '`'
 
 parseAtom :: Parser AstNode
-parseAtom = parseIdentifier <|> parseLiteral
+parseAtom = parseLiteral <|> parseIdentifier
 
 parseLiteral :: Parser AstNode
 parseLiteral = parseBoolean <|> parseStringLiteral <|> parseNumber
 
 parseBoolean :: Parser AstNode
 parseBoolean =
-    parseString "true" <|> parseString "true" >>= \value -> return $ Boolean $ value == "true"
+    parseString "true" <|> parseString "false" >>= \value -> return $ Boolean $ value == "true"
 
 parseNumber :: Parser AstNode
 parseNumber = Number <$> parseStripped (parseSome (parseAnyChar ['0' .. '9']) >>= \num -> return (read num :: Int))
 
 parseStringLiteral :: Parser AstNode
-parseStringLiteral = parseChar '"' >> parseMany (parseAnyChar (['a' .. 'z'] ++ ['A' .. 'Z'] ++ ['_', ' '] ++ ['0' .. '9']) <|> parseEscapeSequence) >>= \str -> parseChar '"' >> return (String str)
+parseStringLiteral = parseEnclosed ("\"", "\"") (String <$> parseMany (parseEscapeSequence <|> parseAnythingBut "\""))
 
 parseVariableDeclaration :: Parser AstNode
 parseVariableDeclaration =
