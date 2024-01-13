@@ -22,10 +22,12 @@ transpileInt nb = case getSystemEndianness of
     BigEndian -> map (chr . (`mod` 256)) (take 8 $ iterate (`shiftR` 8) nb)
 
 transpileInteger :: Integer -> [Char]
-transpileInteger nb = (if nb >= 0 then toEnum 0x51 else toEnum 0x52) : transpileInt size ++ case getSystemEndianness of
-    LittleEndian -> map chr $ reverse $ map (`mod` 256) $ take size $ iterate (`shiftR` 8) (fromInteger (abs nb))
-    BigEndian -> map (chr . (`mod` 256)) (take size $ iterate (`shiftR` 8) (fromInteger (abs nb)))
-  where size = getIntegerSize (abs nb)
+transpileInteger nb =
+    (if nb >= 0 then toEnum 0x51 else toEnum 0x52) : transpileInt size ++ case getSystemEndianness of
+        LittleEndian -> map chr $ reverse $ map (`mod` 256) $ take size $ iterate (`shiftR` 8) (fromInteger (abs nb))
+        BigEndian -> map (chr . (`mod` 256)) (take size $ iterate (`shiftR` 8) (fromInteger (abs nb)))
+  where
+    size = getIntegerSize (abs nb)
 
 transpileString :: String -> [Char]
 transpileString str = transpileInt (length str) ++ str
@@ -37,7 +39,8 @@ transpileCall (FunctionName str) = toEnum 0x22 : transpileString str
 transpileValue :: Value -> [Char]
 transpileValue (Number nb) = toEnum 0x11 : transpileInt nb
 transpileValue (Float nb) = toEnum 0x12 : transpileInteger l ++ transpileInt r
-  where (l, r) = decodeFloat nb
+  where
+    (l, r) = decodeFloat nb
 transpileValue (Bool b) = toEnum 0x13 : (if b then [toEnum 1] else [toEnum 0])
 transpileValue (String str) = toEnum 0x14 : transpileString str
 transpileValue (Symbol call) = toEnum 0x15 : transpileCall call

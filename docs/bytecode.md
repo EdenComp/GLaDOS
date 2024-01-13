@@ -22,10 +22,8 @@ Here are all the definitions of the bytecode:
 - `0x15` + (Symbol or function name): Symbol
 - `0x16`: Void
 
-Strings: 4 bytes for length + string content
-Integer: 4 bytes for length + integral number as bits
-
-> :warning: Strings are not a value type in the language.
+Strings: 8 bytes for length + string content
+Integer: 8 bytes for length + integral number as bits
 
 ## Symbols
 
@@ -50,7 +48,7 @@ Integer: 4 bytes for length + integral number as bits
 
 Both DefineEnv and DefineEnvFromStack use 1 byte to determine the type of the definition:
 
-- `0x41`: Function (+ 4 bytes instructions length)
+- `0x41`: Function (+ 8 bytes instructions length)
 - `0x42`: Value
 
 ## TriBools
