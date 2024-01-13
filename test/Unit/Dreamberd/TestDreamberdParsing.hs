@@ -145,11 +145,32 @@ testParseDreamberd =
     TestCase (assertEqual "parse function call"
         (Right [Call "myFunc" [Number 3]])
         (parseDreamberd (File "" "myFunc(3);"))),
+    TestCase (assertEqual "parse function call no space"
+        (Right [Call "myFunc" [Number 3]])
+        (parseDreamberd (File "" "myFunc(3);"))),
+    TestCase (assertEqual "parse function call no args"
+        (Right [Call "myFunc" []])
+        (parseDreamberd (File "" "myFunc();"))),
+    TestCase (assertEqual "parse function call no args no parenthesis"
+        (Right [Identifier "myFunc"])
+        (parseDreamberd (File "" "myFunc;"))),
+    TestCase (assertEqual "parse function call with multiple args"
+        (Right [Call "myFunc" [Number 1, Number 2, Number 3]])
+        (parseDreamberd (File "" "myFunc(1, 2, 3);"))),
+    TestCase (assertEqual "parse function call with multiple args no space"
+        (Right [Call "myFunc" [Number 1, Number 2, Number 3]])
+        (parseDreamberd (File "" "myFunc(1,2,3);"))),
+    TestCase (assertEqual "parse function call with multiple args no parenthesis"
+        (Left ":1:8: Expected ';' but found '1'")
+        (parseDreamberd (File "" "myFunc 1, 2, 3;"))),
 
     -- Test for loop statement
     TestCase (assertEqual "parse while loop"
         (Right [Loop (Boolean True) [Number 1] Nothing Nothing])
         (parseDreamberd (File "" "while (true) {1;}"))),
+    TestCase (assertEqual "parse while loop no space"
+        (Right [Loop (Boolean True) [Number 1] Nothing Nothing])
+        (parseDreamberd (File "" "while(true){1;}"))),
 
     -- Test for binary operation
     TestCase (assertEqual "parse binary operation"
