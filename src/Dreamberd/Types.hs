@@ -1,4 +1,4 @@
-module Dreamberd.Types (AstNode (..)) where
+module Dreamberd.Types (AstNode (..), File (..)) where
 
 data AstNode
     = Number Int
@@ -13,6 +13,8 @@ data AstNode
     | Loop AstNode [AstNode] (Maybe AstNode) (Maybe AstNode)
     | List [AstNode]
     deriving (Eq)
+
+data File a = File String a
 
 instance Show AstNode where
     show (Number val) = show val
