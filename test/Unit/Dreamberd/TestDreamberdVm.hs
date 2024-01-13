@@ -35,9 +35,9 @@ testStackPushes =
         [ TestCase $ execVM [PushArg 0] >>= assertEqual "PushArg without args" (Left "Argument index out of bounds")
         , TestCase $ exec [] [Number 1] [] [PushArg 0, Ret] 0 0 >>= assertEqual "push from arg" (Right (Number 1))
         , TestCase $ exec [] [Number 1] [] [PushArg (-1), Ret] 0 0 >>= assertEqual "push negative" (Left "Argument index out of bounds")
-        , TestCase $ exec [Env{identifier = "ret", value = Function [PushArg 0, Ret]}] [] [] [Push (Number 10), PushEnv "ret", Call, Ret] 0 0 >>= assertEqual "push arg from function" (Right (Number 10))
-        , TestCase $ exec [Env{identifier = "ret", value = Function [PushArg 0, Ret]}] [] [] [Push (Number 10), PushEnv "res", Call, Ret] 0 0 >>= assertEqual "push unknown env" (Left "Environment res does not exist")
-        , TestCase $ exec [Env{identifier = "const", value = Variable (Bool True)}] [] [] [Push (Number 10), PushEnv "const", Ret] 0 0 >>= assertEqual "push constant env" (Right (Bool True))
+        , TestCase $ exec [Env{identifier = "ret", value = Function [PushArg 0, Ret], scope = 1}] [] [] [Push (Number 10), PushEnv "ret", Call, Ret] 0 0 >>= assertEqual "push arg from function" (Right (Number 10))
+        , TestCase $ exec [Env{identifier = "ret", value = Function [PushArg 0, Ret], scope = 1}] [] [] [Push (Number 10), PushEnv "res", Call, Ret] 0 0 >>= assertEqual "push unknown env" (Left "Environment res does not exist")
+        , TestCase $ exec [Env{identifier = "const", value = Variable (Bool True), scope = 1}] [] [] [Push (Number 10), PushEnv "const", Ret] 0 0 >>= assertEqual "push constant env" (Right (Bool True))
         ]
 
 testCalls :: Test
