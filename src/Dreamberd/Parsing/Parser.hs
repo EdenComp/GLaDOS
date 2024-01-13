@@ -4,7 +4,7 @@ import Control.Applicative (Alternative (..))
 import Debug.Trace (trace)
 import Dreamberd.Types (AstNode (..))
 
-newtype Parser a = Parser {prout :: (String, Int) -> Either String (a, (String, Int))}
+newtype Parser a = Parser {parse :: (String, Int) -> Either String (a, (String, Int))}
 
 instance Functor Parser where
     fmap f (Parser p) = Parser $ \input ->
@@ -32,7 +32,7 @@ instance Monad Parser where
     return = pure
     (Parser p) >>= f = Parser $ \input ->
         case p input of
-            Right (result, rest) -> prout (f result) rest
+            Right (result, rest) -> parse (f result) rest
             Left err -> Left err
 
 parseChar :: Char -> Parser Char
@@ -63,13 +63,13 @@ parseAndWith f p1 p2 = f <$> p1 <*> p2
 
 parseMany :: Parser a -> Parser [a]
 parseMany p = Parser $ \input ->
-    case prout (parseSome p) input of
+    case parse (parseSome p) input of
         Right (results, rest) -> Right (results, rest)
         Left _ -> Right ([], input)
 
 parseIf :: Show a => Parser a -> (a -> Bool) -> Parser a
 parseIf p f = Parser $ \input ->
-    case prout p input of
+    case parse p input of
         Right (result, rest)
             | f result -> Right (result, rest)
             | otherwise -> Left (show result ++ "does not match the predicate")
@@ -77,7 +77,7 @@ parseIf p f = Parser $ \input ->
 
 parseOrValue :: Parser a -> a -> Parser a
 parseOrValue p v = Parser $ \input ->
-    case prout p input of
+    case parse p input of
         Right (result, rest) -> Right (result, rest)
         Left _ -> Right (v, input)
 
@@ -88,11 +88,11 @@ parseStatement :: Parser AstNode
 parseStatement = (parseFunctionDeclaration <|> parseIfStatement <|> parseReturn <|> parseVariableDeclaration <|> parseExpression) <* parseStripped (parseChar ';')
 
 parseExpression :: Parser AstNode
-parseExpression = parseUnaryOperation <|> parseBinaryOperation <|> parseFunctionCall <|> parseAtom
+parseExpression = parseBinaryOperation <|> parseFunctionCall <|> parseUnaryOperation <|> parseAtom <|> (parseChar '(' *> parseStripped parseExpression <* parseChar ')')
 
 parseBinaryOperation :: Parser AstNode
 parseBinaryOperation =
-    parseAtom
+    parseStripped (parseAtom <|> parseChar '(' *> parseStripped parseExpression <* parseChar ')')
         >>= \a ->
             parseStripped parseBinaryOperator
                 >>= \op ->
@@ -106,10 +106,12 @@ parseUnaryOperation =
             parseStripped parseAtom
                 >>= \operand -> return (Call op [operand])
     )
-        <|> parseStripped parseAtom
-        >>= \operand ->
-            parseStripped parseUnaryOperator
-                >>= \op -> return (Call op [operand])
+        <|> ( parseStripped parseAtom
+                >>= \operand ->
+                    parseStripped parseUnaryOperator
+                        >>= \op ->
+                            return (Call op [operand])
+            )
 
 parseUnaryOperator :: Parser String
 parseUnaryOperator =
@@ -118,26 +120,29 @@ parseUnaryOperator =
 
 parseBinaryOperator :: Parser String
 parseBinaryOperator =
-    parseString "+"
-        <|> parseString "-"
-        <|> parseString "*"
-        <|> parseString "/"
-        <|> parseString "%"
+    parseInfixFunctionIdentifierString
+        <|> parseString "+="
+        <|> parseString "-="
+        <|> parseString "*="
+        <|> parseString "/="
+        <|> parseString "%="
         <|> parseString "=="
         <|> parseString "!="
         <|> parseString "<"
         <|> parseString ">"
         <|> parseString "<="
         <|> parseString ">="
-        <|> parseString "="
+        <|> parseString "%="
         <|> parseString "&&"
         <|> parseString "||"
-        <|> parseString "+="
-        <|> parseString "-="
-        <|> parseString "*="
-        <|> parseString "/="
-        <|> parseString "%="
-        <|> parseInfixFunctionIdentifierString
+        <|> parseString "**"
+        <|> parseString "^"
+        <|> parseString "="
+        <|> parseString "+"
+        <|> parseString "-"
+        <|> parseString "*"
+        <|> parseString "/"
+        <|> parseString "%"
 
 parseInfixFunctionIdentifierString :: Parser String
 parseInfixFunctionIdentifierString = parseChar '`' *> parseIdentifierString <* parseChar '`'
@@ -197,7 +202,7 @@ parseFunctionCallArgs =
                 >>= \rest -> return (firstArg : rest)
 
 parseDreamberd :: String -> Either String [AstNode]
-parseDreamberd sourceCode = fst <$> prout (parseStripped (parseSome parseStatement)) (sourceCode, 0)
+parseDreamberd sourceCode = fst <$> parse (parseStripped (parseSome parseStatement)) (sourceCode, 0)
 
 parseFunctionDeclaration :: Parser AstNode
 parseFunctionDeclaration =
