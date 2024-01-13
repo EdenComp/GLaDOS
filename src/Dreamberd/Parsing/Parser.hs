@@ -100,11 +100,11 @@ parseStatementExpression =
         <* parseStripped (parseChar ';')
 
 parseExpression :: Parser AstNode
-parseExpression = parseBinaryOperation <|> parseFunctionCall <|> parseUnaryOperation <|> parseAtom <|> (parseChar '(' *> parseStripped parseExpression <* parseChar ')')
+parseExpression = parseBinaryOperation <|> parseFunctionCall <|> parseUnaryOperation <|> parseAtom <|> (parseEnclosed ("(", ")") parseExpression)
 
 parseBinaryOperation :: Parser AstNode
 parseBinaryOperation =
-    parseStripped (parseExpression <|> parseChar '(' *> parseStripped parseExpression <* parseChar ')')
+    parseStripped (parseExpression <|> parseEnclosed ("(", ")") parseExpression)
         >>= \a ->
             parseStripped parseBinaryOperator
                 >>= \op ->
@@ -204,9 +204,8 @@ parseFunctionCall :: Parser AstNode
 parseFunctionCall =
     parseStripped parseIdentifierString
         >>= \identifier ->
-            parseStripped (parseChar '(')
-                >> parseStripped (parseOrValue parseFunctionCallArgs [])
-                >>= \args -> parseStripped (parseChar ')') >> return (Call identifier args)
+            parseEnclosed ("(", ")") (parseStripped (parseOrValue parseFunctionCallArgs []))
+                >>= \args -> return (Call identifier args)
 
 parseFunctionCallArgs :: Parser [AstNode]
 parseFunctionCallArgs =
@@ -223,11 +222,9 @@ parseFunctionDeclaration =
     parseStripped (parseString "fn")
         >> parseStripped parseIdentifierString
         >>= \identifier ->
-            parseStripped (parseChar '(')
-                >> parseStripped (parseOrValue parseFunctionDeclarationArgs [])
+            parseEnclosed ("(", ")") (parseStripped (parseOrValue parseFunctionDeclarationArgs []))
                 >>= \args ->
-                    parseStripped (parseChar ')')
-                        >> parseStripped parseScope
+                    parseStripped parseScope
                         >>= \body -> return (Function identifier args body)
 
 parseFunctionDeclarationArgs :: Parser [String]
@@ -277,28 +274,32 @@ parseWhileLoop =
 parseForLoop :: Parser AstNode
 parseForLoop =
     parseStripped (parseString "for")
-        >> parseStripped (parseChar '(')
-        >> parseStripped parseStatement
+        >> parseEnclosed ("(", ")") parseForParts
+        >>= \(initNode, conditionNode, updateNode) ->
+            parseStripped parseScope
+                >>= \body -> return (Loop conditionNode body (Just initNode) (Just updateNode))
+
+parseForParts :: Parser (AstNode, AstNode, AstNode)
+parseForParts =
+    parseStripped parseStatement
         >>= \initNode ->
             parseStripped parseStatementExpression
-                >>= \condition ->
+                >>= \conditionNode ->
                     parseStripped parseExpression
-                        >>= \updateNode ->
-                            parseStripped (parseChar ')')
-                                >> parseStripped parseScope
-                                >>= \body -> return (Loop condition body (Just initNode) (Just updateNode))
+                        >>= \updateNode -> return (initNode, conditionNode, updateNode)
 
 parseConditionalScope :: Parser (AstNode, [AstNode])
 parseConditionalScope =
-    parseStripped (parseChar '(')
-        >> parseStripped parseExpression
+    parseEnclosed ("(", ")") parseExpression
         >>= \condition ->
-            parseStripped (parseChar ')')
-                >> parseStripped parseScope
+            parseStripped parseScope
                 >>= \body -> return (condition, body)
 
 parseScope :: Parser [AstNode]
-parseScope =
-    parseStripped (parseChar '{')
-        >> parseStripped (parseMany parseStatement)
-        >>= \nodes -> parseStripped (parseChar '}') >> return nodes
+parseScope = parseEnclosed ("{", "}") (parseMany parseStatement) >>= \nodes -> return nodes
+
+parseEnclosed :: (String, String) -> Parser a -> Parser a
+parseEnclosed (open, close) p =
+    parseStripped (parseString open)
+        >> parseStripped p
+        >>= \result -> parseStripped (parseString close) >> return result
