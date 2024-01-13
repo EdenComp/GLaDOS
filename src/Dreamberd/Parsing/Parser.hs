@@ -39,22 +39,22 @@ parseChar c = Parser parseFunction
   where
     parseFunction (fileName, x : xs, (line, col))
         | x == c = Right (x, (fileName, xs, case x of '\n' -> (line + 1, 1); _ -> (line, col + 1)))
-        | otherwise = Left $ fileName ++ ":" ++ "Expected '" ++ [c] ++ "' but found '" ++ [x] ++ "' at " ++ show line ++ ":" ++ show col
-    parseFunction (fileName, _, (line, col)) = Left $ fileName ++ ":" ++ "Expected '" ++ [c] ++ "' but found end of file at " ++ show line ++ ":" ++ show col
+        | otherwise = Left $ fileName ++ ":" ++ show line ++ ":" ++ show col ++ ": Expected '" ++ [c] ++ "' but found '" ++ [x] ++ "'"
+    parseFunction (fileName, _, (line, col)) = Left $ fileName ++ ":" ++ show line ++ ":" ++ show col ++ ": Expected '" ++ [c] ++ "' but found end of file"
 
 parseAnything :: Parser Char
 parseAnything = Parser parseFunction
   where
     parseFunction (fileName, x : xs, (line, col)) = Right (x, (fileName, xs, case x of '\n' -> (line + 1, 1); _ -> (line, col + 1)))
-    parseFunction (fileName, _, (line, col)) = Left $ fileName ++ ":" ++ "Expected any character but found end of file at " ++ show line ++ ":" ++ show col
+    parseFunction (fileName, _, (line, col)) = Left $ fileName ++ ":" ++ show line ++ ":" ++ show col ++ ": Expected any character but found end of file at"
 
 parseAnythingBut :: String -> Parser Char
 parseAnythingBut chars = Parser parseFunction
   where
     parseFunction (fileName, x : xs, (line, col))
-        | x `elem` chars = Left $ fileName ++ ":" ++ "Expected any character unless not in " ++ chars ++ " but found '" ++ [x] ++ "' at " ++ show line ++ ":" ++ show col
+        | x `elem` chars = Left $ fileName ++ ":" ++ show line ++ ":" ++ show col ++ ": Expected any character unless not in " ++ chars ++ " but found '" ++ [x] ++ "'"
         | otherwise = Right (x, (fileName, xs, case x of '\n' -> (line + 1, 1); _ -> (line, col + 1)))
-    parseFunction (fileName, _, (line, col)) = Left $ fileName ++ ":" ++ "Expected any character unless not in " ++ chars ++ "but found end of file at " ++ show line ++ ":" ++ show col
+    parseFunction (fileName, _, (line, col)) = Left $ fileName ++ ":" ++ show line ++ ":" ++ show col ++ ": Expected any character unless not in " ++ chars ++ "but found end of file"
 
 parseAnyChar :: String -> Parser Char
 parseAnyChar = foldr ((<|>) . parseChar) empty
@@ -121,7 +121,7 @@ parseStatementExpression =
         <* parseStripped (parseChar ';')
 
 parseExpression :: Parser AstNode
-parseExpression = parseBinaryOperation <|> parseFunctionCall <|> parseUnaryOperation <|> parseAtom <|> parseEnclosed ("(", ")") parseExpression
+parseExpression = parseBinaryOperation <|> parseUnaryOperation <|> parseAtom <|> parseEnclosed ("(", ")") parseExpression
 
 parseBinaryOperation :: Parser AstNode
 parseBinaryOperation =
@@ -188,7 +188,7 @@ parseInfixFunctionIdentifierString :: Parser String
 parseInfixFunctionIdentifierString = parseChar '`' *> parseIdentifierString <* parseChar '`'
 
 parseAtom :: Parser AstNode
-parseAtom = parseLiteral <|> parseIdentifier
+parseAtom = parseFunctionCall <|> parseLiteral <|> parseIdentifier
 
 parseLiteral :: Parser AstNode
 parseLiteral = parseBoolean <|> parseStringLiteral <|> parseNumber
@@ -230,10 +230,9 @@ parseFunctionCall =
 
 parseFunctionCallArgs :: Parser [AstNode]
 parseFunctionCallArgs =
-    parseStripped parseExpression
-        >>= \firstArg ->
-            parseStripped (parseMany (parseChar ',' >> parseExpression))
-                >>= \rest -> return (firstArg : rest)
+    (:)
+        <$> parseStripped parseExpression
+        <*> parseStripped (parseMany (parseChar ',' >> parseStripped parseExpression))
 
 parseDreamberd :: File String -> Either String [AstNode]
 parseDreamberd (File fileName sourceCode) = parseDreamberd' (fileName, sourceCode, (1, 1))
