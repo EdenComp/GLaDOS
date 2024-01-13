@@ -1,0 +1,19 @@
+fn println(str) {
+    print(str + "\n");
+}
+
+fn btoi(b) {
+    if (b) {
+        return 1;
+    } else {
+        return 0;
+    }
+}
+
+fn itob(i) {
+    if (i == 0) {
+        return false;
+    } else {
+        return true;
+    }
+}
