@@ -190,6 +190,7 @@ execBuiltin (String str : r : xs) op = case op of
     Eq -> Right (Bool (str == show r) : xs)
     Neq -> Right (Bool (str /= show r) : xs)
     _ -> Left ("Wrong data types in stack: " ++ show op ++ " with a string as left operator")
+execBuiltin (l : String str : xs) Add = Right (String (show l ++ str) : xs)
 execBuiltin _ op = Left ("Wrong stack variables for builtin " ++ show op)
 
 findEnvValue :: String -> [Env] -> Maybe (EnvValue, Int)

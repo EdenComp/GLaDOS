@@ -1,3 +1,55 @@
-function is_even(a) {
-    return true;
+fn is_even(a) {
+    return (a % 2) == 0;
+}
+
+fn is_neg(a) {
+    return a < 0;
+}
+
+fn abs(a) {
+    if (a < 0) {
+        return -a;
+    }
+    return a;
+}
+
+fn max(a, b) {
+    if (a >= b) {
+        return a;
+    }
+    return b;
+}
+
+fn min(a, b) {
+    if (a <= b) {
+        return a;
+    }
+    return b;
+}
+
+fn clamp(nb, min_nb, max_nb) {
+    int low = min(nb, max_nb);
+    int high = max(low, min_nb);
+
+    return high;
+}
+
+fn factorial(x) {
+    if (x < 0) {
+        return 0;
+    } elif (x < 2) {
+        return 1;
+    } else {
+        return x * factorial(x - 1);
+    }
+}
+
+fn pow(nb, power) {
+    int num = nb;
+    int puis = power;
+    while (puis > 1) {
+        num *= nb;
+        puis -= 1;
+    }
+    return num;
 }
