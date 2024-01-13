@@ -2,7 +2,6 @@ module Dreamberd.Parser (parseDreamberd, parse, Parser, parseChar, parseAnyChar,
 
 import Control.Applicative (Alternative (..))
 import Dreamberd.Types (AstNode (..), File (..))
-import Options.Applicative (optional)
 
 newtype Parser a = Parser {parse :: (String, (String, Int, Int)) -> Either String (a, (String, (String, Int, Int)))}
 
