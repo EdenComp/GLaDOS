@@ -141,11 +141,11 @@ execDefineEnv env args stack insts idx scopeIdx name False (Just val) =
         Nothing -> exec (addEnvValue name val scopeIdx env) args stack insts (idx + 1) scopeIdx
 execDefineEnv env args (x : xs) insts idx scopeIdx name True Nothing =
     case findEnvValue name env of
-        Just _ -> exec (addEnvValue name (Variable x) scopeIdx env) args xs insts (idx + 1) scopeIdx
+        Just (_, initialScope) -> exec (addEnvValue name (Variable x) initialScope env) args xs insts (idx + 1) scopeIdx
         Nothing -> return (Left ("Environment " ++ name ++ " does not exist"))
 execDefineEnv env args stack insts idx scopeIdx name True (Just val) =
     case findEnvValue name env of
-        Just _ -> exec (addEnvValue name val scopeIdx env) args stack insts (idx + 1) scopeIdx
+        Just (_, initialScope) -> exec (addEnvValue name val initialScope env) args stack insts (idx + 1) scopeIdx
         Nothing -> return (Left ("Environment " ++ name ++ " does not exist"))
 
 execBuiltin :: [Value] -> Operator -> Either String [Value]
