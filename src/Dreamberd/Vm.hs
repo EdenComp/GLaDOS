@@ -113,7 +113,7 @@ execCall :: [Env] -> [Value] -> Int -> IO (Either String [Value])
 execCall _ [] _ = return (Left "Stack is empty for a Call instruction")
 execCall _ (Symbol (FunctionName "print") : val : xs) _ = putStr (show val) >> return (Right xs)
 execCall _ (Symbol (FunctionName "print") : _) _ = return (Left "Stack is empty for print instruction")
-execCall _ (Symbol (FunctionName "input"): xs) _ = getLine >>= \line -> return (Right (String line : xs))
+execCall _ (Symbol (FunctionName "input") : xs) _ = getLine >>= \line -> return (Right (String line : xs))
 execCall env (Symbol (FunctionName fct) : xs) scopeIdx = case findEnvValue fct env of
     Just (Function insts, fctScope) -> do
         ret <- exec (filter (\e -> scope e <= fctScope) env) xs [] insts 0 (scopeIdx + 1)
