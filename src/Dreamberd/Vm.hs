@@ -11,6 +11,7 @@ module Dreamberd.Vm (
 ) where
 
 import Data.Fixed (mod')
+import GHC.Float (int2Double)
 
 data Value
     = Integer Int
@@ -198,6 +199,21 @@ execBuiltin (Float l : Float r : xs) op = case op of
     Greater -> Right (Bool (l > r) : xs)
     GreaterOrEqual -> Right (Bool (l >= r) : xs)
     _ -> Left ("Wrong data types in stack: " ++ show op ++ " with 2 floats")
+execBuiltin (Float l : Integer r : xs) op = case op of
+    Add -> Right (Float (l + int2Double r) : xs)
+    Sub -> Right (Float (l - int2Double r) : xs)
+    Mul -> Right (Float (l * int2Double r) : xs)
+    Div -> Right (Float (l / int2Double r) : xs)
+    Mod -> Right (Float (mod' l (int2Double r)) : xs)
+    Pow -> Right (Float (l ** int2Double r) : xs)
+    Eq -> Right (Bool (l == int2Double r) : xs)
+    Neq -> Right (Bool (l /= int2Double r) : xs)
+    Less -> Right (Bool (l < int2Double r) : xs)
+    LessOrEqual -> Right (Bool (l <= int2Double r) : xs)
+    Greater -> Right (Bool (l > int2Double r) : xs)
+    GreaterOrEqual -> Right (Bool (l >= int2Double r) : xs)
+    _ -> Left ("Wrong data types in stack: " ++ show op ++ " with a float and an integer")
+execBuiltin (Integer l : Float r : xs) op = execBuiltin (Float (int2Double l) : Float r : xs) op
 execBuiltin (Bool l : Bool r : xs) op = case op of
     Eq -> Right (Bool (l == r) : xs)
     Neq -> Right (Bool (l /= r) : xs)
