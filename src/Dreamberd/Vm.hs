@@ -12,7 +12,7 @@ module Dreamberd.Vm (
 import Data.Fixed (mod')
 
 data Value
-    = Number Int
+    = Integer Int
     | Float Double
     | Bool Bool
     | String String
@@ -21,7 +21,7 @@ data Value
     deriving (Eq)
 
 instance Show Value where
-    show (Number nbr) = show nbr
+    show (Integer nbr) = show nbr
     show (Float nbr) = show nbr
     show (Bool b) = show b
     show (String str) = str
@@ -149,16 +149,16 @@ execDefineEnv env args stack insts idx scopeIdx name True (Just val) =
         Nothing -> return (Left ("Environment " ++ name ++ " does not exist"))
 
 execBuiltin :: [Value] -> Operator -> Either String [Value]
-execBuiltin (Number _ : Number 0 : _) Div = Left "Cannot divide by 0"
-execBuiltin (Number _ : Number 0 : _) Mod = Left "Cannot divide by 0"
+execBuiltin (Integer _ : Integer 0 : _) Div = Left "Cannot divide by 0"
+execBuiltin (Integer _ : Integer 0 : _) Mod = Left "Cannot divide by 0"
 execBuiltin (Float _ : Float 0 : _) Div = Left "Cannot divide by 0"
 execBuiltin (Float _ : Float 0 : _) Mod = Left "Cannot divide by 0"
-execBuiltin (Number l : Number r : xs) op = case op of
-    Add -> Right (Number (l + r) : xs)
-    Sub -> Right (Number (l - r) : xs)
-    Mul -> Right (Number (l * r) : xs)
-    Div -> Right (Number (div l r) : xs)
-    Mod -> Right (Number (mod l r) : xs)
+execBuiltin (Integer l : Integer r : xs) op = case op of
+    Add -> Right (Integer (l + r) : xs)
+    Sub -> Right (Integer (l - r) : xs)
+    Mul -> Right (Integer (l * r) : xs)
+    Div -> Right (Integer (div l r) : xs)
+    Mod -> Right (Integer (mod l r) : xs)
     Eq -> Right (Bool (l == r) : xs)
     Neq -> Right (Bool (l /= r) : xs)
     Less -> Right (Bool (l < r) : xs)
@@ -181,10 +181,10 @@ execBuiltin (Bool l : Bool r : xs) op = case op of
     Eq -> Right (Bool (l == r) : xs)
     Neq -> Right (Bool (l /= r) : xs)
     _ -> Left ("Wrong data types in stack: " ++ show op ++ " with 2 booleans")
-execBuiltin (String str : Number nb : xs) op = case op of
+execBuiltin (String str : Integer nb : xs) op = case op of
     Add -> Right (String (str ++ show nb) : xs)
     Mul -> Right (String (concat $ replicate nb str) : xs)
-    _ -> Left ("Wrong data types in stack: " ++ show op ++ " with a string and a number")
+    _ -> Left ("Wrong data types in stack: " ++ show op ++ " with a string and an integer")
 execBuiltin (String str : r : xs) op = case op of
     Add -> Right (String (str ++ show r) : xs)
     Eq -> Right (Bool (str == show r) : xs)
@@ -209,7 +209,7 @@ removeEnvValue iden = filter (\x -> identifier x /= iden)
 
 toBool :: Value -> Bool
 toBool (Bool False) = False
-toBool (Number 0) = False
+toBool (Integer 0) = False
 toBool (String "") = False
 toBool Void = False
 toBool _ = True

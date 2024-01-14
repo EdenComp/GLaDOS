@@ -37,7 +37,7 @@ transpileCall (Builtin op) = toEnum 0x21 : [toEnum (0x31 + fromEnum op)]
 transpileCall (FunctionName str) = toEnum 0x22 : transpileString str
 
 transpileValue :: Value -> [Char]
-transpileValue (Number nb) = toEnum 0x11 : transpileInt nb
+transpileValue (Integer nb) = toEnum 0x11 : transpileInt nb
 transpileValue (Float nb) = toEnum 0x12 : transpileInteger l ++ transpileInt r
   where
     (l, r) = decodeFloat nb

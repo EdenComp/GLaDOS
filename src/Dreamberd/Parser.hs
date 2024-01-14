@@ -198,14 +198,22 @@ parseAtom :: Parser AstNode
 parseAtom = parseEnclosed ("(", ")") parseExpression <|> parseFunctionCall <|> parseLiteral <|> parseIdentifier
 
 parseLiteral :: Parser AstNode
-parseLiteral = parseBoolean <|> parseStringLiteral <|> parseNumber
+parseLiteral = parseBoolean <|> parseStringLiteral <|> parseFloat <|> parseInteger
 
 parseBoolean :: Parser AstNode
 parseBoolean =
     parseString "true" <|> parseString "false" >>= \value -> return $ Boolean $ value == "true"
 
-parseNumber :: Parser AstNode
-parseNumber = Number <$> parseStripped (parseSome (parseAnyChar ['0' .. '9']) >>= \num -> return (read num :: Int))
+parseInteger :: Parser AstNode
+parseInteger = Integer <$> parseStripped (parseSome (parseAnyChar ['0' .. '9']) >>= \num -> return (read num :: Int))
+
+parseFloat :: Parser AstNode
+parseFloat =
+    parseOrValue (parseSome (parseAnyChar ['0' .. '9'])) "0"
+        >>= \integerPart ->
+            parseChar '.'
+                >> parseSome (parseAnyChar ['0' .. '9'])
+                >>= \decimalPart -> return (Float $ read (integerPart ++ "." ++ decimalPart) :: AstNode)
 
 parseStringLiteral :: Parser AstNode
 parseStringLiteral = parseChar '\"' *> (String <$> parseMany (parseEscapeSequence <|> parseAnythingBut '\"')) <* parseChar '\"'
