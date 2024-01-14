@@ -1,0 +1,3 @@
+import "../dreamberd/test_circular_dependency";
+
+print("Bien le bonjour\n");

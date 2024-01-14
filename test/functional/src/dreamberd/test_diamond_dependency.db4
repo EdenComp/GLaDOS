@@ -1,0 +1,9 @@
+import "../samples/file1.db4";
+import "../samples/file2";
+
+int fst = get_first_number();
+int snd = get_second_number();
+
+int result = fst * snd;
+
+print(result + "\n");
