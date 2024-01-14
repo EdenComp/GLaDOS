@@ -53,7 +53,7 @@ parseEnvValue :: [Char] -> Either String (Maybe EnvValue, [Char])
 parseEnvValue [] = Left "No value provided"
 parseEnvValue (c : bytes)
     | fromEnum c == 0x41 =
-        parseInt bytes >>= \(args, rest) -> 
+        parseInt bytes >>= \(args, rest) ->
             parseInt rest >>= \(len, rest') ->
                 let (insts, rest'') = splitAt len rest' in parseInstructions insts >>= \func -> if length rest' < len then Left "Wrong function body length" else Right (Just (Function args func), rest'')
     | fromEnum c == 0x42 = parseValue bytes >>= \(val, rest) -> Right (Just (Variable val), rest)
