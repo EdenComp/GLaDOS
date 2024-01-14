@@ -188,7 +188,7 @@ execBuiltin (Integer l : Integer r : xs) op = case op of
     LessOrEqual -> Right (Bool (l <= r) : xs)
     Greater -> Right (Bool (l > r) : xs)
     GreaterOrEqual -> Right (Bool (l >= r) : xs)
-    _ -> Left ("Wrong data types in stack: " ++ show op ++ " with 2 numbers")
+    _ -> Left ("Wrong data types in stack: " ++ show op ++ " with 2 integers")
 execBuiltin (Float l : Float r : xs) op = case op of
     Add -> Right (Float (l + r) : xs)
     Sub -> Right (Float (l - r) : xs)
