@@ -43,13 +43,3 @@ fn factorial(x) {
         return x * factorial(x - 1);
     }
 }
-
-fn pow(nb, power) {
-    int num = nb;
-    int puis = power;
-    while (puis > 1) {
-        num *= nb;
-        puis -= 1;
-    }
-    return num;
-}
