@@ -1,3 +1,39 @@
+<a name="v1.0.0"></a>
+# [v1.0.0 🌈](https://github.com/EdenComp/GLaDOS/releases/tag/v1.0.0) - 14 Jan 2024
+
+## Changes
+
+Last project release (after 2 LoL games)
+
+## 🚀 Features
+
+- Lambdas [@EdenComp](https://github.com/EdenComp) ([#102](https://github.com/EdenComp/GLaDOS/issues/102))
+- BNF updated with latest code changes [@RezaRahemtola](https://github.com/RezaRahemtola) ([#117](https://github.com/EdenComp/GLaDOS/issues/117))
+- feat(parsing): variables assignations types can now only be certain values [@Croos3r](https://github.com/Croos3r) ([#114](https://github.com/EdenComp/GLaDOS/issues/114))
+- fix: unit tests on builtin operations [@EdenComp](https://github.com/EdenComp) ([#115](https://github.com/EdenComp/GLaDOS/issues/115))
+- feat: unit tests on new vm operators [@EdenComp](https://github.com/EdenComp) ([#112](https://github.com/EdenComp/GLaDOS/issues/112))
+- feat: Preprocessing (2) - Optimizations [@EdenComp](https://github.com/EdenComp) ([#110](https://github.com/EdenComp/GLaDOS/issues/110))
+- Add 3 functional tests on complex programs [@Tomi-Tom](https://github.com/Tomi-Tom) ([#104](https://github.com/EdenComp/GLaDOS/issues/104))
+- feat: IO improvements (error builtin + flush on input) [@EdenComp](https://github.com/EdenComp) ([#108](https://github.com/EdenComp/GLaDOS/issues/108))
+- feat: operators between integers and floats [@EdenComp](https://github.com/EdenComp) ([#109](https://github.com/EdenComp/GLaDOS/issues/109))
+- add unit tests for parsing [@pablo0675](https://github.com/pablo0675) ([#107](https://github.com/EdenComp/GLaDOS/issues/107))
+- Make functional tests on everything [@Tomi-Tom](https://github.com/Tomi-Tom) ([#101](https://github.com/EdenComp/GLaDOS/issues/101))
+- fix: Function arguments overrides [@EdenComp](https://github.com/EdenComp) ([#100](https://github.com/EdenComp/GLaDOS/issues/100))
+- Implementation of singular scopes  [@Croos3r](https://github.com/Croos3r) ([#98](https://github.com/EdenComp/GLaDOS/issues/98))
+- feat(parser): now handle \\ " \\t \\n \\r \\v \\f \\a \\b \\e \\0 [@Tomi-Tom](https://github.com/Tomi-Tom) ([#99](https://github.com/EdenComp/GLaDOS/issues/99))
+- add last unit tests [@pablo0675](https://github.com/pablo0675) ([#116](https://github.com/EdenComp/GLaDOS/issues/116))
+- Add Unit test for Dreamberd Compile [@pablo0675](https://github.com/pablo0675) ([#111](https://github.com/EdenComp/GLaDOS/issues/111))
+- Update changelog for "v0.9.0" [@github-actions](https://github.com/github-actions) ([#97](https://github.com/EdenComp/GLaDOS/issues/97))
+
+## 📄 Documentation
+
+- BNF updated with latest code changes [@RezaRahemtola](https://github.com/RezaRahemtola) ([#117](https://github.com/EdenComp/GLaDOS/issues/117))
+- Project documentation [@RezaRahemtola](https://github.com/RezaRahemtola) ([#113](https://github.com/EdenComp/GLaDOS/issues/113))
+
+
+[Changes][v1.0.0]
+
+
 <a name="v0.9.0"></a>
 # [v0.9.0 🌈](https://github.com/EdenComp/GLaDOS/releases/tag/v0.9.0) - 14 Jan 2024
 
@@ -253,6 +289,7 @@ Project setup with CI, evaluation of SExpr and documentation
 [Changes][v0.1.0]
 
 
+[v1.0.0]: https://github.com/EdenComp/GLaDOS/compare/v0.9.0...v1.0.0
 [v0.9.0]: https://github.com/EdenComp/GLaDOS/compare/v0.8.0...v0.9.0
 [v0.8.0]: https://github.com/EdenComp/GLaDOS/compare/v0.7.0...v0.8.0
 [v0.7.0]: https://github.com/EdenComp/GLaDOS/compare/v0.6.0...v0.7.0
