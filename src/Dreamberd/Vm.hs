@@ -20,6 +20,7 @@ data Value
     | Bool Bool
     | String String
     | Symbol Call
+    | Lambda [Insts]
     | Void
     deriving (Eq)
 
@@ -29,6 +30,7 @@ instance Show Value where
     show (Bool b) = show b
     show (String str) = str
     show (Symbol sym) = show sym
+    show (Lambda _) = "<lambda>"
     show Void = ""
 
 data EnvValue
@@ -134,7 +136,12 @@ execCall env (Symbol (FunctionName fct) : xs) scopeIdx = case findEnvValue fct e
             Right val -> return (Right (val : drop args xs))
     _ -> return (Left ("Environment " ++ fct ++ " does not exist"))
 execCall _ (Symbol (Builtin op) : xs) _ = return (execBuiltin xs op)
-execCall _ _ _ = return (Left "Stack argument is not a symbol")
+execCall env (Lambda insts : xs) scopeIdx = do
+    ret <- exec env xs [] insts 0 (scopeIdx + 1)
+    case ret of
+        Left err -> return (Left err)
+        Right val -> return (Right (val : xs))
+execCall _ _ _ = return (Left "Stack argument is not a symbol or a lambda")
 
 execJump :: [Env] -> [Value] -> [Value] -> [Insts] -> Int -> Int -> Int -> Maybe Bool -> IO (Either String Value)
 execJump _ _ _ _ _ _ (-1) _ = return (Left "Invalid number of instructions")
