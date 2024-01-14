@@ -1,20 +1,20 @@
 module Unit.Dreamberd.TestDreamberdParsing (testDreamberdParsing) where
 
-import Dreamberd.Parser (parse, parseAndWith, parseChar, parseDreamberd, parseMany, parseNumber)
-import Dreamberd.Types (AstNode (Boolean, Call, Function, Identifier, If, Loop, Number, Return, String), File (File))
+import Dreamberd.Parser (parse, parseAndWith, parseChar, parseDreamberd, parseInteger, parseMany)
+import Dreamberd.Types (AstNode (..), File (File))
 import Test.HUnit (Test (..), assertBool, assertEqual)
 
 testDreamberdParsing :: Test
-testDreamberdParsing = TestList [testParseNumber, testParseDreamberd, testParseAndWith, testParseMany]
+testDreamberdParsing = TestList [testParseInteger, testParseDreamberd, testParseAndWith, testParseMany]
 
-testParseNumber :: Test
-testParseNumber =
+testParseInteger :: Test
+testParseInteger =
     TestList
         [ TestCase
             ( assertEqual
-                "for (parseNumber \"123\")"
-                (Right (Number 123, ("", ("", 1, 4))))
-                (parse parseNumber ("123", ("", 1, 1)))
+                "for (parseInteger \"123\")"
+                (Right (Integer 123, ("", ("", 1, 4))))
+                (parse parseInteger ("123", ("", 1, 1)))
             )
         ]
 
@@ -56,61 +56,61 @@ testParseDreamberd =
           TestCase
             ( assertEqual
                 "parseDreamberd basic assign var"
-                (Right [Call "=" [Identifier "int", Identifier "a", Number 1]])
+                (Right [Call "=" [Identifier "int", Identifier "a", Integer 1]])
                 (parseDreamberd (File "" "int a = 1;"))
             )
         , TestCase
             ( assertEqual
                 "parse variable assignment no space"
-                (Right [Call "=" [Identifier "int", Identifier "a", Number 1]])
+                (Right [Call "=" [Identifier "int", Identifier "a", Integer 1]])
                 (parseDreamberd (File "" "int a=1;"))
             )
         , TestCase
             ( assertEqual
                 "parse variable assignment no type"
-                (Right [Call "=" [Identifier "a", Number 1]])
+                (Right [Call "=" [Identifier "a", Integer 1]])
                 (parseDreamberd (File "" "a = 1;"))
             )
         , TestCase
             ( assertEqual
                 "parse variable assignment no type no space"
-                (Right [Call "=" [Identifier "a", Number 1]])
+                (Right [Call "=" [Identifier "a", Integer 1]])
                 (parseDreamberd (File "" "a=1;"))
             )
         , TestCase
             ( assertEqual
                 "parse variable assignment with calculation basic"
-                (Right [Call "=" [Identifier "int", Identifier "a", Call "+" [Number 1, Number 2]]])
+                (Right [Call "=" [Identifier "int", Identifier "a", Call "+" [Integer 1, Integer 2]]])
                 (parseDreamberd (File "" "int a = 1 + 2;"))
             )
         , TestCase
             ( assertEqual
                 "parse variable assignment with calculation no space"
-                (Right [Call "=" [Identifier "int", Identifier "a", Call "+" [Number 1, Number 2]]])
+                (Right [Call "=" [Identifier "int", Identifier "a", Call "+" [Integer 1, Integer 2]]])
                 (parseDreamberd (File "" "int a=1+2;"))
             )
         , TestCase
             ( assertEqual
                 "parse variable assignment with calculation no type"
-                (Right [Call "=" [Identifier "a", Call "+" [Number 1, Number 2]]])
+                (Right [Call "=" [Identifier "a", Call "+" [Integer 1, Integer 2]]])
                 (parseDreamberd (File "" "a = 1 + 2;"))
             )
         , TestCase
             ( assertEqual
                 "parse variable assignment with calculation complex"
-                (Right [Call "=" [Identifier "int", Identifier "a", Call "*" [Number 1, Call "+" [Number 2, Call "/" [Number 3, Number 4]]]]])
+                (Right [Call "=" [Identifier "int", Identifier "a", Call "*" [Integer 1, Call "+" [Integer 2, Call "/" [Integer 3, Integer 4]]]]])
                 (parseDreamberd (File "" "int a = 1 * 2 + 3 / 4;"))
             )
         , TestCase
             ( assertEqual
                 "parse variable assignment with function call"
-                (Right [Call "=" [Identifier "int", Identifier "a", Call "myFunc" [Number 1]]])
+                (Right [Call "=" [Identifier "int", Identifier "a", Call "myFunc" [Integer 1]]])
                 (parseDreamberd (File "" "int a = myFunc(1);"))
             )
         , TestCase
             ( assertEqual
                 "parse variable assignment with function call no space"
-                (Right [Call "=" [Identifier "int", Identifier "a", Call "myFunc" [Number 1]]])
+                (Right [Call "=" [Identifier "int", Identifier "a", Call "myFunc" [Integer 1]]])
                 (parseDreamberd (File "" "int a=myFunc(1);"))
             )
         , TestCase
@@ -135,61 +135,61 @@ testParseDreamberd =
           TestCase
             ( assertEqual
                 "parse if statement"
-                (Right [If (Boolean True) [Number 1] [Number 2]])
+                (Right [If (Boolean True) [Integer 1] [Integer 2]])
                 (parseDreamberd (File "" "if (true) {1;} else {2;}"))
             )
         , TestCase
             ( assertEqual
                 "parse if statement no space"
-                (Right [If (Boolean True) [Number 1] [Number 2]])
+                (Right [If (Boolean True) [Integer 1] [Integer 2]])
                 (parseDreamberd (File "" "if(true){1;}else{2;}"))
             )
         , TestCase
             ( assertEqual
                 "parse if statement no else"
-                (Right [If (Boolean True) [Number 1] []])
+                (Right [If (Boolean True) [Integer 1] []])
                 (parseDreamberd (File "" "if (true) {1;}"))
             )
         , TestCase
             ( assertEqual
                 "parse if statement no else no space"
-                (Right [If (Boolean True) [Number 1] []])
+                (Right [If (Boolean True) [Integer 1] []])
                 (parseDreamberd (File "" "if(true){1;}"))
             )
         , TestCase
             ( assertEqual
                 "parse if statement with else if"
-                (Right [If (Boolean True) [Number 1] [If (Boolean False) [Number 2] []]])
+                (Right [If (Boolean True) [Integer 1] [If (Boolean False) [Integer 2] []]])
                 (parseDreamberd (File "" "if (true) {1;} elif (false) {2;}"))
             )
         , TestCase
             ( assertEqual
                 "parse if statement with else if and else"
-                (Right [If (Boolean True) [Number 1] [If (Boolean False) [Number 2] [Number 3]]])
+                (Right [If (Boolean True) [Integer 1] [If (Boolean False) [Integer 2] [Integer 3]]])
                 (parseDreamberd (File "" "if (true) {1;} elif (false) {2;} else {3;}"))
             )
         , TestCase
             ( assertEqual
                 "parse if statement with calculation"
-                (Right [If (Call "==" [Number 1, Number 2]) [Number 1] [Number 2]])
+                (Right [If (Call "==" [Integer 1, Integer 2]) [Integer 1] [Integer 2]])
                 (parseDreamberd (File "" "if (1 == 2) {1;} else {2;}"))
             )
         , TestCase
             ( assertEqual
                 "parse if statement with calculation no space"
-                (Right [If (Call "==" [Number 1, Number 2]) [Number 1] [Number 2]])
+                (Right [If (Call "==" [Integer 1, Integer 2]) [Integer 1] [Integer 2]])
                 (parseDreamberd (File "" "if(1==2){1;}else{2;}"))
             )
         , TestCase
             ( assertEqual
                 "parse if statement with function call"
-                (Right [If (Call "myFunc" [Number 1]) [Number 1] [Number 2]])
+                (Right [If (Call "myFunc" [Integer 1]) [Integer 1] [Integer 2]])
                 (parseDreamberd (File "" "if (myFunc(1)) {1;} else {2;}"))
             )
         , TestCase
             ( assertEqual
                 "parse if statement calcul and comparison"
-                (Right [If (Call "==" [Call "+" [Number 1, Number 2], Number 3]) [Number 1] [Number 2]])
+                (Right [If (Call "==" [Call "+" [Integer 1, Integer 2], Integer 3]) [Integer 1] [Integer 2]])
                 (parseDreamberd (File "" "if ((1 + 2) == 3) {1;} else {2;}"))
             )
         , -- Test for function declaration
@@ -232,32 +232,32 @@ testParseDreamberd =
         , TestCase
             ( assertEqual
                 "parse function declaration with call to another function with args"
-                (Right [Function "myFunc" [] [Call "myFunc2" [Number 1]]])
+                (Right [Function "myFunc" [] [Call "myFunc2" [Integer 1]]])
                 (parseDreamberd (File "" "fn myFunc {myFunc2(1);}"))
             )
         , TestCase
             ( assertEqual
                 "parse function declaration with if else"
-                (Right [Function "myFunc" [] [If (Boolean True) [Number 1] [Number 2]]])
+                (Right [Function "myFunc" [] [If (Boolean True) [Integer 1] [Integer 2]]])
                 (parseDreamberd (File "" "fn myFunc {if (true) {1;} else {2;}}"))
             )
         , TestCase
             ( assertEqual
                 "parse function declaration with if else and return value"
-                (Right [Function "myFunc" [] [If (Boolean True) [Return (Number 1)] [Return (Number 2)]]])
+                (Right [Function "myFunc" [] [If (Boolean True) [Return (Integer 1)] [Return (Integer 2)]]])
                 (parseDreamberd (File "" "fn myFunc {if (true) {return 1;} else {return 2;}}"))
             )
         , -- Test for function call
           TestCase
             ( assertEqual
                 "parse function call"
-                (Right [Call "myFunc" [Number 3]])
+                (Right [Call "myFunc" [Integer 3]])
                 (parseDreamberd (File "" "myFunc(3);"))
             )
         , TestCase
             ( assertEqual
                 "parse function call no space"
-                (Right [Call "myFunc" [Number 3]])
+                (Right [Call "myFunc" [Integer 3]])
                 (parseDreamberd (File "" "myFunc(3);"))
             )
         , TestCase
@@ -275,13 +275,13 @@ testParseDreamberd =
         , TestCase
             ( assertEqual
                 "parse function call with multiple args"
-                (Right [Call "myFunc" [Number 1, Number 2, Number 3]])
+                (Right [Call "myFunc" [Integer 1, Integer 2, Integer 3]])
                 (parseDreamberd (File "" "myFunc(1, 2, 3);"))
             )
         , TestCase
             ( assertEqual
                 "parse function call with multiple args no space"
-                (Right [Call "myFunc" [Number 1, Number 2, Number 3]])
+                (Right [Call "myFunc" [Integer 1, Integer 2, Integer 3]])
                 (parseDreamberd (File "" "myFunc(1,2,3);"))
             )
         , TestCase
@@ -294,13 +294,13 @@ testParseDreamberd =
           TestCase
             ( assertEqual
                 "parse while loop"
-                (Right [Loop (Boolean True) [Number 1] Nothing Nothing])
+                (Right [Loop (Boolean True) [Integer 1] Nothing Nothing])
                 (parseDreamberd (File "" "while (true) {1;}"))
             )
         , TestCase
             ( assertEqual
                 "parse while loop no space"
-                (Right [Loop (Boolean True) [Number 1] Nothing Nothing])
+                (Right [Loop (Boolean True) [Integer 1] Nothing Nothing])
                 (parseDreamberd (File "" "while(true){1;}"))
             )
         , TestCase
@@ -312,105 +312,105 @@ testParseDreamberd =
         , TestCase
             ( assertEqual
                 "parse while loop with function call"
-                (Right [Loop (Call "myFunc" []) [Number 1] Nothing Nothing])
+                (Right [Loop (Call "myFunc" []) [Integer 1] Nothing Nothing])
                 (parseDreamberd (File "" "while (myFunc()) {1;}"))
             )
         , TestCase
             ( assertEqual
                 "parse while loop with calculation"
-                (Right [Loop (Call "==" [Number 1, Number 2]) [Number 1] Nothing Nothing])
+                (Right [Loop (Call "==" [Integer 1, Integer 2]) [Integer 1] Nothing Nothing])
                 (parseDreamberd (File "" "while (1 == 2) {1;}"))
             )
         , TestCase
             ( assertEqual
                 "parse while loop with calculation no space"
-                (Right [Loop (Call "==" [Number 1, Number 2]) [Number 1] Nothing Nothing])
+                (Right [Loop (Call "==" [Integer 1, Integer 2]) [Integer 1] Nothing Nothing])
                 (parseDreamberd (File "" "while(1==2){1;}"))
             )
         , TestCase
             ( assertEqual
                 "parse while loop with calculation complex"
-                (Right [Loop (Call "==" [Call "+" [Number 1, Number 2], Number 3]) [Number 1] Nothing Nothing])
+                (Right [Loop (Call "==" [Call "+" [Integer 1, Integer 2], Integer 3]) [Integer 1] Nothing Nothing])
                 (parseDreamberd (File "" "while ((1 + 2) == 3) {1;}"))
             )
         , -- Test for binary operation
           TestCase
             ( assertEqual
                 "parse binary operation"
-                (Right [Call "+" [Number 2, Number 3]])
+                (Right [Call "+" [Integer 2, Integer 3]])
                 (parseDreamberd (File "" "2 + 3;"))
             )
         , TestCase
             ( assertEqual
                 "parse binary operation no space"
-                (Right [Call "+" [Number 2, Number 3]])
+                (Right [Call "+" [Integer 2, Integer 3]])
                 (parseDreamberd (File "" "2+3;"))
             )
         , TestCase
             ( assertEqual
                 "parse binary operation with parenthesis"
-                (Right [Call "+" [Number 2, Call "*" [Number 3, Number 4]]])
+                (Right [Call "+" [Integer 2, Call "*" [Integer 3, Integer 4]]])
                 (parseDreamberd (File "" "2 + (3 * 4);"))
             )
         , TestCase
             ( assertEqual
                 "parse binary operation with parenthesis no space"
-                (Right [Call "+" [Number 2, Call "*" [Number 3, Number 4]]])
+                (Right [Call "+" [Integer 2, Call "*" [Integer 3, Integer 4]]])
                 (parseDreamberd (File "" "2+(3*4);"))
             )
         , TestCase
             ( assertEqual
                 "parse binary operation with parenthesis and function call"
-                (Right [Call "+" [Number 2, Call "*" [Call "myFunc" [Number 3], Number 4]]])
+                (Right [Call "+" [Integer 2, Call "*" [Call "myFunc" [Integer 3], Integer 4]]])
                 (parseDreamberd (File "" "2 + (myFunc(3) *            \n\n 4);"))
             )
         , TestCase
             ( assertEqual
                 "parse binary operation with parenthesis and function call no space"
-                (Right [Call "+" [Number 2, Call "*" [Call "myFunc" [Number 3], Number 4]]])
+                (Right [Call "+" [Integer 2, Call "*" [Call "myFunc" [Integer 3], Integer 4]]])
                 (parseDreamberd (File "" "2+(myFunc(3)*4)\n;"))
             )
         , TestCase
             ( assertEqual
                 "parse binary operation with parenthesis and mutliple function call"
-                (Right [Call "+" [Number 2, Call "*" [Call "myFunc" [Number 3], Call "myFunc2" [Number 4]]]])
+                (Right [Call "+" [Integer 2, Call "*" [Call "myFunc" [Integer 3], Call "myFunc2" [Integer 4]]]])
                 (parseDreamberd (File "" "2 + (myFunc(3) *                 myFunc2(                             \n4));"))
             )
         , TestCase
             ( assertEqual
                 "parse binary operation with parenthesis and a lot of function call"
-                (Right [Call "+" [Number 2, Call "*" [Call "myFunc" [Number 3], Call "myFunc2" [Call "myFunc3" [Number 4]]]]])
+                (Right [Call "+" [Integer 2, Call "*" [Call "myFunc" [Integer 3], Call "myFunc2" [Call "myFunc3" [Integer 4]]]]])
                 (parseDreamberd (File "" "2 + (myFunc(3) * myFunc2(myFunc3(4)));"))
             )
         , -- Test for multiple statements
           TestCase
             ( assertEqual
                 "parse multiple statements"
-                (Right [Call "=" [Identifier "int", Identifier "a", Number 1], Call "+" [Identifier "a", Number 2]])
+                (Right [Call "=" [Identifier "int", Identifier "a", Integer 1], Call "+" [Identifier "a", Integer 2]])
                 (parseDreamberd (File "" "int a = 1; a \n\n\n\n+ 2;"))
             )
         , TestCase
             ( assertEqual
                 "parse multiple statements no space"
-                (Right [Call "=" [Identifier "int", Identifier "a", Number 1], Call "+" [Identifier "a", Number 2]])
+                (Right [Call "=" [Identifier "int", Identifier "a", Integer 1], Call "+" [Identifier "a", Integer 2]])
                 (parseDreamberd (File "" "int a=1;a+2;"))
             )
         , TestCase
             ( assertEqual
                 "parse multiple statements with function call"
-                (Right [Call "=" [Identifier "int", Identifier "a", Number 1], Call "+" [Identifier "a", Call "myFunc" [Number 2]]])
+                (Right [Call "=" [Identifier "int", Identifier "a", Integer 1], Call "+" [Identifier "a", Call "myFunc" [Integer 2]]])
                 (parseDreamberd (File "" "int a = 1; a + myFunc(2);"))
             )
         , TestCase
             ( assertEqual
                 "parse multiple statements with function call no space"
-                (Right [Call "=" [Identifier "int", Identifier "a", Number 1], Call "+" [Identifier "a", Call "myFunc" [Number 2]]])
+                (Right [Call "=" [Identifier "int", Identifier "a", Integer 1], Call "+" [Identifier "a", Call "myFunc" [Integer 2]]])
                 (parseDreamberd (File "" "int a=1;a+myFunc(2)\n\n\n;"))
             )
         , TestCase
             ( assertEqual
                 "parse a strlen function in dreamberd4"
-                (Right [Function "strlen" ["str"] [If (Call "==" [Identifier "str", String ""]) [Return (Number 0)] [Return (Call "+" [Number 1, Call "strlen" [Call "substr" [Identifier "str", Number 1]]])]]])
+                (Right [Function "strlen" ["str"] [If (Call "==" [Identifier "str", String ""]) [Return (Integer 0)] [Return (Call "+" [Integer 1, Call "strlen" [Call "substr" [Identifier "str", Integer 1]]])]]])
                 (parseDreamberd (File "" "fn strlen(str) {if (str \n== \"\") {return \n\n0\n\n;} \n\nelse {\n\nreturn \n1 + strlen(substr(\nstr, 1));}}"))
             )
         ]
