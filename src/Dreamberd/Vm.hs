@@ -121,7 +121,7 @@ execInstruction env args stack insts (Jump num cond) idx scopeIdx = execJump env
 
 execCall :: [Env] -> [Value] -> Int -> IO (Either String [Value])
 execCall _ [] _ = return (Left "Stack is empty for a Call instruction")
-execCall _ (Symbol (FunctionName "input") : xs) _ = hFlush stdout >> getLine >>= \line -> return (Right (String line : xs))
+execCall _ (Symbol (FunctionName "input") : xs) _ = hFlush stdout >> hFlush stderr >> getLine >>= \line -> return (Right (String line : xs))
 execCall _ (Symbol (FunctionName "print") : val : xs) _ = putStr (show val) >> return (Right xs)
 execCall _ (Symbol (FunctionName "print") : _) _ = return (Left "Stack is empty for a print instruction")
 execCall _ (Symbol (FunctionName "error") : val : xs) _ = hPutStr stderr (show val) >> return (Right xs)
