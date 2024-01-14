@@ -48,7 +48,7 @@ transpileValue Void = [toEnum 0x16]
 
 transpileEnvValue :: Maybe EnvValue -> [Char]
 transpileEnvValue Nothing = [toEnum 0x53]
-transpileEnvValue (Just (Function insts)) = toEnum 0x41 : transpileInt (length nested) ++ nested
+transpileEnvValue (Just (Function args insts)) = toEnum 0x41 : transpileInt args ++ transpileInt (length nested) ++ nested
   where
     nested = foldMap transpileInstruction insts
 transpileEnvValue (Just (Variable val)) = toEnum 0x42 : transpileValue val

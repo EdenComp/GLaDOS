@@ -30,7 +30,7 @@ instance Show Value where
     show Void = ""
 
 data EnvValue
-    = Function [Insts]
+    = Function Int [Insts]
     | Variable Value
     deriving (Show)
 
@@ -102,7 +102,7 @@ execInstruction env args stack insts (PushEnv "print") idx scopeIdx = exec env a
 execInstruction env args stack insts (PushEnv "input") idx scopeIdx = exec env args (Symbol (FunctionName "input") : stack) insts (idx + 1) scopeIdx
 execInstruction env args stack insts (PushEnv name) idx scopeIdx =
     case findEnvValue name env of
-        Just (Function _, _) -> exec env args (Symbol (FunctionName name) : stack) insts (idx + 1) scopeIdx
+        Just (Function _ _, _) -> exec env args (Symbol (FunctionName name) : stack) insts (idx + 1) scopeIdx
         Just (Variable v, _) -> exec env args (v : stack) insts (idx + 1) scopeIdx
         _ -> return (Left ("Environment " ++ name ++ " does not exist"))
 execInstruction env args stack insts (EraseEnv name) idx scopeIdx = case findEnvValue name env of
@@ -122,11 +122,11 @@ execCall _ (Symbol (FunctionName "print") : val : xs) _ = putStr (show val) >> r
 execCall _ (Symbol (FunctionName "print") : _) _ = return (Left "Stack is empty for print instruction")
 execCall _ (Symbol (FunctionName "input") : xs) _ = getLine >>= \line -> return (Right (String line : xs))
 execCall env (Symbol (FunctionName fct) : xs) scopeIdx = case findEnvValue fct env of
-    Just (Function insts, fctScope) -> do
+    Just (Function args insts, fctScope) -> do
         ret <- exec (filter (\e -> scope e <= fctScope) env) xs [] insts 0 (scopeIdx + 1)
         case ret of
             Left err -> return (Left err)
-            Right val -> return (Right (val : xs))
+            Right val -> return (Right (val : drop args xs))
     _ -> return (Left ("Environment " ++ fct ++ " does not exist"))
 execCall _ (Symbol (Builtin op) : xs) _ = return (execBuiltin xs op)
 execCall _ _ _ = return (Left "Stack argument is not a symbol")

@@ -36,8 +36,8 @@ testStackPushes =
         [ TestCase $ execVM [PushArg 0] >>= assertEqual "PushArg without args" (Left "Argument index out of bounds")
         , TestCase $ exec [] [VM.Integer 1] [] [PushArg 0, Ret] 0 0 >>= assertEqual "push from arg" (Right (VM.Integer 1))
         , TestCase $ exec [] [VM.Integer 1] [] [PushArg (-1), Ret] 0 0 >>= assertEqual "push negative" (Left "Argument index out of bounds")
-        , TestCase $ exec [Env{identifier = "ret", value = Function [PushArg 0, Ret], scope = 1}] [] [] [Push (VM.Integer 10), PushEnv "ret", Call, Ret] 0 0 >>= assertEqual "push arg from function" (Right (VM.Integer 10))
-        , TestCase $ exec [Env{identifier = "ret", value = Function [PushArg 0, Ret], scope = 1}] [] [] [Push (VM.Integer 10), PushEnv "res", Call, Ret] 0 0 >>= assertEqual "push unknown env" (Left "Environment res does not exist")
+        , TestCase $ exec [Env{identifier = "ret", value = Function 1 [PushArg 0, Ret], scope = 1}] [] [] [Push (VM.Integer 10), PushEnv "ret", Call, Ret] 0 0 >>= assertEqual "push arg from function" (Right (VM.Integer 10))
+        , TestCase $ exec [Env{identifier = "ret", value = Function 1 [PushArg 0, Ret], scope = 1}] [] [] [Push (VM.Integer 10), PushEnv "res", Call, Ret] 0 0 >>= assertEqual "push unknown env" (Left "Environment res does not exist")
         , TestCase $ exec [Env{identifier = "const", value = Variable (VM.Bool True), scope = 1}] [] [] [Push (VM.Integer 10), PushEnv "const", Ret] 0 0 >>= assertEqual "push constant env" (Right (VM.Bool True))
         ]
 
@@ -85,11 +85,11 @@ testBuiltins =
 testEnvDefinesAndRedefines :: Test
 testEnvDefinesAndRedefines =
     TestList
-        [ TestCase $ execVM [Push (VM.Integer (-26)), DefineEnv "opp" Define (Just (Function [PushArg 0, Push (VM.Integer (-1)), Push (VM.Symbol (Builtin Mul)), Call, Ret])), PushEnv "opp", Call, Ret] >>= assertEqual "basic function" (Right (VM.Integer 26))
-        , TestCase $ execVM [DefineEnv "inc" Define (Just (Function [PushArg 0, DefineEnv "val" Define (Just (Variable (VM.Integer 2))), PushEnv "val", Push (VM.Symbol (Builtin Add)), Call, Ret])), Push (VM.Integer 2), PushEnv "inc", Call, Ret] >>= assertEqual "define inside define" (Right (VM.Integer 4))
-        , TestCase $ execVM [DefineEnv "inc" Define (Just (Function [PushArg 0, DefineEnv "val" Define (Just (Variable (VM.Integer 2))), PushEnv "val", Push (VM.Symbol (Builtin Add)), Call, Ret])), PushEnv "val", Call, Ret] >>= assertEqual "private scopes" (Left "Environment val does not exist")
-        , TestCase $ execVM [DefineEnv "idx" Define (Just (Variable (VM.Integer 3))), DefineEnv "mul" Define (Just (Function [PushEnv "idx", PushArg 0, Push (VM.Symbol (Builtin Mul)), Call, Ret])), Push (VM.String "hey"), PushEnv "mul", Call, Ret] >>= assertEqual "parent scope" (Right (VM.String "heyheyhey"))
-        , TestCase $ execVM [DefineEnv "test" Define (Just (Function [Push (VM.Bool True), Push (VM.Symbol (Builtin Eq)), Call, Ret])), PushEnv "test", Call, Ret] >>= assertEqual "error inside function" (Left "Wrong stack variables for builtin Eq")
+        [ TestCase $ execVM [Push (VM.Integer (-26)), DefineEnv "opp" Define (Just (Function 1 [PushArg 0, Push (VM.Integer (-1)), Push (VM.Symbol (Builtin Mul)), Call, Ret])), PushEnv "opp", Call, Ret] >>= assertEqual "basic function" (Right (VM.Integer 26))
+        , TestCase $ execVM [DefineEnv "inc" Define (Just (Function 1 [PushArg 0, DefineEnv "val" Define (Just (Variable (VM.Integer 2))), PushEnv "val", Push (VM.Symbol (Builtin Add)), Call, Ret])), Push (VM.Integer 2), PushEnv "inc", Call, Ret] >>= assertEqual "define inside define" (Right (VM.Integer 4))
+        , TestCase $ execVM [DefineEnv "inc" Define (Just (Function 1 [PushArg 0, DefineEnv "val" Define (Just (Variable (VM.Integer 2))), PushEnv "val", Push (VM.Symbol (Builtin Add)), Call, Ret])), PushEnv "val", Call, Ret] >>= assertEqual "private scopes" (Left "Environment val does not exist")
+        , TestCase $ execVM [DefineEnv "idx" Define (Just (Variable (VM.Integer 3))), DefineEnv "mul" Define (Just (Function 1 [PushEnv "idx", PushArg 0, Push (VM.Symbol (Builtin Mul)), Call, Ret])), Push (VM.String "hey"), PushEnv "mul", Call, Ret] >>= assertEqual "parent scope" (Right (VM.String "heyheyhey"))
+        , TestCase $ execVM [DefineEnv "test" Define (Just (Function 0 [Push (VM.Bool True), Push (VM.Symbol (Builtin Eq)), Call, Ret])), PushEnv "test", Call, Ret] >>= assertEqual "error inside function" (Left "Wrong stack variables for builtin Eq")
         , TestCase $ execVM [DefineEnv "begin" Define (Just (Variable (VM.String "bonjour"))), DefineEnv "begin" Redefine (Just (Variable (VM.String "hello"))), Push (VM.String " world"), PushEnv "begin", Push (VM.Symbol (Builtin Add)), Call, Ret] >>= assertEqual "environment reassignment" (Right (VM.String "hello world"))
         , TestCase $ execVM [Push (VM.String "Hello World"), DefineEnv "message" Define Nothing, Ret] >>= assertEqual "basic DefineEnv from stack" (Right VM.Void)
         , TestCase $ execVM [DefineEnv "message" Define Nothing, Ret] >>= assertEqual "empty stack for DefineEnv from stack" (Left "Stack is empty for a DefineEnv from stack instruction")
@@ -121,7 +121,7 @@ testJumps =
 testFunctions :: Test
 testFunctions =
     TestList
-        [ TestCase $ execVM [DefineEnv "fact" Define (Just (Function [PushArg 0, Push (VM.Integer 1), Push (VM.Symbol (Builtin Eq)), Call, Jump 2 (Just False), Push (VM.Integer 1), Ret, Push (VM.Integer 1), PushArg 0, Push (VM.Symbol (Builtin Sub)), Call, PushEnv "fact", Call, PushArg 0, Push (VM.Symbol (Builtin Mul)), Call, Ret])), Push (VM.Integer 5), PushEnv "fact", Call, Ret] >>= assertEqual "factorial" (Right (VM.Integer 120))
+        [ TestCase $ execVM [DefineEnv "fact" Define (Just (Function 1 [PushArg 0, Push (VM.Integer 1), Push (VM.Symbol (Builtin Eq)), Call, Jump 2 (Just False), Push (VM.Integer 1), Ret, Push (VM.Integer 1), PushArg 0, Push (VM.Symbol (Builtin Sub)), Call, PushEnv "fact", Call, PushArg 0, Push (VM.Symbol (Builtin Mul)), Call, Ret])), Push (VM.Integer 5), PushEnv "fact", Call, Ret] >>= assertEqual "factorial" (Right (VM.Integer 120))
         , TestCase $ execVM [DefineEnv "a" Define (Just (Variable (VM.Integer 0))), DefineEnv "b" Define (Just (Variable (VM.String "hello"))), Push (VM.Bool False), Jump 10 (Just False), Push (VM.Integer 1), PushEnv "a", Push (VM.Symbol (Builtin Add)), Call, DefineEnv "a" Redefine Nothing, Push (VM.Integer 2), PushEnv "b", Push (VM.Symbol (Builtin Mul)), Call, DefineEnv "b" Redefine Nothing, Push (VM.Integer 2), PushEnv "a", Push (VM.Symbol (Builtin GreaterOrEqual)), Call, Jump (-15) (Just False), PushEnv "b", Ret] >>= assertEqual "for loop" (Right (VM.String "hellohellohellohello"))
         , TestCase $ execVM [Push (VM.Integer 10), PushEnv "print", Call, Ret] >>= assertEqual "basic print" (Right VM.Void)
         , TestCase $ execVM [PushEnv "print", Call, Ret] >>= assertEqual "print with empty stack" (Left "Stack is empty for print instruction")

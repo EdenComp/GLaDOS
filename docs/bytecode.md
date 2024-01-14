@@ -52,7 +52,7 @@ Integer: 8 bytes for length + integral number as bits
 
 Both DefineEnv and DefineEnvFromStack use 1 byte to determine the type of the definition:
 
-- `0x41`: Function (+ 8 bytes instructions length)
+- `0x41`: Function (+ 8 bytes args length) (+ 8 bytes instructions length)
 - `0x42`: Value
 
 There is 3 types of DefineEnv:
