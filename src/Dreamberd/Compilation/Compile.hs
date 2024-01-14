@@ -3,6 +3,8 @@ module Dreamberd.Compilation.Compile (
     compileValuePush,
     getBuiltinCallForOp,
     compileNode,
+    compileReturn,
+    compileFunction,
 ) where
 
 import Data.Maybe (mapMaybe)

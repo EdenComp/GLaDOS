@@ -5,7 +5,7 @@ import Test.HUnit (Test (..), assertEqual)
 import qualified Dreamberd.Types as AST
 import Dreamberd.Vm as VM
 
-import Dreamberd.Compilation.Compile (compileNode, compileValuePush, getBuiltinCallForOp)
+import Dreamberd.Compilation.Compile (compileNode, compileValuePush, getBuiltinCallForOp, compileReturn, compileFunction)
 
 testDreamberdCompilation :: Test
 testDreamberdCompilation =
@@ -13,6 +13,8 @@ testDreamberdCompilation =
         [ testCompileValuePush
         , testGetBuiltinCallForOp
         , testCompileNode
+        , testCompileReturn
+        , testCompileFunction
         ]
 
 testCompileValuePush :: Test
@@ -203,3 +205,34 @@ testCompileNode =
                 (compileNode [] (AST.Import "someModule"))
             )
         ]
+
+testCompileReturn :: Test
+testCompileReturn = TestList [
+    TestCase (assertEqual "compile return with a call"
+        (Right [VM.Push (VM.Integer 1), VM.PushEnv "function", VM.Call, VM.Ret])
+        (compileReturn [] (Just (AST.Call "function" [AST.Integer 1])))),
+
+    TestCase (assertEqual "compile return with a value"
+        (Right [VM.Push (VM.Integer 42), VM.Ret])
+        (compileReturn [] (Just (AST.Integer 42)))),
+
+    TestCase (assertEqual "compile void return"
+        (Right [VM.Push VM.Void, VM.Ret])
+        (compileReturn [] Nothing))
+    ]
+
+testCompileFunction :: Test
+testCompileFunction = TestList [
+    TestCase (assertEqual "compile simple function"
+        (Right [VM.DefineEnv "myFunc" VM.Define (Just $ VM.Function 1 [VM.PushArg 0, VM.DefineEnv "x" VM.Override Nothing, VM.PushEnv "x", VM.Ret, VM.EraseEnv "x"])])
+        (compileFunction [] "myFunc" ["x"] [AST.Return (Just (AST.Identifier "x"))])),
+
+    TestCase (assertEqual "compile function without parameters"
+        (Right [VM.DefineEnv "noParamsFunc" VM.Define (Just $ VM.Function 0 [VM.Push (VM.Integer 1), VM.Ret])])
+        (compileFunction [] "noParamsFunc" [] [AST.Return (Just (AST.Integer 1))])),
+
+    TestCase (assertEqual "compile function with multiple parameters"
+        (Right [VM.DefineEnv "multiParamsFunc" VM.Define (Just $ VM.Function 3 [VM.PushArg 0, VM.DefineEnv "x" VM.Override Nothing, VM.PushArg 1, VM.DefineEnv "y" VM.Override Nothing, VM.PushArg 2, VM.DefineEnv "z" VM.Override Nothing, VM.PushEnv "x", VM.Ret, VM.EraseEnv "x", VM.EraseEnv "y", VM.EraseEnv "z"])])
+        (compileFunction [] "multiParamsFunc" ["x", "y", "z"] [AST.Return (Just (AST.Identifier "x"))]))
+    ]
+
