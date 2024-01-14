@@ -8,6 +8,7 @@ module Dreamberd.Compilation.Compile (
     compileIf,
     compileLoop,
     compileCall,
+    compileBuiltinCall
 ) where
 
 import Data.Maybe (mapMaybe)
