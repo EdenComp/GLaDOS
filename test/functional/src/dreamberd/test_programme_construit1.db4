@@ -1,0 +1,41 @@
+str welcome_message = "Bienvenue dans Dreamberd!";
+int age = 25;
+float temperature = 28.5;
+bool isSummer = true;
+
+fn display_info(name, age, temperature, isSummer) {
+    print("Nom: " + name + "\n");
+    print("Âge: " + age + "\n");
+    print("Température: " + temperature + " degrés Celsius\n");
+
+    if (isSummer) {
+        print("C'est l'été!\n");
+    } else {
+        print("Ce n'est pas l'été.\n");
+    }
+}
+
+fn calculate_discount(amount_spent) {
+    float discount_rate = 0.1;
+    float discount = 0.0;
+
+    if (amount_spent > 100.0) {
+        discount = amount_spent * discount_rate;
+        return discount;
+    } else {
+        return 0;
+    }
+}
+
+fn main() {
+    display_info("Alice", age, temperature, isSummer);
+
+    float total_amount = 120.0;
+    float red = calculate_discount(total_amount);
+
+    print("Montant total: " + total_amount + "\n");
+    print("Réduction applicable: " + red + "\n");
+    print("Montant après réduction: " + (total_amount - red) + "\n");
+}
+
+main();
