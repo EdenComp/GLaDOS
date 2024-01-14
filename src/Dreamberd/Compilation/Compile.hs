@@ -60,9 +60,15 @@ compileCall :: [String] -> String -> [AST.AstNode] -> Either String [VM.Insts]
 compileCall params "=" [_, AST.Identifier iden, value] = compileAssignation params iden value False
 compileCall params "=" [AST.Identifier iden, value] = compileAssignation params iden value True
 compileCall params [op, '='] [AST.Identifier iden, value]
-    | op `elem` "+-*/" =
+    | op `elem` "+-*/%" =
         compileBuiltinCall params [op] [AST.Identifier iden, value]
             >>= \opInsts -> Right $ opInsts ++ [VM.DefineEnv iden True Nothing]
+compileCall params [op, op2, '='] [AST.Identifier iden, value]
+    | op `elem` "&|" && op == op2 =
+        compileBuiltinCall params [op, op2] [AST.Identifier iden, value]
+            >>= \opInsts -> Right $ opInsts ++ [VM.DefineEnv iden True Nothing]
+compileCall params "++" [AST.Identifier iden] = compileBuiltinCall params "+" [AST.Identifier iden, AST.Number 1] >>= \opInsts -> Right $ opInsts ++ [VM.DefineEnv iden True Nothing, VM.PushEnv iden]
+compileCall params "--" [AST.Identifier iden] = compileBuiltinCall params "-" [AST.Identifier iden, AST.Number 1] >>= \opInsts -> Right $ opInsts ++ [VM.DefineEnv iden True Nothing, VM.PushEnv iden]
 compileCall params op args = compileBuiltinCall params op args <> compileCustomCall params op args
 
 getScopedInstructions :: [VM.Insts] -> [VM.Insts]
@@ -110,12 +116,16 @@ getBuiltinCallForOp "-" = Right VM.Sub
 getBuiltinCallForOp "*" = Right VM.Mul
 getBuiltinCallForOp "/" = Right VM.Div
 getBuiltinCallForOp "%" = Right VM.Mod
+getBuiltinCallForOp "**" = Right VM.Pow
 getBuiltinCallForOp "==" = Right VM.Eq
 getBuiltinCallForOp "!=" = Right VM.Neq
 getBuiltinCallForOp "<" = Right VM.Less
 getBuiltinCallForOp "<=" = Right VM.LessOrEqual
 getBuiltinCallForOp ">" = Right VM.Greater
 getBuiltinCallForOp ">=" = Right VM.GreaterOrEqual
+getBuiltinCallForOp "&&" = Right VM.And
+getBuiltinCallForOp "||" = Right VM.Or
+getBuiltinCallForOp "^" = Right VM.Xor
 getBuiltinCallForOp _ = Left "Unknown builtin call"
 
 compileCustomCall :: [String] -> String -> [AST.AstNode] -> Either String [VM.Insts]
