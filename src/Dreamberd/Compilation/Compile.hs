@@ -47,9 +47,10 @@ compileLoop params test body initNode updateNode =
   where
     compileMaybeNode = maybe (Right []) (compileNode params)
 
-compileReturn :: [String] -> AST.AstNode -> Either String [VM.Insts]
-compileReturn params (AST.Call op args) = compileCall params op args >>= \call -> Right $ call ++ [VM.Ret]
-compileReturn params value = compileNode params value >>= \pushInst -> Right $ pushInst ++ [VM.Ret]
+compileReturn :: [String] -> Maybe AST.AstNode -> Either String [VM.Insts]
+compileReturn params (Just (AST.Call op args)) = compileCall params op args >>= \call -> Right $ call ++ [VM.Ret]
+compileReturn params (Just value) = compileNode params value >>= \pushInst -> Right $ pushInst ++ [VM.Ret]
+compileReturn _ Nothing = Right [VM.Push VM.Void, VM.Ret]
 
 compileFunction :: [String] -> String -> [String] -> [AST.AstNode] -> Either String [VM.Insts]
 compileFunction params name args body =

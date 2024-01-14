@@ -9,7 +9,7 @@ data AstNode
     | Function String [String] [AstNode]
     | Call String [AstNode]
     | If AstNode [AstNode] [AstNode]
-    | Return AstNode
+    | Return (Maybe AstNode)
     | Loop AstNode [AstNode] (Maybe AstNode) (Maybe AstNode)
     | List [AstNode]
     | Import String
