@@ -46,9 +46,10 @@ parseValue (c : bytes) = case fromEnum c of
     0x12 -> parseInteger bytes >>= \(l, rest) -> parseInt rest >>= \(r, rest') -> Right (Float (encodeFloat l r), rest')
     0x14 -> parseString bytes >>= \(val, rest) -> Right (String val, rest)
     0x15 -> parseCall bytes >>= \(val, rest) -> Right (Symbol val, rest)
-    0x16 -> parseInt bytes >>= \(args, rest) ->
-        parseInt rest >>= \(len, rest') ->
-            let (insts, rest'') = splitAt len rest' in parseInstructions insts >>= \func -> if length rest' < len then Left "Wrong lambda body length" else Right (Lambda args func, rest'')
+    0x16 ->
+        parseInt bytes >>= \(args, rest) ->
+            parseInt rest >>= \(len, rest') ->
+                let (insts, rest'') = splitAt len rest' in parseInstructions insts >>= \func -> if length rest' < len then Left "Wrong lambda body length" else Right (Lambda args func, rest'')
     0x17 -> Right (Void, bytes)
     _ -> Left "Unknown value type"
 
