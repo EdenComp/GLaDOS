@@ -5,6 +5,9 @@ module Dreamberd.Compilation.Compile (
     compileNode,
     compileReturn,
     compileFunction,
+    compileIf,
+    compileLoop,
+    compileCall,
 ) where
 
 import Data.Maybe (mapMaybe)
