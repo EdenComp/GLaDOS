@@ -68,6 +68,27 @@ parseEscapeSequence =
         <|> ( parseString "\\t"
                 >> return '\t'
             )
+        <|> ( parseString "\\r"
+                >> return '\r'
+            )
+        <|> ( parseString "\\b"
+                >> return '\b'
+            )
+        <|> ( parseString "\\f"
+                >> return '\f'
+            )
+        <|> ( parseString "\\v"
+                >> return '\v'
+            )
+        <|> ( parseString "\\a"
+                >> return '\a'
+            )
+        <|> ( parseString "\\0"
+                >> return '\0'
+            )
+        <|> ( parseString "\\e"
+                >> return '\ESC'
+            )
 
 parseString :: String -> Parser String
 parseString = traverse parseChar
