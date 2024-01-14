@@ -1,0 +1,42 @@
+fn should_print_star(row, col) {
+    return (((row + col) % 3) == 0) && (((row * col) % 2) == 0);
+}
+
+fn print_pattern_row(size, row) {
+    int col = 0;
+
+    while (col < size) {
+        if (should_print_star(row, col)) {
+            print("*");
+        } else {
+            print(" ");
+        }
+
+        if (col < size - 1) {
+            print(" ");
+        }
+
+        col = col + 1;
+    }
+
+    print("\n");
+}
+
+fn print_pattern(size) {
+    int row = 0;
+
+    while (row < size) {
+        print_pattern_row(size, row);
+        row = row + 1;
+    }
+}
+
+fn main() {
+    int size = 90;
+
+    print_pattern(size);
+
+    return 0;
+}
+
+main();
