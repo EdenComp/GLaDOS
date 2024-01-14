@@ -184,7 +184,7 @@ execBuiltin (Bool l : Bool r : xs) op = case op of
 execBuiltin (String str : Integer nb : xs) op = case op of
     Add -> Right (String (str ++ show nb) : xs)
     Mul -> Right (String (concat $ replicate nb str) : xs)
-    _ -> Left ("Wrong data types in stack: " ++ show op ++ " with a string and a number")
+    _ -> Left ("Wrong data types in stack: " ++ show op ++ " with a string and an integer")
 execBuiltin (String str : r : xs) op = case op of
     Add -> Right (String (str ++ show r) : xs)
     Eq -> Right (Bool (str == show r) : xs)
