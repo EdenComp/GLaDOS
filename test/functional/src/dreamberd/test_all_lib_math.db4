@@ -1,0 +1,47 @@
+import "std:Format";
+import "std:Math";
+
+int randomvarnamesoitssafehaha = is_even(2);
+print(randomvarnamesoitssafehaha);
+randomvarnamesoitssafehaha = is_even(3);
+print(randomvarnamesoitssafehaha);
+
+randomvarnamesoitssafehaha = is_neg(-2);
+print(randomvarnamesoitssafehaha);
+randomvarnamesoitssafehaha = is_neg(3);
+print(randomvarnamesoitssafehaha);
+
+randomvarnamesoitssafehaha = abs(-2);
+print(randomvarnamesoitssafehaha);
+randomvarnamesoitssafehaha = abs(3);
+print(randomvarnamesoitssafehaha);
+
+randomvarnamesoitssafehaha = min(2, 3);
+print(randomvarnamesoitssafehaha);
+randomvarnamesoitssafehaha = min(3, 2);
+print(randomvarnamesoitssafehaha);
+
+randomvarnamesoitssafehaha = max(2, 3);
+print(randomvarnamesoitssafehaha);
+randomvarnamesoitssafehaha = max(3, 2);
+print(randomvarnamesoitssafehaha);
+
+randomvarnamesoitssafehaha = clamp(2, 3, 4);
+print(randomvarnamesoitssafehaha);
+randomvarnamesoitssafehaha = clamp(3, 2, 4);
+print(randomvarnamesoitssafehaha);
+
+randomvarnamesoitssafehaha = clamp(5, 2, 4);
+print(randomvarnamesoitssafehaha);
+randomvarnamesoitssafehaha = clamp(1, 2, 4);
+print(randomvarnamesoitssafehaha);
+
+randomvarnamesoitssafehaha = clamp(3, 2, 4);
+print(randomvarnamesoitssafehaha);
+randomvarnamesoitssafehaha = clamp(4, 2, 4);
+print(randomvarnamesoitssafehaha);
+
+randomvarnamesoitssafehaha = factorial(5);
+print(randomvarnamesoitssafehaha);
+randomvarnamesoitssafehaha = factorial(0);
+print(randomvarnamesoitssafehaha);
