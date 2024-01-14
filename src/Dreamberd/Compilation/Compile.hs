@@ -60,8 +60,8 @@ compileFunction params name args body =
 compileCall :: [String] -> String -> [AST.AstNode] -> Either String [VM.Insts]
 compileCall params "=" [_, AST.Identifier iden, value] = compileAssignation params iden value False
 compileCall params "=" [AST.Identifier iden, value] = compileAssignation params iden value True
-compileCall _ "-" [AST.Integer n] = Right [VM.Push $ VM.Integer (-n)]
-compileCall _ "-" [AST.Float n] = Right [VM.Push $ VM.Float (-n)]
+compileCall params "-" [node] = compileBuiltinCall params "*" [node, AST.Integer (-1)]
+compileCall params "+" [node] = compileNode params node
 compileCall params [op, '='] [AST.Identifier iden, value]
     | op `elem` "+-*/%" =
         compileBuiltinCall params [op] [AST.Identifier iden, value]
@@ -70,8 +70,9 @@ compileCall params [op, op2, '='] [AST.Identifier iden, value]
     | op `elem` "&|" =
         compileBuiltinCall params [op, op2] [AST.Identifier iden, value]
             >>= \opInsts -> Right $ opInsts ++ [VM.DefineEnv iden True Nothing]
-compileCall params "++" [AST.Identifier iden] = compileBuiltinCall params "+" [AST.Identifier iden, AST.Integer 1] >>= \opInsts -> Right $ opInsts ++ [VM.DefineEnv iden True Nothing, VM.PushEnv iden]
-compileCall params "--" [AST.Identifier iden] = compileBuiltinCall params "-" [AST.Identifier iden, AST.Integer 1] >>= \opInsts -> Right $ opInsts ++ [VM.DefineEnv iden True Nothing, VM.PushEnv iden]
+compileCall params [opA, opB] [AST.Identifier iden]
+    | opA `elem` "+-" && opA == opB =
+        (++) <$> compileBuiltinCall params [opA] [AST.Identifier iden, AST.Integer 1] <*> Right [VM.DefineEnv iden True Nothing, VM.PushEnv iden]
 compileCall params op args = compileBuiltinCall params op args <> compileCustomCall params op args
 
 getScopedInstructions :: [VM.Insts] -> [VM.Insts]
