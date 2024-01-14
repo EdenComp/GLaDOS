@@ -1,3 +1,35 @@
+<a name="v0.9.0"></a>
+# [v0.9.0 🌈](https://github.com/EdenComp/GLaDOS/releases/tag/v0.9.0) - 14 Jan 2024
+
+## Changes
+
+Multiple parsing and pre processing improvements
+
+## 🚀 Features
+
+- feat(preprocess): Function hoisting [@EdenComp](https://github.com/EdenComp) ([#94](https://github.com/EdenComp/GLaDOS/issues/94))
+- Parsing: Returning without returning [@Croos3r](https://github.com/Croos3r) ([#95](https://github.com/EdenComp/GLaDOS/issues/95))
+- Compilation: generalization of the unary operators + and - to all expression [@Croos3r](https://github.com/Croos3r) ([#93](https://github.com/EdenComp/GLaDOS/issues/93))
+- Now taking argument as variables (making them mutable) [@EdenComp](https://github.com/EdenComp) ([#92](https://github.com/EdenComp/GLaDOS/issues/92))
+- input function to read stdin [@EdenComp](https://github.com/EdenComp) ([#91](https://github.com/EdenComp/GLaDOS/issues/91))
+- We can now return void/nothing instead of an expression [@Croos3r](https://github.com/Croos3r) ([#90](https://github.com/EdenComp/GLaDOS/issues/90))
+- Preprocessing (1): Imports [@EdenComp](https://github.com/EdenComp) ([#74](https://github.com/EdenComp/GLaDOS/issues/74))
+- Parsing: syntactic sugar for scopes with only one statement [@Croos3r](https://github.com/Croos3r) ([#88](https://github.com/EdenComp/GLaDOS/issues/88))
+- Parsing: Implementation of float values [@Croos3r](https://github.com/Croos3r) ([#85](https://github.com/EdenComp/GLaDOS/issues/85))
+- Parsing: handling of comments [@Croos3r](https://github.com/Croos3r) ([#83](https://github.com/EdenComp/GLaDOS/issues/83))
+- Removed print of the main scope return value [@EdenComp](https://github.com/EdenComp) ([#81](https://github.com/EdenComp/GLaDOS/issues/81))
+- Scopes index for environment [@EdenComp](https://github.com/EdenComp) ([#79](https://github.com/EdenComp/GLaDOS/issues/79))
+
+## 🧰 Maintenance
+
+- fix: compilation and unit tests launch [@EdenComp](https://github.com/EdenComp) ([#87](https://github.com/EdenComp/GLaDOS/issues/87))
+- build(deps): bump tj-actions/changed-files from 39 to 41 in /.github/workflows [@dependabot](https://github.com/dependabot) ([#96](https://github.com/EdenComp/GLaDOS/issues/96))
+- refacto parsing unit test  [@pablo0675](https://github.com/pablo0675) ([#82](https://github.com/EdenComp/GLaDOS/issues/82))
+- Update changelog for "v0.8.0" [@github-actions](https://github.com/github-actions) ([#80](https://github.com/EdenComp/GLaDOS/issues/80))
+
+[Changes][v0.9.0]
+
+
 <a name="v0.8.0"></a>
 # [v0.8.0 🌈](https://github.com/EdenComp/GLaDOS/releases/tag/v0.8.0) - 13 Jan 2024
 
@@ -221,6 +253,7 @@ Project setup with CI, evaluation of SExpr and documentation
 [Changes][v0.1.0]
 
 
+[v0.9.0]: https://github.com/EdenComp/GLaDOS/compare/v0.8.0...v0.9.0
 [v0.8.0]: https://github.com/EdenComp/GLaDOS/compare/v0.7.0...v0.8.0
 [v0.7.0]: https://github.com/EdenComp/GLaDOS/compare/v0.6.0...v0.7.0
 [v0.6.0]: https://github.com/EdenComp/GLaDOS/compare/v0.5.0...v0.6.0
