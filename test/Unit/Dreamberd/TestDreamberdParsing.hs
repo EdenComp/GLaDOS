@@ -1,6 +1,6 @@
 module Unit.Dreamberd.TestDreamberdParsing (testDreamberdParsing) where
 
-import Dreamberd.Parser (parse, parseAndWith, parseChar, parseDreamberd, parseInteger, parseMany, parseBinaryOperator)
+import Dreamberd.Parser (parse, parseAndWith, parseBinaryOperator, parseChar, parseDreamberd, parseInteger, parseMany)
 import Dreamberd.Types (AstNode (..), File (File))
 import Test.HUnit (Test (..), assertBool, assertEqual)
 
@@ -51,62 +51,104 @@ testParseMany =
 
 testParseBinaryOperator :: Test
 testParseBinaryOperator =
-    TestList [
-        TestCase (assertEqual "parse addition operator"
-            (Right ("+", ("", ("", 1, 2))))
-            (parse parseBinaryOperator ("+", ("", 1, 1)))),
-
-        TestCase (assertEqual "parse subtraction operator"
-            (Right ("-", ("", ("", 1, 2))))
-            (parse parseBinaryOperator ("-", ("", 1, 1)))),
-
-        TestCase (assertEqual "parse multiplication operator"
-            (Right ("*", ("", ("", 1, 2))))
-            (parse parseBinaryOperator ("*", ("", 1, 1)))),
-
-        TestCase (assertEqual "parse division operator"
-            (Right ("/", ("", ("", 1, 2))))
-            (parse parseBinaryOperator ("/", ("", 1, 1)))),
-
-        TestCase (assertEqual "parse modulus operator"
-            (Right ("%", ("", ("", 1, 2))))
-            (parse parseBinaryOperator ("%", ("", 1, 1)))),
-
-        TestCase (assertEqual "parse equality operator"
-            (Right ("==", ("", ("", 1, 3))))
-            (parse parseBinaryOperator ("==", ("", 1, 1)))),
-
-        TestCase (assertEqual "parse inequality operator"
-            (Right ("!=", ("", ("", 1, 3))))
-            (parse parseBinaryOperator ("!=", ("", 1, 1)))),
-        TestCase (assertEqual "parse less than operator"
-            (Right ("<", ("", ("", 1, 2))))
-            (parse parseBinaryOperator ("<", ("", 1, 1)))),
-        TestCase (assertEqual "parse less than or equal operator"
-            (Right ("<=", ("", ("", 1, 3))))
-            (parse parseBinaryOperator ("<=", ("", 1, 1)))),
-        TestCase (assertEqual "parse greater than operator"
-            (Right (">", ("", ("", 1, 2))))
-            (parse parseBinaryOperator (">", ("", 1, 1)))),
-        TestCase (assertEqual "parse greater than or equal operator"
-            (Right (">=", ("", ("", 1, 3))))
-            (parse parseBinaryOperator (">=", ("", 1, 1)))),
-        TestCase (assertEqual "parse and operator"
-            (Right ("&&", ("", ("", 1, 3))))
-            (parse parseBinaryOperator ("&&", ("", 1, 1)))),
-        TestCase (assertEqual "parse or operator"
-            (Right ("||", ("", ("", 1, 3))))
-            (parse parseBinaryOperator ("||", ("", 1, 1)))),
-        TestCase (assertEqual "parse xor operator"
-            (Right ("^", ("", ("", 1, 2))))
-            (parse parseBinaryOperator ("^", ("", 1, 1)))),
-        TestCase (assertEqual "parse bitwise and operator"
-            (Left ":1:1: Expected '%' but found '&'")
-            (parse parseBinaryOperator ("&", ("", 1, 1)))),
-        TestCase (assertEqual "parse bitwise or operator"
-            (Left ":1:1: Expected '%' but found '|'")
-            (parse parseBinaryOperator ("|", ("", 1, 1))))
-    ]
+    TestList
+        [ TestCase
+            ( assertEqual
+                "parse addition operator"
+                (Right ("+", ("", ("", 1, 2))))
+                (parse parseBinaryOperator ("+", ("", 1, 1)))
+            )
+        , TestCase
+            ( assertEqual
+                "parse subtraction operator"
+                (Right ("-", ("", ("", 1, 2))))
+                (parse parseBinaryOperator ("-", ("", 1, 1)))
+            )
+        , TestCase
+            ( assertEqual
+                "parse multiplication operator"
+                (Right ("*", ("", ("", 1, 2))))
+                (parse parseBinaryOperator ("*", ("", 1, 1)))
+            )
+        , TestCase
+            ( assertEqual
+                "parse division operator"
+                (Right ("/", ("", ("", 1, 2))))
+                (parse parseBinaryOperator ("/", ("", 1, 1)))
+            )
+        , TestCase
+            ( assertEqual
+                "parse modulus operator"
+                (Right ("%", ("", ("", 1, 2))))
+                (parse parseBinaryOperator ("%", ("", 1, 1)))
+            )
+        , TestCase
+            ( assertEqual
+                "parse equality operator"
+                (Right ("==", ("", ("", 1, 3))))
+                (parse parseBinaryOperator ("==", ("", 1, 1)))
+            )
+        , TestCase
+            ( assertEqual
+                "parse inequality operator"
+                (Right ("!=", ("", ("", 1, 3))))
+                (parse parseBinaryOperator ("!=", ("", 1, 1)))
+            )
+        , TestCase
+            ( assertEqual
+                "parse less than operator"
+                (Right ("<", ("", ("", 1, 2))))
+                (parse parseBinaryOperator ("<", ("", 1, 1)))
+            )
+        , TestCase
+            ( assertEqual
+                "parse less than or equal operator"
+                (Right ("<=", ("", ("", 1, 3))))
+                (parse parseBinaryOperator ("<=", ("", 1, 1)))
+            )
+        , TestCase
+            ( assertEqual
+                "parse greater than operator"
+                (Right (">", ("", ("", 1, 2))))
+                (parse parseBinaryOperator (">", ("", 1, 1)))
+            )
+        , TestCase
+            ( assertEqual
+                "parse greater than or equal operator"
+                (Right (">=", ("", ("", 1, 3))))
+                (parse parseBinaryOperator (">=", ("", 1, 1)))
+            )
+        , TestCase
+            ( assertEqual
+                "parse and operator"
+                (Right ("&&", ("", ("", 1, 3))))
+                (parse parseBinaryOperator ("&&", ("", 1, 1)))
+            )
+        , TestCase
+            ( assertEqual
+                "parse or operator"
+                (Right ("||", ("", ("", 1, 3))))
+                (parse parseBinaryOperator ("||", ("", 1, 1)))
+            )
+        , TestCase
+            ( assertEqual
+                "parse xor operator"
+                (Right ("^", ("", ("", 1, 2))))
+                (parse parseBinaryOperator ("^", ("", 1, 1)))
+            )
+        , TestCase
+            ( assertEqual
+                "parse bitwise and operator"
+                (Left ":1:1: Expected '%' but found '&'")
+                (parse parseBinaryOperator ("&", ("", 1, 1)))
+            )
+        , TestCase
+            ( assertEqual
+                "parse bitwise or operator"
+                (Left ":1:1: Expected '%' but found '|'")
+                (parse parseBinaryOperator ("|", ("", 1, 1)))
+            )
+        ]
 
 testParseDreamberd :: Test
 testParseDreamberd =
@@ -490,8 +532,8 @@ testParseDreamberd =
                 (Right [Function "strcmp" ["str1", "str2"] [If (Call "==" [Identifier "str1", String ""]) [If (Call "==" [Identifier "str2", String ""]) [Return $ Just $ Integer 0] [Return $ Just $ Call "-" [Integer 1]]] [If (Call "==" [Identifier "str2", String ""]) [Return $ Just $ Integer 1] [If (Call "==" [Call "substr" [Identifier "str1", Integer 0, Integer 1], Call "substr" [Identifier "str2", Integer 0, Integer 1]]) [Return $ Just $ Call "strcmp" [Call "substr" [Identifier "str1", Integer 1], Call "substr" [Identifier "str2", Integer 1]]] [If (Call "<" [Call "substr" [Identifier "str1", Integer 0, Integer 1], Call "substr" [Identifier "str2", Integer 0, Integer 1]]) [Return $ Just $ Call "-" [Integer 1]] [Return $ Just $ Integer 1]]]]]])
                 (parseDreamberd (File "" "fn strcmp(str1,str2){if(str1==\"\"){if(str2==\"\"){return 0;}else{return -1;}}else{if(str2==\"\"){return 1;}else{if(substr(str1,0,1)==substr(str2,0,1)){return strcmp(substr(str1,1),substr(str2,1));}else{if(substr(str1,0,1)<substr(str2,0,1)){return -1;}else{return 1;}}}}}\n"))
             )
-        -- Test that should fail
-        , TestCase
+        , -- Test that should fail
+          TestCase
             ( assertEqual
                 "parse a strcmp function in dreamberd4 no space"
                 (Left ":1:3: Expected ';' but found 's'")
