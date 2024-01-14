@@ -10,7 +10,7 @@ module Dreamberd.Bytecode.Encode (
 
 import Data.Bits (shiftR)
 import Data.Char (chr)
-import Dreamberd.Vm (Call (..), EnvValue (..), Insts (..), Value (..))
+import Dreamberd.Vm (Call (..), DefineEnvType (..), EnvValue (..), Insts (..), Value (..))
 import System.Endian (Endianness (..), getSystemEndianness)
 
 getIntegerSize :: Integer -> Int
@@ -58,8 +58,9 @@ transpileInstruction (Push v) = toEnum 0x01 : transpileValue v
 transpileInstruction (PushArg idx) = toEnum 0x02 : transpileInt idx
 transpileInstruction (PushEnv env) = toEnum 0x03 : transpileString env
 transpileInstruction Call = [toEnum 0x04]
-transpileInstruction (DefineEnv name True value) = toEnum 0x05 : transpileString name ++ [toEnum 0x51] ++ transpileEnvValue value
-transpileInstruction (DefineEnv name False value) = toEnum 0x05 : transpileString name ++ [toEnum 0x52] ++ transpileEnvValue value
+transpileInstruction (DefineEnv name Define value) = toEnum 0x05 : transpileString name ++ [toEnum 0x45] ++ transpileEnvValue value
+transpileInstruction (DefineEnv name Redefine value) = toEnum 0x05 : transpileString name ++ [toEnum 0x46] ++ transpileEnvValue value
+transpileInstruction (DefineEnv name Override value) = toEnum 0x05 : transpileString name ++ [toEnum 0x47] ++ transpileEnvValue value
 transpileInstruction (EraseEnv name) = toEnum 0x06 : transpileString name
 transpileInstruction (Jump nb (Just True)) = toEnum 0x07 : transpileInt nb ++ [toEnum 0x51]
 transpileInstruction (Jump nb (Just False)) = toEnum 0x07 : transpileInt nb ++ [toEnum 0x52]

@@ -55,7 +55,7 @@ compileReturn _ Nothing = Right [VM.Push VM.Void, VM.Ret]
 compileFunction :: [String] -> String -> [String] -> [AST.AstNode] -> Either String [VM.Insts]
 compileFunction params name args body =
     compileNodes (args ++ params) body []
-        >>= \bodyInsts -> Right [VM.DefineEnv name False (Just $ VM.Function (concatMap (\nb -> [VM.PushArg nb, VM.DefineEnv (args !! nb) False Nothing]) [0 .. (length args - 1)] ++ bodyInsts ++ map VM.EraseEnv args))]
+        >>= \bodyInsts -> Right [VM.DefineEnv name VM.Define (Just $ VM.Function (concatMap (\nb -> [VM.PushArg nb, VM.DefineEnv (args !! nb) VM.Override Nothing]) [0 .. (length args - 1)] ++ bodyInsts ++ map VM.EraseEnv args))]
 
 compileCall :: [String] -> String -> [AST.AstNode] -> Either String [VM.Insts]
 compileCall params "=" [_, AST.Identifier iden, value] = compileAssignation params iden value False
@@ -65,14 +65,13 @@ compileCall params "+" [node] = compileNode params node
 compileCall params [op, '='] [AST.Identifier iden, value]
     | op `elem` "+-*/%" =
         compileBuiltinCall params [op] [AST.Identifier iden, value]
-            >>= \opInsts -> Right $ opInsts ++ [VM.DefineEnv iden True Nothing]
+            >>= \opInsts -> Right $ opInsts ++ [VM.DefineEnv iden VM.Redefine Nothing]
 compileCall params [op, op2, '='] [AST.Identifier iden, value]
     | op `elem` "&|" =
         compileBuiltinCall params [op, op2] [AST.Identifier iden, value]
-            >>= \opInsts -> Right $ opInsts ++ [VM.DefineEnv iden True Nothing]
-compileCall params [opA, opB] [AST.Identifier iden]
-    | opA `elem` "+-" && opA == opB =
-        (++) <$> compileBuiltinCall params [opA] [AST.Identifier iden, AST.Integer 1] <*> Right [VM.DefineEnv iden True Nothing, VM.PushEnv iden]
+            >>= \opInsts -> Right $ opInsts ++ [VM.DefineEnv iden VM.Redefine Nothing]
+compileCall params "++" [AST.Identifier iden] = compileBuiltinCall params "+" [AST.Identifier iden, AST.Integer 1] >>= \opInsts -> Right $ opInsts ++ [VM.DefineEnv iden VM.Redefine Nothing, VM.PushEnv iden]
+compileCall params "--" [AST.Identifier iden] = compileBuiltinCall params "-" [AST.Identifier iden, AST.Integer 1] >>= \opInsts -> Right $ opInsts ++ [VM.DefineEnv iden VM.Redefine Nothing, VM.PushEnv iden]
 compileCall params op args = compileBuiltinCall params op args <> compileCustomCall params op args
 
 getScopedInstructions :: [VM.Insts] -> [VM.Insts]
@@ -136,8 +135,8 @@ compileCustomCall :: [String] -> String -> [AST.AstNode] -> Either String [VM.In
 compileCustomCall params name args = mapM (compileNode params) args >>= \args' -> Right $ concat (reverse args') ++ [VM.PushEnv name, VM.Call]
 
 compileAssignation :: [String] -> String -> AST.AstNode -> Bool -> Either String [VM.Insts]
-compileAssignation params iden value False = compileNode params value >>= \pushInsts -> Right $ pushInsts ++ [VM.DefineEnv iden False Nothing]
-compileAssignation params iden value True = compileNode params value >>= \pushInsts -> Right $ pushInsts ++ [VM.DefineEnv iden True Nothing]
+compileAssignation params iden value False = compileNode params value >>= \pushInsts -> Right $ pushInsts ++ [VM.DefineEnv iden VM.Define Nothing]
+compileAssignation params iden value True = compileNode params value >>= \pushInsts -> Right $ pushInsts ++ [VM.DefineEnv iden VM.Redefine Nothing]
 
 compileValuePush :: AST.AstNode -> Either String VM.Insts
 compileValuePush (AST.Boolean b) = Right $ VM.Push $ VM.Bool b

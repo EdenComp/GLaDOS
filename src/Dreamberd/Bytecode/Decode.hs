@@ -4,7 +4,7 @@ module Dreamberd.Bytecode.Decode (
 
 import Data.Bits (shiftL, (.|.))
 import Data.Char (ord)
-import Dreamberd.Vm (Call (..), EnvValue (..), Insts (..), Value (..))
+import Dreamberd.Vm (Call (..), DefineEnvType (..), EnvValue (..), Insts (..), Value (..))
 
 parseInt :: [Char] -> Either String (Int, [Char])
 parseInt (b1 : b2 : b3 : b4 : b5 : b6 : b7 : b8 : rest) = Right ((ord b1 `shiftL` 56) .|. (ord b2 `shiftL` 48) .|. (ord b3 `shiftL` 40) .|. (ord b4 `shiftL` 32) .|. (ord b5 `shiftL` 24) .|. (ord b6 `shiftL` 16) .|. (ord b7 `shiftL` 8) .|. ord b8, rest)
@@ -62,8 +62,9 @@ parseEnvValue (c : bytes)
 parseDefineEnv :: String -> [Char] -> Either String (Insts, [Char])
 parseDefineEnv _ [] = Left "No value provided"
 parseDefineEnv name (c : bytes) = case fromEnum c of
-    0x51 -> parseEnvValue bytes >>= \(val, rest) -> Right (DefineEnv name True val, rest)
-    0x52 -> parseEnvValue bytes >>= \(val, rest) -> Right (DefineEnv name False val, rest)
+    0x45 -> parseEnvValue bytes >>= \(val, rest) -> Right (DefineEnv name Define val, rest)
+    0x46 -> parseEnvValue bytes >>= \(val, rest) -> Right (DefineEnv name Redefine val, rest)
+    0x47 -> parseEnvValue bytes >>= \(val, rest) -> Right (DefineEnv name Override val, rest)
     _ -> Left "Unknown define env"
 
 parseJump :: (Int, [Char]) -> Either String [Insts]
