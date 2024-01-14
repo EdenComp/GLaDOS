@@ -4,7 +4,7 @@ module Dreamberd.Compilation.Preprocessing (
     executePreprocessing,
 ) where
 
-import Data.List (partition, elemIndex, intercalate)
+import Data.List (elemIndex, intercalate, partition)
 import Dreamberd.Parser (parseDreamberd)
 import Dreamberd.Types (AstNode (..), File (..))
 import System.Directory (getCurrentDirectory, getHomeDirectory)
@@ -77,7 +77,7 @@ sanitizeSimpleDots (x : xs) = x : sanitizeSimpleDots xs
 
 sanitizeDoubleDots :: String -> FilePath
 sanitizeDoubleDots [] = []
-sanitizeDoubleDots path = case elemIndex ".." folders of 
+sanitizeDoubleDots path = case elemIndex ".." folders of
     Just idx -> sanitizeDoubleDots $ '/' : intercalate "/" (take (idx - 1) folders ++ drop (idx + 1) folders)
     Nothing -> path
   where
