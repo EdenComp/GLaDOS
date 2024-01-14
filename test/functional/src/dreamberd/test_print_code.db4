@@ -1,0 +1,1 @@
+print("fn test(){return \"hello\";}print(test());");

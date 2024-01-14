@@ -1,0 +1,5 @@
+fn text() {
+    return "Hello World";
+}
+
+print(text());
