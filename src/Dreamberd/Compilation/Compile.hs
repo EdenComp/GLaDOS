@@ -1,6 +1,7 @@
 module Dreamberd.Compilation.Compile (
     compileAst,
     compileValuePush,
+    getBuiltinCallForOp,
 ) where
 
 import Data.Maybe (mapMaybe)
