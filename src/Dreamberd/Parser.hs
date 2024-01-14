@@ -349,7 +349,20 @@ parseConditionalScope =
                 >>= \body -> return (condition, body)
 
 parseScope :: Parser [AstNode]
-parseScope = parseEnclosed ("{", "}") (parseLineComments *> parseMany parseStatement <* parseLineComments)
+parseScope =
+    parseEnclosed
+        ("{", "}")
+        ( parseLineComments
+            *> ( getStatements
+                    <$> parseMany parseStatement
+                    <*> parseStripped (optional parseExpression)
+               )
+            <* parseLineComments
+        )
+  where
+    getStatements :: [AstNode] -> Maybe AstNode -> [AstNode]
+    getStatements statements Nothing = statements
+    getStatements statements expression = statements ++ [Return expression]
 
 parseEnclosed :: (String, String) -> Parser a -> Parser a
 parseEnclosed (open, close) p =
