@@ -70,8 +70,9 @@ compileCall params [op, op2, '='] [AST.Identifier iden, value]
     | op `elem` "&|" =
         compileBuiltinCall params [op, op2] [AST.Identifier iden, value]
             >>= \opInsts -> Right $ opInsts ++ [VM.DefineEnv iden VM.Redefine Nothing]
-compileCall params "++" [AST.Identifier iden] = compileBuiltinCall params "+" [AST.Identifier iden, AST.Integer 1] >>= \opInsts -> Right $ opInsts ++ [VM.DefineEnv iden VM.Redefine Nothing, VM.PushEnv iden]
-compileCall params "--" [AST.Identifier iden] = compileBuiltinCall params "-" [AST.Identifier iden, AST.Integer 1] >>= \opInsts -> Right $ opInsts ++ [VM.DefineEnv iden VM.Redefine Nothing, VM.PushEnv iden]
+compileCall params [opA, opB] [AST.Identifier iden]
+    | opA `elem` "+-" && opA == opB =
+        (++) <$> compileBuiltinCall params [opA] [AST.Identifier iden, AST.Integer 1] <*> Right [VM.DefineEnv iden VM.Redefine Nothing, VM.PushEnv iden]
 compileCall params op args = compileBuiltinCall params op args <> compileCustomCall params op args
 
 getScopedInstructions :: [VM.Insts] -> [VM.Insts]
