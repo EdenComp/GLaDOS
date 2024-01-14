@@ -53,7 +53,7 @@ getImportPackage (x : xs) package = getImportPackage xs (package ++ [x])
 resolvePath :: String -> FilePath
 resolvePath [] = ".db4"
 resolvePath ['.', 'd', 'b', '4'] = ".db4"
-resolvePath (x:xs) = x : resolvePath xs
+resolvePath (x : xs) = x : resolvePath xs
 
 getFileDirectory :: FilePath -> FilePath
 getFileDirectory = reverse . dropWhile (/= '/') . reverse
