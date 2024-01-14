@@ -253,7 +253,7 @@ parseStringLiteral = parseChar '\"' *> parseMany (parseEscapeSequence <|> parseA
 parseVariableDeclaration :: Parser AstNode
 parseVariableDeclaration =
     parseManyWhiteSpaces
-        >> parseIdentifier
+        >> (Identifier <$> parseTypeIdentifier)
         >>= \typeIdentifier ->
             parseSomeWhiteSpaces
                 >> parseStripped parseIdentifier
@@ -261,6 +261,14 @@ parseVariableDeclaration =
                     parseStripped (parseChar '=')
                         >> parseStripped parseExpression
                         >>= \expression -> return $ Call "=" [typeIdentifier, variableIdentifier, expression]
+
+parseTypeIdentifier :: Parser String
+parseTypeIdentifier =
+    parseString "int"
+        <|> parseString "float"
+        <|> parseString "str"
+        <|> parseString "bool"
+        <|> parseString "num"
 
 parseIdentifierString :: Parser String
 parseIdentifierString = parseAndWith (++) (parseSome $ parseAnyChar $ ['a' .. 'z'] ++ ['A' .. 'Z'] ++ ['_']) (parseMany $ parseAnyChar $ ['a' .. 'z'] ++ ['A' .. 'Z'] ++ ['_'] ++ ['0' .. '9'])
