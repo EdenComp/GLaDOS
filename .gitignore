@@ -14,6 +14,7 @@ glados
 *.hi
 *.o
 a.out
+SANDBOX*
 
 # Coverage
 test/coverage/
