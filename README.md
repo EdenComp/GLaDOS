@@ -1,4 +1,4 @@
-# DreamBerd 4
+# GLaDOS - DreamBerd 4
 
 Dreamberd v4 is a fully-fledged language that allows you to code you dream app in an elegant syntax.
 
@@ -15,7 +15,7 @@ make  # Build
 ## How it works 🤔
 
 If you're here for the technical details, we got you covered too!
-You can dive into the architecture documentation explaining how we are [compiling and executing your db4 code]()
+You can dive into the architecture documentation explaining how we are [compiling and executing your db4 code](https://docs.dreamberd.fr/#/general/compilation)
 
 > 💡 Some pretty standard parts may not be covered, but don't hesitate to reach out by creating an issue on [our repository](https://github.com/EdenComp/GLaDOS), we'll be happy to help you!
 
