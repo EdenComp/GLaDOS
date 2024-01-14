@@ -81,10 +81,9 @@ preprocessFunctions :: [AstNode] -> [AstNode]
 preprocessFunctions a = map hoistFunctions functions ++ map hoistFunctions rest
   where
     (functions, rest) = partition isFunction a
-
-isFunction :: AstNode -> Bool
-isFunction Function{} = True
-isFunction _ = False
+    isFunction :: AstNode -> Bool
+    isFunction Function{} = True
+    isFunction _ = False
 
 hoistFunctions :: AstNode -> AstNode
 hoistFunctions (Function name args ast) = Function name args (preprocessFunctions ast)
