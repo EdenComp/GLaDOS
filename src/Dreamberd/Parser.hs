@@ -1,4 +1,4 @@
-module Dreamberd.Parser (parseDreamberd, parse, Parser, parseChar, parseAnyChar, parseAndWith, parseMany, parseSome, parseInteger) where
+module Dreamberd.Parser (parseDreamberd, parse, Parser, parseChar, parseAnyChar, parseAndWith, parseMany, parseSome, parseInteger, parseBinaryOperator) where
 
 import Control.Applicative (Alternative (..))
 import Dreamberd.Types (AstNode (..), File (..))
