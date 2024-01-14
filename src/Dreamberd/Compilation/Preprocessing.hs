@@ -78,7 +78,7 @@ importFile lib (imports, code) = case parseDreamberd (File lib code) of
     Left err -> return $ Left ("Error while importing " ++ lib ++ ": " ++ err)
 
 preprocessFunctions :: [AstNode] -> [AstNode]
-preprocessFunctions a = concatMap hoistFunction functions ++ rest
+preprocessFunctions a = concatMap hoistFunctions functions ++ concatMap hoistFunctions rest
   where
     (functions, rest) = partition isFunction a
 
@@ -86,6 +86,8 @@ isFunction :: AstNode -> Bool
 isFunction Function{} = True
 isFunction _ = False
 
-hoistFunction :: AstNode -> [AstNode]
-hoistFunction (Function name args ast) = [Function name args (preprocessFunctions ast)]
-hoistFunction _ = []
+hoistFunctions :: AstNode -> [AstNode]
+hoistFunctions (Function name args ast) = [Function name args (preprocessFunctions ast)]
+hoistFunctions (If cond trueBody falseBody) = [If cond (preprocessFunctions trueBody) (preprocessFunctions falseBody)]
+hoistFunctions (Loop test body initNode updateNode) = [Loop test (preprocessFunctions body) initNode updateNode]
+hoistFunctions _ = []
