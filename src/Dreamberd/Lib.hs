@@ -17,6 +17,7 @@ import Dreamberd.Parser (parseDreamberd)
 import Dreamberd.Types (File (..))
 import Dreamberd.Vm (Insts (..), Value (..), execVM)
 import System.Exit (ExitCode (ExitFailure), exitWith)
+import Dreamberd.Bytecode.Pretty (prettyPrintInsts)
 
 compileDreamberdCode :: File String -> String -> IO ()
 compileDreamberdCode (File filename sourcecode) outputFile =
@@ -78,7 +79,7 @@ compileToVm (File filename sourcecode) =
         Right ast ->
             executePreprocessing (File filename ast) >>= \case
                 Right ast' -> case compileAst ast' of
-                    Right insts -> print insts
+                    Right insts -> putStr $ prettyPrintInsts insts
                     Left err -> returnWithError err
                 Left err -> returnWithError err
         Left err -> returnWithError err
