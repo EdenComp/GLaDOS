@@ -86,6 +86,8 @@ jobs:
           stack-version: ${{ env.STACK_VERSION }}
       - name: Repository checkout
         uses: actions/checkout@v4
+      - name: Standard lib installation
+        run: make install
       - name: Run functional tests
         timeout-minutes: 10
         run: make func_tests

@@ -9,47 +9,63 @@ import Dreamberd.Types (AstNode (..), File (..))
 import System.Directory (getCurrentDirectory, getHomeDirectory)
 
 executePreprocessing :: File [AstNode] -> IO (Either String [AstNode])
-executePreprocessing (File filename nodes) =
-    preprocessNodes nodes [filename] >>= \case
+executePreprocessing (File filename nodes) = do
+    current <- getCurrentDirectory
+    preprocessNodes nodes (if head filename == '/' then filename else current ++ "/" ++ filename) [if head filename == '/' then filename else current ++ "/" ++ filename] >>= \case
         Left err -> return $ Left err
         Right (_, nodes') -> return $ Right nodes'
 
-preprocessNodes :: [AstNode] -> [String] -> IO (Either String ([String], [AstNode]))
-preprocessNodes [] imports = return $ Right (imports, [])
-preprocessNodes (Import path : rest) imports =
-    preprocessImport path imports >>= \case
+preprocessNodes :: [AstNode] -> String -> [String] -> IO (Either String ([String], [AstNode]))
+preprocessNodes [] _ imports = return $ Right (imports, [])
+preprocessNodes (Import path : rest) filename imports = do
+    preprocessImport path filename imports >>= \case
         Right (imports', nodes) ->
-            preprocessNodes rest imports' >>= \case
+            preprocessNodes rest filename imports' >>= \case
                 Right (imports'', nodes') -> return $ Right (imports'', nodes ++ nodes')
                 Left err -> return $ Left err
         Left err -> return $ Left err
-preprocessNodes (x : xs) imports =
-    preprocessNodes xs imports >>= \case
+preprocessNodes (x : xs) filename imports =
+    preprocessNodes xs filename imports >>= \case
         Right (imports', nodes) -> return $ Right (imports', x : nodes)
         Left err -> return $ Left err
 
-preprocessImport :: String -> [String] -> IO (Either String ([String], [AstNode]))
-preprocessImport ('s' : 't' : 'd' : ':' : ':' : lib) imports = do
-    home <- getHomeDirectory
-    file <- resolveImport ("std::" ++ lib) (home ++ "/.dreamberd/std/" ++ lib ++ ".db4") imports
-    case file of
-        Left err -> return $ Left err
-        Right (imports', file') -> importFile ("std::" ++ lib) (imports', file')
-preprocessImport lib imports = do
-    current <- getCurrentDirectory
-    file <- resolveImport lib (current ++ "/" ++ lib ++ ".db4") imports
-    case file of
-        Left err -> return $ Left err
-        Right (imports', file') -> importFile lib (imports', file')
+preprocessImport :: String -> String -> [String] -> IO (Either String ([String], [AstNode]))
+preprocessImport lib filename imports = case getImportPackage lib "" of
+    Just (package, lib') -> do
+        home <- getHomeDirectory
+        file <- resolveImport (home ++ "/.dreamberd/" ++ package ++ "/" ++ resolvePath lib') imports
+        case file of
+            Nothing -> return $ Right (imports, [])
+            Just (imports', file') -> importFile (home ++ "/.dreamberd/" ++ package ++ "/" ++ resolvePath lib') (imports', file')
+    Nothing -> do
+        file <- resolveImport path imports
+        case file of
+            Nothing -> return $ Right (imports, [])
+            Just (imports', file') -> importFile path (imports', file')
+      where
+        path = getFileDirectory filename ++ resolvePath lib
 
-resolveImport :: String -> FilePath -> [String] -> IO (Either String ([String], String))
-resolveImport lib path imports = do
+getImportPackage :: String -> String -> Maybe (String, String)
+getImportPackage [] _ = Nothing
+getImportPackage (':' : xs) package = Just (package, xs)
+getImportPackage (x : xs) package = getImportPackage xs (package ++ [x])
+
+resolvePath :: String -> FilePath
+resolvePath [] = ".db4"
+resolvePath ['.', 'd', 'b', '4'] = ".db4"
+resolvePath (x:xs) = x : resolvePath xs
+
+getFileDirectory :: FilePath -> FilePath
+getFileDirectory = reverse . dropWhile (/= '/') . reverse
+
+resolveImport :: FilePath -> [String] -> IO (Maybe ([String], String))
+resolveImport path imports = do
     file <- readFile path
     if path `elem` imports
-        then return $ Left ("Circular dependency detected: " ++ lib)
-        else return $ Right (path : imports, file)
+        then return Nothing
+        else return $ Just (path : imports, file)
 
 importFile :: String -> ([String], String) -> IO (Either String ([String], [AstNode]))
 importFile lib (imports, code) = case parseDreamberd (File lib code) of
-    Right ast -> preprocessNodes ast imports
+    Right ast -> preprocessNodes ast lib imports
     Left err -> return $ Left ("Error while importing " ++ lib ++ ": " ++ err)

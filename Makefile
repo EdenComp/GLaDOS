@@ -19,8 +19,8 @@ fclean: clean
 	$(RM) -r .stack-work
 
 install:
-	mkdir -p ~/.dreamberd
-	cp -r ./lib ~/.dreamberd/std
+	$(RM) -r ~/.dreamberd
+	cp -r ./lib ~/.dreamberd
 
 re: fclean all
 

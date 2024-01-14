@@ -1,0 +1,4 @@
+import "std:Format";
+import "./test_import_basic";
+
+println("Import from local is working!");

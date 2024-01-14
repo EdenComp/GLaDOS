@@ -1,0 +1,18 @@
+// my_fizzbuzz
+// Solo Stumper 2 pour ceux qui ont la ref
+
+import "std:Format";
+
+fn my_fizzbuzz(a) {
+    for (int i = 0; i <= a; i++) {
+        if ((i % 15) == 0) {
+            println("Fizzbuzz");
+        } elif ((i % 5) == 0) {
+            println("Buzz");
+        } elif ((i % 3) == 0) {
+            println("Fizz");
+        } else {
+            println(i);
+        }
+    }
+}

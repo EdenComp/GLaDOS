@@ -1,0 +1,3 @@
+import "std:Format";
+
+println("Import from standard is working!");
