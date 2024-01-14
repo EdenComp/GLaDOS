@@ -76,5 +76,4 @@ testDecodeErrorHandling =
         , TestCase $ assertEqual "wrong integer size (code)" (getFromBytecode "db4\n\SOH\DC2Q\NUL\NUL\NUL\NUL\NUL\NUL\NUL\a\FS\NUL\NUL\NUL\NUL") (Left "Not enough space for an integer")
         , TestCase $ assertEqual "wrong int size" (getFromBytecode "db4\n\SOH\DC2Q\NUL") (Left "Not enough space for an int")
         , TestCase $ assertEqual "wrong int size" (getFromBytecode "db4\n\SOH\DC4\NUL\NUL\NUL\NUL\NUL\NUL\NUL\ENQHell\n") (Left "Wrong string length")
-
         ]
