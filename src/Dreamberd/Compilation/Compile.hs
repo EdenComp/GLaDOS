@@ -2,7 +2,6 @@ module Dreamberd.Compilation.Compile (
     compileAst,
 ) where
 
-import Data.List (elemIndex)
 import Data.Maybe (mapMaybe)
 import qualified Dreamberd.Types as AST
 import qualified Dreamberd.Vm as VM
@@ -25,7 +24,7 @@ compileNode params (AST.If test trueBody falseBody) = compileIf params test true
 compileNode params (AST.Function name args body) = compileFunction params name args body
 compileNode params (AST.Return value) = compileReturn params value
 compileNode params (AST.Loop test body initNode updateNode) = compileLoop params test body initNode updateNode
-compileNode params node = (compileValuePush params node >>= \inst -> Right [inst]) <> Left "Unknown node type"
+compileNode _ node = (compileValuePush node >>= \inst -> Right [inst]) <> Left "Unknown node type"
 
 compileLoop :: [String] -> AST.AstNode -> [AST.AstNode] -> Maybe AST.AstNode -> Maybe AST.AstNode -> Either String [VM.Insts]
 compileLoop params test body initNode updateNode =
@@ -55,7 +54,7 @@ compileReturn _ Nothing = Right [VM.Push VM.Void, VM.Ret]
 compileFunction :: [String] -> String -> [String] -> [AST.AstNode] -> Either String [VM.Insts]
 compileFunction params name args body =
     compileNodes (args ++ params) body []
-        >>= \bodyInsts -> Right [VM.DefineEnv name False $ Just $ VM.Function bodyInsts]
+        >>= \bodyInsts -> Right [VM.DefineEnv name False (Just $ VM.Function (concatMap (\nb -> [VM.PushArg nb, VM.DefineEnv (args !! nb) False Nothing]) [0..(length args - 1)] ++ bodyInsts ++ map VM.EraseEnv args))]
 
 compileCall :: [String] -> String -> [AST.AstNode] -> Either String [VM.Insts]
 compileCall params "=" [_, AST.Identifier iden, value] = compileAssignation params iden value False
@@ -138,10 +137,10 @@ compileAssignation :: [String] -> String -> AST.AstNode -> Bool -> Either String
 compileAssignation params iden value False = compileNode params value >>= \pushInsts -> Right $ pushInsts ++ [VM.DefineEnv iden False Nothing]
 compileAssignation params iden value True = compileNode params value >>= \pushInsts -> Right $ pushInsts ++ [VM.DefineEnv iden True Nothing]
 
-compileValuePush :: [String] -> AST.AstNode -> Either String VM.Insts
-compileValuePush _ (AST.Boolean b) = Right $ VM.Push $ VM.Bool b
-compileValuePush _ (AST.Integer n) = Right $ VM.Push $ VM.Integer n
-compileValuePush _ (AST.String s) = Right $ VM.Push $ VM.String s
-compileValuePush _ (AST.Float f) = Right $ VM.Push $ VM.Float f
-compileValuePush params (AST.Identifier i) = Right $ maybe (VM.PushEnv i) VM.PushArg $ elemIndex i params
-compileValuePush _ _ = Left "Unknown value type"
+compileValuePush :: AST.AstNode -> Either String VM.Insts
+compileValuePush (AST.Boolean b) = Right $ VM.Push $ VM.Bool b
+compileValuePush (AST.Integer n) = Right $ VM.Push $ VM.Integer n
+compileValuePush (AST.String s) = Right $ VM.Push $ VM.String s
+compileValuePush (AST.Float f) = Right $ VM.Push $ VM.Float f
+compileValuePush (AST.Identifier i) = Right $ VM.PushEnv i
+compileValuePush _ = Left "Unknown value type"
