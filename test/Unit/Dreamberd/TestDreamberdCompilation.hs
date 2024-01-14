@@ -58,13 +58,13 @@ testCompileValuePush =
             ( assertEqual
                 "compile Identifier"
                 (Right (VM.PushEnv "x"))
-                (compileValuePush (AST.Identifier "x"))
+                (compileValuePush [] (AST.Identifier "x"))
             )
         , TestCase
             ( assertEqual
                 "compile unknown type"
                 (Left "Unknown value type")
-                (compileValuePush (AST.Function "foo" [] []))
+                (compileValuePush [] (AST.Function "foo" [] []))
             )
         ]
 
