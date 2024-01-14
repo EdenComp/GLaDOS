@@ -4,6 +4,7 @@ module Dreamberd.Compilation.Preprocessing (
     executePreprocessing,
 ) where
 
+import Data.Fixed (mod')
 import Data.List (elemIndex, intercalate, partition)
 import Dreamberd.Parser (parseDreamberd)
 import Dreamberd.Types (AstNode (..), File (..))
@@ -120,10 +121,10 @@ preprocessOptimizations (x : xs) = x : preprocessOptimizations xs
 preprocessOptimizations [] = []
 
 preprocessOptimizations' :: [AstNode] -> [AstNode]
-preprocessOptimizations' (Call name [Integer x, Integer y] : xs) = optimizeIntegerCall name x y : preprocessOptimizations xs
-preprocessOptimizations' (Call name [Float x, Float y] : xs) = optimizeFloatCall name x y : preprocessOptimizations xs
-preprocessOptimizations' (Call name [Boolean x, Boolean y] : xs) = optimizeBoolCall name x y : preprocessOptimizations xs
-preprocessOptimizations' (Call name [String x, String y] : xs) = optimizeStringCall name x y : preprocessOptimizations xs
+preprocessOptimizations' (Call (Identifier name) [Integer x, Integer y] : xs) = optimizeIntegerCall name x y : preprocessOptimizations xs
+preprocessOptimizations' (Call (Identifier name) [Float x, Float y] : xs) = optimizeFloatCall name x y : preprocessOptimizations xs
+preprocessOptimizations' (Call (Identifier name) [Boolean x, Boolean y] : xs) = optimizeBoolCall name x y : preprocessOptimizations xs
+preprocessOptimizations' (Call (Identifier name) [String x, String y] : xs) = optimizeStringCall name x y : preprocessOptimizations xs
 preprocessOptimizations' (x : xs) = x : preprocessOptimizations xs
 preprocessOptimizations' [] = []
 
@@ -141,7 +142,7 @@ optimizeIntegerCall name x y = case name of
     ">" -> Boolean (x > y)
     "<=" -> Boolean (x <= y)
     ">=" -> Boolean (x >= y)
-    _ -> Call name [Integer x, Integer y]
+    _ -> Call (Identifier name) [Integer x, Integer y]
 
 optimizeFloatCall :: String -> Double -> Double -> AstNode
 optimizeFloatCall name x y = case name of
@@ -149,6 +150,7 @@ optimizeFloatCall name x y = case name of
     "-" -> Float (x - y)
     "*" -> Float (x * y)
     "/" -> Float (x / y)
+    "%" -> Float (mod' x y)
     "^" -> Float (x ** y)
     "==" -> Boolean (x == y)
     "!=" -> Boolean (x /= y)
@@ -156,7 +158,7 @@ optimizeFloatCall name x y = case name of
     ">" -> Boolean (x > y)
     "<=" -> Boolean (x <= y)
     ">=" -> Boolean (x >= y)
-    _ -> Call name [Float x, Float y]
+    _ -> Call (Identifier name) [Float x, Float y]
 
 optimizeBoolCall :: String -> Bool -> Bool -> AstNode
 optimizeBoolCall name x y = case name of
@@ -165,11 +167,11 @@ optimizeBoolCall name x y = case name of
     "==" -> Boolean (x == y)
     "!=" -> Boolean (x /= y)
     "^" -> Boolean (x /= y)
-    _ -> Call name [Boolean x, Boolean y]
+    _ -> Call (Identifier name) [Boolean x, Boolean y]
 
 optimizeStringCall :: String -> String -> String -> AstNode
 optimizeStringCall name x y = case name of
     "+" -> String (x ++ y)
     "==" -> Boolean (x == y)
     "!=" -> Boolean (x /= y)
-    _ -> Call name [String x, String y]
+    _ -> Call (Identifier name) [String x, String y]
