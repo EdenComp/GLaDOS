@@ -462,4 +462,22 @@ testParseDreamberd =
                 (Left "'\n' at :1:1")
                 (parseDreamberd (File "" "\n"))
             )
+        , TestCase
+            ( assertEqual
+                "empty file with tab"
+                (Left "'\t' at :1:1")
+                (parseDreamberd (File "" "\t"))
+            )
+        , TestCase
+            ( assertEqual
+                "empty file with carriage return"
+                (Left "'\r' at :1:1")
+                (parseDreamberd (File "" "\r"))
+            )
+        , TestCase
+            ( assertEqual
+                "empty file with carriage return and newline"
+                (Left "'\r\n' at :1:1")
+                (parseDreamberd (File "" "\r\n"))
+            )
         ]
