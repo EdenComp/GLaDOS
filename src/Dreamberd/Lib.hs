@@ -14,6 +14,7 @@ import Dreamberd.Bytecode.Encode (transpileIntoBytecode)
 import Dreamberd.Bytecode.Pretty (prettyPrintInsts)
 import Dreamberd.Compilation.Compile (compileAst)
 import Dreamberd.Compilation.Preprocessing (executePreprocessing)
+import Dreamberd.Compilation.Pretty (prettyPrintAST)
 import Dreamberd.Parser (parseDreamberd)
 import Dreamberd.Types (File (..))
 import Dreamberd.Vm (Insts (..), Value (..), execVM)
@@ -61,7 +62,7 @@ runDreamberdCode (File filename sourcecode) =
 compileToAst :: File String -> IO ()
 compileToAst file =
     case parseDreamberd file of
-        Right ast -> print ast
+        Right ast -> putStr $ prettyPrintAST ast
         Left err -> returnWithError err
 
 compileToPreprocessedAst :: File String -> IO ()
@@ -69,7 +70,7 @@ compileToPreprocessedAst (File filename sourcecode) =
     case parseDreamberd (File filename sourcecode) of
         Right ast ->
             executePreprocessing (File filename ast) >>= \case
-                Right ast' -> print ast'
+                Right ast' -> putStr $ prettyPrintAST ast'
                 Left err -> returnWithError err
         Left err -> returnWithError err
 

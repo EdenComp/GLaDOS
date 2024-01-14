@@ -33,7 +33,7 @@ prettyPrintDefine name True (Just val) sp = "RedefineEnv " ++ name ++ " " ++ pre
 prettyPrintDefine name False (Just val) sp = "DefineEnv " ++ name ++ " " ++ prettyPrintEnvValue val sp
 
 prettyPrintEnvValue :: EnvValue -> Int -> String
-prettyPrintEnvValue (Function insts) sp = "Function (\n" ++ prettyPrintInstructions insts (sp + 2) ++ ")"
+prettyPrintEnvValue (Function insts) sp = "Function (\n" ++ prettyPrintInstructions insts (sp + 2) ++ replicate sp ' ' ++ ")"
 prettyPrintEnvValue (Variable val) _ = "Variable (" ++ prettyPrintValue val ++ ")"
 
 prettyPrintJump :: Int -> Maybe Bool -> String

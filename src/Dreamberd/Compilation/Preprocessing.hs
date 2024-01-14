@@ -7,9 +7,15 @@ module Dreamberd.Compilation.Preprocessing (
 import Dreamberd.Parser (parseDreamberd)
 import Dreamberd.Types (AstNode (..), File (..))
 import System.Directory (getCurrentDirectory, getHomeDirectory)
+import Data.List (partition)
 
 executePreprocessing :: File [AstNode] -> IO (Either String [AstNode])
-executePreprocessing (File filename nodes) = do
+executePreprocessing file = preprocessImports file >>= \case
+    Right nodes' -> return $ Right $ preprocessFunctions nodes'
+    Left err -> return $ Left err
+
+preprocessImports :: File [AstNode] -> IO (Either String [AstNode])
+preprocessImports (File filename nodes) = do
     current <- getCurrentDirectory
     preprocessNodes nodes (if head filename == '/' then filename else current ++ "/" ++ filename) [if head filename == '/' then filename else current ++ "/" ++ filename] >>= \case
         Left err -> return $ Left err
@@ -69,3 +75,16 @@ importFile :: String -> ([String], String) -> IO (Either String ([String], [AstN
 importFile lib (imports, code) = case parseDreamberd (File lib code) of
     Right ast -> preprocessNodes ast lib imports
     Left err -> return $ Left ("Error while importing " ++ lib ++ ": " ++ err)
+
+preprocessFunctions :: [AstNode] -> [AstNode]
+preprocessFunctions a = concatMap hoistFunction functions ++ rest
+  where
+    (functions, rest) = partition isFunction a
+
+isFunction :: AstNode -> Bool
+isFunction Function{} = True
+isFunction _ = False
+
+hoistFunction :: AstNode -> [AstNode]
+hoistFunction (Function name args ast) = [Function name args (preprocessFunctions ast)]
+hoistFunction _ = []
