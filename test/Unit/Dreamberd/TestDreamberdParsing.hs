@@ -413,4 +413,22 @@ testParseDreamberd =
                 (Right [Function "strlen" ["str"] [If (Call "==" [Identifier "str", String ""]) [Return $ Just $ Integer 0] [Return $ Just $ Call "+" [Integer 1, Call "strlen" [Call "substr" [Identifier "str", Integer 1]]]]]])
                 (parseDreamberd (File "" "fn strlen(str) {if (str \n== \"\") {return \n\n0\n\n;} \n\nelse {\n\nreturn \n1 + strlen(substr(\nstr, 1));}}"))
             )
+        , TestCase
+            ( assertEqual
+                "parse a strlen function in dreamberd4 no space"
+                (Right [Function "strlen" ["str"] [If (Call "==" [Identifier "str", String ""]) [Return $ Just $ Integer 0] [Return $ Just $ Call "+" [Integer 1, Call "strlen" [Call "substr" [Identifier "str", Integer 1]]]]]])
+                (parseDreamberd (File "" "fn strlen(str){if(str==\"\"){return 0;}else{return 1+strlen(substr(str,1));}}"))
+            )
+        , TestCase
+            ( assertEqual
+                "parse a strcmp function in dreamberd4"
+                (Right [Function "strcmp" ["str1", "str2"] [If (Call "==" [Identifier "str1", String ""]) [If (Call "==" [Identifier "str2", String ""]) [Return $ Just $ Integer 0] [Return $ Just $ Call "-" [Integer 1]]] [If (Call "==" [Identifier "str2", String ""]) [Return $ Just $ Integer 1] [If (Call "==" [Call "substr" [Identifier "str1", Integer 0, Integer 1], Call "substr" [Identifier "str2", Integer 0, Integer 1]]) [Return $ Just $ Call "strcmp" [Call "substr" [Identifier "str1", Integer 1], Call "substr" [Identifier "str2", Integer 1]]] [If (Call "<" [Call "substr" [Identifier "str1", Integer 0, Integer 1], Call "substr" [Identifier "str2", Integer 0, Integer 1]]) [Return $ Just $ Call "-" [Integer 1]] [Return $ Just $ Integer 1]]]]]])
+                (parseDreamberd (File "" "fn strcmp(str1, str2) {\n\nif (str1 == \"\") {\n\nif (str2 == \"\") {\n\nreturn 0;\n\n} else {\n\nreturn -1;\n\n}\n\n} else {\n\nif (str2 == \"\") {\n\nreturn 1;\n\n} else {\n\nif (substr(str1, 0, 1) == substr(str2, 0, 1)) {\n\nreturn strcmp(substr(str1, 1), substr(str2, 1));\n\n} else {\n\nif (substr(str1, 0, 1) < substr(str2, 0, 1)) {\n\nreturn -1;\n\n} else {\n\nreturn 1;\n\n}\n\n}\n\n}\n\n}\n\n}"))
+            )
+        , TestCase
+            ( assertEqual
+                "parse a strcmp function in dreamberd4 no space"
+                (Right [Function "strcmp" ["str1", "str2"] [If (Call "==" [Identifier "str1", String ""]) [If (Call "==" [Identifier "str2", String ""]) [Return $ Just $ Integer 0] [Return $ Just $ Call "-" [Integer 1]]] [If (Call "==" [Identifier "str2", String ""]) [Return $ Just $ Integer 1] [If (Call "==" [Call "substr" [Identifier "str1", Integer 0, Integer 1], Call "substr" [Identifier "str2", Integer 0, Integer 1]]) [Return $ Just $ Call "strcmp" [Call "substr" [Identifier "str1", Integer 1], Call "substr" [Identifier "str2", Integer 1]]] [If (Call "<" [Call "substr" [Identifier "str1", Integer 0, Integer 1], Call "substr" [Identifier "str2", Integer 0, Integer 1]]) [Return $ Just $ Call "-" [Integer 1]] [Return $ Just $ Integer 1]]]]]])
+                (parseDreamberd (File "" "fn strcmp(str1,str2){if(str1==\"\"){if(str2==\"\"){return 0;}else{return -1;}}else{if(str2==\"\"){return 1;}else{if(substr(str1,0,1)==substr(str2,0,1)){return strcmp(substr(str1,1),substr(str2,1));}else{if(substr(str1,0,1)<substr(str2,0,1)){return -1;}else{return 1;}}}}}\n"))
+            )
         ]
