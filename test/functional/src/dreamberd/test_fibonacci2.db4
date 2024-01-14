@@ -1,0 +1,26 @@
+fn fibonacci(n) {
+    if (n == 0) {
+        return 0;
+    } elif (n == 1) {
+        return 1;
+    } else {
+        int a1 = fibonacci(n - 1);
+        int a2 = fibonacci(n - 2);
+        int a3 = a1 + a2;
+        return (a3);
+    }
+}
+
+fn main() {
+    var number = 12;
+
+    print("Série de Fibonacci jusqu'à " + number + " termes:\n");
+    for (var i = 0; i < number; i = i + 1) {
+        print(fibonacci(i));
+        if (i < number - 1) {
+            print(", ");
+        }
+    }
+}
+
+main();
