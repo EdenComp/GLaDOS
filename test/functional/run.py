@@ -50,10 +50,6 @@ def run_test(test_path: str, extension: str, flag: str, after_command: str, is_d
         err = f'Test "{name}" failed.'
         print(colored(err, "red") if has_color else err)
         return False
-
-    if is_full_log:
-        success = f'Test "{name}" passed.'
-        print(colored(success, "green") if has_color else success)
     return True
 
 
