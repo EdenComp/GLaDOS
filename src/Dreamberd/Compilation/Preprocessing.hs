@@ -4,15 +4,16 @@ module Dreamberd.Compilation.Preprocessing (
     executePreprocessing,
 ) where
 
+import Data.List (partition)
 import Dreamberd.Parser (parseDreamberd)
 import Dreamberd.Types (AstNode (..), File (..))
 import System.Directory (getCurrentDirectory, getHomeDirectory)
-import Data.List (partition)
 
 executePreprocessing :: File [AstNode] -> IO (Either String [AstNode])
-executePreprocessing file = preprocessImports file >>= \case
-    Right nodes' -> return $ Right $ preprocessFunctions nodes'
-    Left err -> return $ Left err
+executePreprocessing file =
+    preprocessImports file >>= \case
+        Right nodes' -> return $ Right $ preprocessFunctions nodes'
+        Left err -> return $ Left err
 
 preprocessImports :: File [AstNode] -> IO (Either String [AstNode])
 preprocessImports (File filename nodes) = do
