@@ -5,7 +5,7 @@ import Test.HUnit (Test (..), assertEqual)
 import qualified Dreamberd.Types as AST
 import Dreamberd.Vm as VM
 
-import Dreamberd.Compilation.Compile (compileNode, compileValuePush, getBuiltinCallForOp, compileReturn, compileFunction)
+import Dreamberd.Compilation.Compile (compileCall, compileFunction, compileIf, compileLoop, compileNode, compileReturn, compileValuePush, getBuiltinCallForOp)
 
 testDreamberdCompilation :: Test
 testDreamberdCompilation =
@@ -15,6 +15,9 @@ testDreamberdCompilation =
         , testCompileNode
         , testCompileReturn
         , testCompileFunction
+        , testCompileLoop
+        , testCompileCall
+        , testCompileIf
         ]
 
 testCompileValuePush :: Test
@@ -207,32 +210,116 @@ testCompileNode =
         ]
 
 testCompileReturn :: Test
-testCompileReturn = TestList [
-    TestCase (assertEqual "compile return with a call"
-        (Right [VM.Push (VM.Integer 1), VM.PushEnv "function", VM.Call, VM.Ret])
-        (compileReturn [] (Just (AST.Call "function" [AST.Integer 1])))),
-
-    TestCase (assertEqual "compile return with a value"
-        (Right [VM.Push (VM.Integer 42), VM.Ret])
-        (compileReturn [] (Just (AST.Integer 42)))),
-
-    TestCase (assertEqual "compile void return"
-        (Right [VM.Push VM.Void, VM.Ret])
-        (compileReturn [] Nothing))
-    ]
+testCompileReturn =
+    TestList
+        [ TestCase
+            ( assertEqual
+                "compile return with a call"
+                (Right [VM.Push (VM.Integer 1), VM.PushEnv "function", VM.Call, VM.Ret])
+                (compileReturn [] (Just (AST.Call "function" [AST.Integer 1])))
+            )
+        , TestCase
+            ( assertEqual
+                "compile return with a value"
+                (Right [VM.Push (VM.Integer 42), VM.Ret])
+                (compileReturn [] (Just (AST.Integer 42)))
+            )
+        , TestCase
+            ( assertEqual
+                "compile void return"
+                (Right [VM.Push VM.Void, VM.Ret])
+                (compileReturn [] Nothing)
+            )
+        ]
 
 testCompileFunction :: Test
-testCompileFunction = TestList [
-    TestCase (assertEqual "compile simple function"
-        (Right [VM.DefineEnv "myFunc" VM.Define (Just $ VM.Function 1 [VM.PushArg 0, VM.DefineEnv "x" VM.Override Nothing, VM.PushEnv "x", VM.Ret, VM.EraseEnv "x"])])
-        (compileFunction [] "myFunc" ["x"] [AST.Return (Just (AST.Identifier "x"))])),
+testCompileFunction =
+    TestList
+        [ TestCase
+            ( assertEqual
+                "compile simple function"
+                (Right [VM.DefineEnv "myFunc" VM.Define (Just $ VM.Function 1 [VM.PushArg 0, VM.DefineEnv "x" VM.Override Nothing, VM.PushEnv "x", VM.Ret, VM.EraseEnv "x"])])
+                (compileFunction [] "myFunc" ["x"] [AST.Return (Just (AST.Identifier "x"))])
+            )
+        , TestCase
+            ( assertEqual
+                "compile function without parameters"
+                (Right [VM.DefineEnv "noParamsFunc" VM.Define (Just $ VM.Function 0 [VM.Push (VM.Integer 1), VM.Ret])])
+                (compileFunction [] "noParamsFunc" [] [AST.Return (Just (AST.Integer 1))])
+            )
+        , TestCase
+            ( assertEqual
+                "compile function with multiple parameters"
+                (Right [VM.DefineEnv "multiParamsFunc" VM.Define (Just $ VM.Function 3 [VM.PushArg 0, VM.DefineEnv "x" VM.Override Nothing, VM.PushArg 1, VM.DefineEnv "y" VM.Override Nothing, VM.PushArg 2, VM.DefineEnv "z" VM.Override Nothing, VM.PushEnv "x", VM.Ret, VM.EraseEnv "x", VM.EraseEnv "y", VM.EraseEnv "z"])])
+                (compileFunction [] "multiParamsFunc" ["x", "y", "z"] [AST.Return (Just (AST.Identifier "x"))])
+            )
+        ]
 
-    TestCase (assertEqual "compile function without parameters"
-        (Right [VM.DefineEnv "noParamsFunc" VM.Define (Just $ VM.Function 0 [VM.Push (VM.Integer 1), VM.Ret])])
-        (compileFunction [] "noParamsFunc" [] [AST.Return (Just (AST.Integer 1))])),
+testCompileLoop :: Test
+testCompileLoop =
+    TestList
+        [ TestCase
+            ( assertEqual
+                "compile simple loop"
+                (Right [VM.Push (VM.Bool True), VM.Jump 4 (Just False), VM.Push (VM.Integer 1), VM.PushEnv "print", VM.Call, VM.Jump (-6) Nothing])
+                (compileLoop [] (AST.Boolean True) [AST.Call "print" [AST.Integer 1]] Nothing Nothing)
+            )
+        , TestCase
+            ( assertEqual
+                "compile loop with initialization"
+                (Right [VM.Push (VM.Integer 0), VM.Push (VM.Bool True), VM.Jump 4 (Just False), VM.Push (VM.Integer 1), VM.PushEnv "print", VM.Call, VM.Jump (-6) Nothing])
+                (compileLoop [] (AST.Boolean True) [AST.Call "print" [AST.Integer 1]] (Just (AST.Integer 0)) Nothing)
+            )
+        , TestCase
+            ( assertEqual
+                "compile loop with update"
+                (Right [VM.Push (VM.Bool True), VM.Jump 6 (Just False), VM.Push (VM.Integer 1), VM.PushEnv "print", VM.Call, VM.PushEnv "i", VM.Call, VM.Jump (-8) Nothing])
+                (compileLoop [] (AST.Boolean True) [AST.Call "print" [AST.Integer 1]] Nothing (Just (AST.Call "i" [])))
+            )
+        ]
 
-    TestCase (assertEqual "compile function with multiple parameters"
-        (Right [VM.DefineEnv "multiParamsFunc" VM.Define (Just $ VM.Function 3 [VM.PushArg 0, VM.DefineEnv "x" VM.Override Nothing, VM.PushArg 1, VM.DefineEnv "y" VM.Override Nothing, VM.PushArg 2, VM.DefineEnv "z" VM.Override Nothing, VM.PushEnv "x", VM.Ret, VM.EraseEnv "x", VM.EraseEnv "y", VM.EraseEnv "z"])])
-        (compileFunction [] "multiParamsFunc" ["x", "y", "z"] [AST.Return (Just (AST.Identifier "x"))]))
-    ]
+testCompileCall :: Test
+testCompileCall =
+    TestList
+        [ TestCase
+            ( assertEqual
+                "compile simple function call"
+                (Right [VM.Push (VM.Integer 2), VM.Push (VM.Integer 1), VM.PushEnv "myFunc", VM.Call])
+                (compileCall [] "myFunc" [AST.Integer 1, AST.Integer 2])
+            )
+        , TestCase
+            ( assertEqual
+                "compile simple assignment"
+                (Right [VM.Push (VM.Integer 5), VM.DefineEnv "x" VM.Redefine Nothing])
+                (compileCall [] "=" [AST.Identifier "x", AST.Integer 5])
+            )
+        , TestCase
+            ( assertEqual
+                "compile binary operation call"
+                (Right [VM.Push (VM.Integer 3), VM.Push (VM.Integer 2), VM.Push (VM.Symbol (VM.Builtin VM.Add)), VM.Call])
+                (compileCall [] "+" [AST.Integer 2, AST.Integer 3])
+            )
+        ]
 
+testCompileIf :: Test
+testCompileIf =
+    TestList
+        [ TestCase
+            ( assertEqual
+                "compile simple if"
+                (Right [VM.Push (VM.Bool True), VM.Jump 2 (Just False), VM.Push (VM.Integer 1), VM.Jump 1 Nothing, VM.Push (VM.Integer 0)])
+                (compileIf [] (AST.Boolean True) [AST.Integer 1] [AST.Integer 0])
+            )
+        , TestCase
+            ( assertEqual
+                "compile if with multiple statements"
+                (Right [VM.Push (VM.Bool False), VM.Jump 5 (Just False), VM.PushEnv "func1", VM.Call, VM.PushEnv "func2", VM.Call, VM.Jump 2 Nothing, VM.PushEnv "func3", VM.Call])
+                (compileIf [] (AST.Boolean False) [AST.Call "func1" [], AST.Call "func2" []] [AST.Call "func3" []])
+            )
+        , TestCase
+            ( assertEqual
+                "compile if without else"
+                (Right [VM.Push (VM.Bool True), VM.Jump 1 (Just False), VM.Push (VM.Integer 1)])
+                (compileIf [] (AST.Boolean True) [AST.Integer 1] [])
+            )
+        ]
