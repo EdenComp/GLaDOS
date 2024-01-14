@@ -5,7 +5,7 @@ import Test.HUnit (Test (..), assertEqual)
 import qualified Dreamberd.Types as AST
 import Dreamberd.Vm as VM
 
-import Dreamberd.Compilation.Compile (compileCall, compileFunction, compileIf, compileLoop, compileNode, compileReturn, compileValuePush, getBuiltinCallForOp, compileBuiltinCall)
+import Dreamberd.Compilation.Compile (compileBuiltinCall, compileCall, compileFunction, compileIf, compileLoop, compileNode, compileReturn, compileValuePush, getBuiltinCallForOp)
 
 testDreamberdCompilation :: Test
 testDreamberdCompilation =
@@ -326,15 +326,24 @@ testCompileIf =
         ]
 
 testCompileBuiltinCall :: Test
-testCompileBuiltinCall = 
+testCompileBuiltinCall =
     TestList
-        [TestCase (assertEqual "compile binary addition"
+        [ TestCase
+            ( assertEqual
+                "compile binary addition"
                 (Right [VM.Push (VM.Integer 3), VM.Push (VM.Integer 2), VM.Push (VM.Symbol (VM.Builtin VM.Add)), VM.Call])
-                (compileBuiltinCall [] "+" [AST.Integer 2, AST.Integer 3])),
-        TestCase (assertEqual "compile binary subtraction"
-            (Right [VM.Push (VM.Integer 2), VM.Push (VM.Integer 5), VM.Push (VM.Symbol (VM.Builtin VM.Sub)), VM.Call])
-            (compileBuiltinCall [] "-" [AST.Integer 5, AST.Integer 2])),
-        TestCase (assertEqual "compile binary multiplication"
-            (Right [VM.Push (VM.Integer 6), VM.Push (VM.Integer 4), VM.Push (VM.Symbol (VM.Builtin VM.Mul)), VM.Call])
-            (compileBuiltinCall [] "*" [AST.Integer 4, AST.Integer 6]))
+                (compileBuiltinCall [] "+" [AST.Integer 2, AST.Integer 3])
+            )
+        , TestCase
+            ( assertEqual
+                "compile binary subtraction"
+                (Right [VM.Push (VM.Integer 2), VM.Push (VM.Integer 5), VM.Push (VM.Symbol (VM.Builtin VM.Sub)), VM.Call])
+                (compileBuiltinCall [] "-" [AST.Integer 5, AST.Integer 2])
+            )
+        , TestCase
+            ( assertEqual
+                "compile binary multiplication"
+                (Right [VM.Push (VM.Integer 6), VM.Push (VM.Integer 4), VM.Push (VM.Symbol (VM.Builtin VM.Mul)), VM.Call])
+                (compileBuiltinCall [] "*" [AST.Integer 4, AST.Integer 6])
+            )
         ]
