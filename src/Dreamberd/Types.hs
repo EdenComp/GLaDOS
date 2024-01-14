@@ -7,7 +7,8 @@ data AstNode
     | String String
     | Identifier String
     | Function String [String] [AstNode]
-    | Call String [AstNode]
+    | Lambda [String] [AstNode]
+    | Call AstNode [AstNode]
     | If AstNode [AstNode] [AstNode]
     | Return (Maybe AstNode)
     | Loop AstNode [AstNode] (Maybe AstNode) (Maybe AstNode)
@@ -27,7 +28,8 @@ instance Show AstNode where
     show (If test trueBody falseBody) = "If (" ++ show test ++ ") " ++ show trueBody ++ " " ++ show falseBody
     show (Scope stmts) = "{" ++ unwords (map show stmts) ++ "}"
     show (Function name params body) = "Function " ++ show name ++ " " ++ show params ++ " " ++ show body
-    show (Call name params) = "(Call " ++ name ++ " " ++ show params ++ ")"
+    show (Lambda params body) = "Lambda (" ++ show params ++ " " ++ show body ++ ")"
+    show (Call name params) = "(Call " ++ show name ++ " " ++ show params ++ ")"
     show (Loop test body initializer update) = "(Loop " ++ show test ++ " " ++ show body ++ " " ++ show initializer ++ " " ++ show update ++ ")"
     show (Return element) = "Return " ++ show element
     show (Import path) = "Import " ++ show path
