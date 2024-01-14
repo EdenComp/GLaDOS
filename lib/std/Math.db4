@@ -1,3 +1,5 @@
+// Package std -- Math
+
 fn is_even(a) {
     return (a % 2) == 0;
 }

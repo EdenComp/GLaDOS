@@ -13,6 +13,7 @@ glados
 *~
 *.hi
 *.o
+a.out
 
 # Coverage
 test/coverage/
