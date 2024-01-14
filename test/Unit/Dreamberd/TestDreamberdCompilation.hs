@@ -28,31 +28,31 @@ testCompileValuePush =
             ( assertEqual
                 "compile Boolean True"
                 (Right (VM.Push (VM.Bool True)))
-                (compileValuePush (AST.Boolean True))
+                (compileValuePush [] (AST.Boolean True))
             )
         , TestCase
             ( assertEqual
                 "compile Boolean False"
                 (Right (VM.Push (VM.Bool False)))
-                (compileValuePush (AST.Boolean False))
+                (compileValuePush [] (AST.Boolean False))
             )
         , TestCase
             ( assertEqual
                 "compile Integer"
                 (Right (VM.Push (VM.Integer 42)))
-                (compileValuePush (AST.Integer 42))
+                (compileValuePush [] (AST.Integer 42))
             )
         , TestCase
             ( assertEqual
                 "compile Float"
                 (Right (VM.Push (VM.Float 3.14)))
-                (compileValuePush (AST.Float 3.14))
+                (compileValuePush [] (AST.Float 3.14))
             )
         , TestCase
             ( assertEqual
                 "compile String"
                 (Right (VM.Push (VM.String "Hello")))
-                (compileValuePush (AST.String "Hello"))
+                (compileValuePush [] (AST.String "Hello"))
             )
         , TestCase
             ( assertEqual
@@ -176,7 +176,7 @@ testCompileNode =
             ( assertEqual
                 "compile Call node"
                 (Right [VM.Push (VM.Integer 1), VM.PushEnv "function", VM.Call])
-                (compileNode [] (AST.Call "function" [AST.Integer 1]))
+                (compileNode [] (AST.Call (AST.Identifier "function") [AST.Integer 1]))
             )
         , TestCase
             ( assertEqual
@@ -217,7 +217,7 @@ testCompileReturn =
             ( assertEqual
                 "compile return with a call"
                 (Right [VM.Push (VM.Integer 1), VM.PushEnv "function", VM.Call, VM.Ret])
-                (compileReturn [] (Just (AST.Call "function" [AST.Integer 1])))
+                (compileReturn [] (Just (AST.Call (AST.Identifier "function") [AST.Integer 1])))
             )
         , TestCase
             ( assertEqual
@@ -263,19 +263,19 @@ testCompileLoop =
             ( assertEqual
                 "compile simple loop"
                 (Right [VM.Push (VM.Bool True), VM.Jump 4 (Just False), VM.Push (VM.Integer 1), VM.PushEnv "print", VM.Call, VM.Jump (-6) Nothing])
-                (compileLoop [] (AST.Boolean True) [AST.Call "print" [AST.Integer 1]] Nothing Nothing)
+                (compileLoop [] (AST.Boolean True) [AST.Call (AST.Identifier "print") [AST.Integer 1]] Nothing Nothing)
             )
         , TestCase
             ( assertEqual
                 "compile loop with initialization"
                 (Right [VM.Push (VM.Integer 0), VM.Push (VM.Bool True), VM.Jump 4 (Just False), VM.Push (VM.Integer 1), VM.PushEnv "print", VM.Call, VM.Jump (-6) Nothing])
-                (compileLoop [] (AST.Boolean True) [AST.Call "print" [AST.Integer 1]] (Just (AST.Integer 0)) Nothing)
+                (compileLoop [] (AST.Boolean True) [AST.Call (AST.Identifier "print") [AST.Integer 1]] (Just (AST.Integer 0)) Nothing)
             )
         , TestCase
             ( assertEqual
                 "compile loop with update"
                 (Right [VM.Push (VM.Bool True), VM.Jump 6 (Just False), VM.Push (VM.Integer 1), VM.PushEnv "print", VM.Call, VM.PushEnv "i", VM.Call, VM.Jump (-8) Nothing])
-                (compileLoop [] (AST.Boolean True) [AST.Call "print" [AST.Integer 1]] Nothing (Just (AST.Call "i" [])))
+                (compileLoop [] (AST.Boolean True) [AST.Call (AST.Identifier "print") [AST.Integer 1]] Nothing (Just (AST.Call (AST.Identifier "i") [])))
             )
         ]
 
@@ -286,19 +286,19 @@ testCompileCall =
             ( assertEqual
                 "compile simple function call"
                 (Right [VM.Push (VM.Integer 2), VM.Push (VM.Integer 1), VM.PushEnv "myFunc", VM.Call])
-                (compileCall [] "myFunc" [AST.Integer 1, AST.Integer 2])
+                (compileCall [] (AST.Identifier "myFunc") [AST.Integer 1, AST.Integer 2])
             )
         , TestCase
             ( assertEqual
                 "compile simple assignment"
                 (Right [VM.Push (VM.Integer 5), VM.DefineEnv "x" VM.Redefine Nothing])
-                (compileCall [] "=" [AST.Identifier "x", AST.Integer 5])
+                (compileCall [] (AST.Identifier "=") [AST.Identifier "x", AST.Integer 5])
             )
         , TestCase
             ( assertEqual
                 "compile binary operation call"
                 (Right [VM.Push (VM.Integer 3), VM.Push (VM.Integer 2), VM.Push (VM.Symbol (VM.Builtin VM.Add)), VM.Call])
-                (compileCall [] "+" [AST.Integer 2, AST.Integer 3])
+                (compileCall [] (AST.Identifier "+") [AST.Integer 2, AST.Integer 3])
             )
         ]
 
@@ -315,7 +315,7 @@ testCompileIf =
             ( assertEqual
                 "compile if with multiple statements"
                 (Right [VM.Push (VM.Bool False), VM.Jump 5 (Just False), VM.PushEnv "func1", VM.Call, VM.PushEnv "func2", VM.Call, VM.Jump 2 Nothing, VM.PushEnv "func3", VM.Call])
-                (compileIf [] (AST.Boolean False) [AST.Call "func1" [], AST.Call "func2" []] [AST.Call "func3" []])
+                (compileIf [] (AST.Boolean False) [AST.Call (AST.Identifier "func1") [], AST.Call (AST.Identifier "func2") []] [AST.Call (AST.Identifier "func3") []])
             )
         , TestCase
             ( assertEqual
