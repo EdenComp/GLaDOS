@@ -122,9 +122,16 @@ parseStatementExpression :: Parser AstNode
 parseStatementExpression =
     ( parseVariableDeclaration
         <|> parseReturn
+        <|> parseImport
         <|> parseExpression
     )
         <* parseStripped (parseChar ';')
+
+parseImport :: Parser AstNode
+parseImport =
+    parseStripped (parseString "import")
+        >> parseStripped parseStringLiteral
+        >>= \path -> return (Import path)
 
 parseExpression :: Parser AstNode
 parseExpression = parseBinaryOperation <|> parseUnaryOperation <|> parseAtom
@@ -200,25 +207,25 @@ parseAtom :: Parser AstNode
 parseAtom = parseEnclosed ("(", ")") parseExpression <|> parseFunctionCall <|> parseLiteral <|> parseIdentifier
 
 parseLiteral :: Parser AstNode
-parseLiteral = parseBoolean <|> parseStringLiteral <|> parseFloat <|> parseInteger
+parseLiteral = (Boolean <$> parseBoolean) <|> (String <$> parseStringLiteral) <|> (Float <$> parseFloat) <|> (Integer <$> parseInteger)
 
-parseBoolean :: Parser AstNode
+parseBoolean :: Parser Bool
 parseBoolean =
-    parseString "true" <|> parseString "false" >>= \value -> return $ Boolean $ value == "true"
+    parseString "true" <|> parseString "false" >>= \value -> return $ value == "true"
 
-parseInteger :: Parser AstNode
-parseInteger = Integer <$> parseStripped (parseSome (parseAnyChar ['0' .. '9']) >>= \num -> return (read num :: Int))
+parseInteger :: Parser Int
+parseInteger = parseStripped (parseSome (parseAnyChar ['0' .. '9']) >>= \num -> return (read num :: Int))
 
-parseFloat :: Parser AstNode
+parseFloat :: Parser Double
 parseFloat =
     parseOrValue (parseSome (parseAnyChar ['0' .. '9'])) "0"
         >>= \integerPart ->
             parseChar '.'
                 >> parseSome (parseAnyChar ['0' .. '9'])
-                >>= \decimalPart -> return (Float $ read (integerPart ++ "." ++ decimalPart) :: AstNode)
+                >>= \decimalPart -> return (read (integerPart ++ "." ++ decimalPart) :: Double)
 
-parseStringLiteral :: Parser AstNode
-parseStringLiteral = parseChar '\"' *> (String <$> parseMany (parseEscapeSequence <|> parseAnythingBut '\"')) <* parseChar '\"'
+parseStringLiteral :: Parser String
+parseStringLiteral = parseChar '\"' *> parseMany (parseEscapeSequence <|> parseAnythingBut '\"') <* parseChar '\"'
 
 parseVariableDeclaration :: Parser AstNode
 parseVariableDeclaration =
