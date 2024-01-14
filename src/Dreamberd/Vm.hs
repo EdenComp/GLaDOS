@@ -2,6 +2,7 @@ module Dreamberd.Vm (
     exec,
     execVM,
     Call (..),
+    DefineEnvType (..),
     Env (..),
     EnvValue (..),
     Insts (..),
@@ -40,6 +41,12 @@ data Env = Env
     }
     deriving (Show)
 
+data DefineEnvType
+    = Define
+    | Redefine
+    | Override
+    deriving (Eq, Show)
+
 data Call
     = Builtin Operator
     | FunctionName String
@@ -68,7 +75,7 @@ data Insts
     | PushArg Int
     | PushEnv String
     | Call
-    | DefineEnv String Bool (Maybe EnvValue)
+    | DefineEnv String DefineEnvType (Maybe EnvValue)
     | EraseEnv String
     | Jump Int (Maybe Bool)
     | Ret
@@ -135,24 +142,28 @@ execJump env args (x : xs) insts idx scopeIdx num (Just b)
     | otherwise = exec env args xs insts (idx + 1) scopeIdx
 execJump _ _ _ _ _ _ _ _ = return (Left "Stack is empty for a conditional jump")
 
-execDefineEnv :: [Env] -> [Value] -> [Value] -> [Insts] -> Int -> Int -> String -> Bool -> Maybe EnvValue -> IO (Either String Value)
+execDefineEnv :: [Env] -> [Value] -> [Value] -> [Insts] -> Int -> Int -> String -> DefineEnvType -> Maybe EnvValue -> IO (Either String Value)
 execDefineEnv _ _ [] _ _ _ _ _ Nothing = return (Left "Stack is empty for a DefineEnv from stack instruction")
-execDefineEnv env args (x : xs) insts idx scopeIdx name False Nothing =
+execDefineEnv env args (x : xs) insts idx scopeIdx name Define Nothing =
     case findEnvValue name env of
         Just _ -> return (Left ("Environment " ++ name ++ " already exists"))
         Nothing -> exec (addEnvValue name (Variable x) scopeIdx env) args xs insts (idx + 1) scopeIdx
-execDefineEnv env args stack insts idx scopeIdx name False (Just val) =
+execDefineEnv env args stack insts idx scopeIdx name Define (Just val) =
     case findEnvValue name env of
         Just _ -> return (Left ("Environment " ++ name ++ " already exists"))
         Nothing -> exec (addEnvValue name val scopeIdx env) args stack insts (idx + 1) scopeIdx
-execDefineEnv env args (x : xs) insts idx scopeIdx name True Nothing =
+execDefineEnv env args (x : xs) insts idx scopeIdx name Redefine Nothing =
     case findEnvValue name env of
         Just (_, initialScope) -> exec (addEnvValue name (Variable x) initialScope env) args xs insts (idx + 1) scopeIdx
         Nothing -> return (Left ("Environment " ++ name ++ " does not exist"))
-execDefineEnv env args stack insts idx scopeIdx name True (Just val) =
+execDefineEnv env args stack insts idx scopeIdx name Redefine (Just val) =
     case findEnvValue name env of
         Just (_, initialScope) -> exec (addEnvValue name val initialScope env) args stack insts (idx + 1) scopeIdx
         Nothing -> return (Left ("Environment " ++ name ++ " does not exist"))
+execDefineEnv env args (x : xs) insts idx scopeIdx name Override Nothing =
+    exec (addEnvValue name (Variable x) scopeIdx env) args xs insts (idx + 1) scopeIdx
+execDefineEnv env args stack insts idx scopeIdx name Override (Just val) =
+    exec (addEnvValue name val scopeIdx env) args stack insts (idx + 1) scopeIdx
 
 execBuiltin :: [Value] -> Operator -> Either String [Value]
 execBuiltin (Integer _ : Integer 0 : _) Div = Left "Cannot divide by 0"

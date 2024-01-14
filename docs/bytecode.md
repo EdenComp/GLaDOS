@@ -55,6 +55,12 @@ Both DefineEnv and DefineEnvFromStack use 1 byte to determine the type of the de
 - `0x41`: Function (+ 8 bytes instructions length)
 - `0x42`: Value
 
+There is 3 types of DefineEnv:
+
+- `0x45`: Define (does not allow redefinitions)
+- `0x46`: Redefine (does not allow definitions)
+- `0x47`: Override (redefines if necessary, otherwise defines)
+
 ## TriBools
 
 TriBools are a special type for the handling of conditional jumps:
