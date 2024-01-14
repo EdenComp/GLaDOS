@@ -1,0 +1,4 @@
+import "std:Format";
+import "std:Format";
+
+println("Hello, world!");
