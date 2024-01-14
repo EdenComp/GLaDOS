@@ -61,9 +61,6 @@ if __name__ == "__main__":
     total_tests, total_passed = 0, 0
 
     for name, extension, folder, flag, after_command in LANGUAGES:
-         print(f"\n\n===================================================================================================================" + (len(name) - 6) * "=")
-         print(f"================================================== TEST [{name}] ==================================================")
-         print(f"===================================================================================================================" + (len(name) - 6) * "=" + "\n")
          nb_passed, nb_failed = 0, 0
          test_passed, test_failed = [], []
          tests = get_test_paths(folder_name=folder, extension=extension)
@@ -75,9 +72,10 @@ if __name__ == "__main__":
              nb_passed += 1 if passed else 0
              test_passed.append(name) if passed else test_failed.append(name)
              nb_failed += 1 if not passed else 0
-         print(f"\n##################################################################################################################")
-         print(f"#================================================= RESULTS ======================================================#")
-         print(f"#================================================================================================================#")
+             title = "RESULT TEST [" + name + "]"
+         print(f"\n##########################################################################################################################" + (len(name)) * "#")
+         print("#================================================= " + colored(title, "light_yellow") + " =======================================================#")
+         print(f"#=========================================================================================================================" + (len(name)) * "=")
          print(f"#                                              Ran {nb_tests} tests")
          print(f"# {nb_passed} passed :")
          for test in test_passed:
@@ -97,7 +95,6 @@ if __name__ == "__main__":
 
          print(f"# Success rate : {colored(success_percentage, 'green')}%")
          print("# "+colored(success_bar, "green") + colored(failure_bar, "red"))
-         print(f"#")
          print(f"#\n##################################################################################################################\n")
          total_tests += nb_tests
          total_passed += nb_passed
