@@ -2,6 +2,7 @@ module Dreamberd.Compilation.Compile (
     compileAst,
     compileValuePush,
     getBuiltinCallForOp,
+    compileNode,
 ) where
 
 import Data.Maybe (mapMaybe)
