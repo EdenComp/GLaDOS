@@ -67,23 +67,25 @@ compileFunction params name args body =
     compileNodes (args ++ params) body []
         >>= \bodyInsts -> Right [VM.DefineEnv name VM.Define (Just $ VM.Function (length args) (concatMap (\nb -> [VM.PushArg nb, VM.DefineEnv (args !! nb) VM.Override Nothing]) [0 .. (length args - 1)] ++ bodyInsts ++ map VM.EraseEnv args))]
 
-compileCall :: [String] -> String -> [AST.AstNode] -> Either String [VM.Insts]
-compileCall params "=" [_, AST.Identifier iden, value] = compileAssignation params iden value False
-compileCall params "=" [AST.Identifier iden, value] = compileAssignation params iden value True
-compileCall params "-" [node] = compileBuiltinCall params "*" [node, AST.Integer (-1)]
-compileCall params "+" [node] = compileNode params node
-compileCall params [op, '='] [AST.Identifier iden, value]
+compileCall :: [String] -> AST.AstNode -> [AST.AstNode] -> Either String [VM.Insts]
+compileCall params (AST.Identifier "=") [_, AST.Identifier iden, value] = compileAssignation params iden value False
+compileCall params (AST.Identifier "=") [AST.Identifier iden, value] = compileAssignation params iden value True
+compileCall params (AST.Identifier "-") [node] = compileBuiltinCall params "*" [node, AST.Integer (-1)]
+compileCall params (AST.Identifier "+") [node] = compileNode params node
+compileCall params (AST.Identifier [op, '=']) [AST.Identifier iden, value]
     | op `elem` "+-*/%" =
         compileBuiltinCall params [op] [AST.Identifier iden, value]
             >>= \opInsts -> Right $ opInsts ++ [VM.DefineEnv iden VM.Redefine Nothing]
-compileCall params [op, op2, '='] [AST.Identifier iden, value]
+compileCall params (AST.Identifier [op, op2, '=']) [AST.Identifier iden, value]
     | op `elem` "&|" =
         compileBuiltinCall params [op, op2] [AST.Identifier iden, value]
             >>= \opInsts -> Right $ opInsts ++ [VM.DefineEnv iden VM.Redefine Nothing]
-compileCall params [opA, opB] [AST.Identifier iden]
+compileCall params (AST.Identifier [opA, opB]) [AST.Identifier iden]
     | opA `elem` "+-" && opA == opB =
         (++) <$> compileBuiltinCall params [opA] [AST.Identifier iden, AST.Integer 1] <*> Right [VM.DefineEnv iden VM.Redefine Nothing, VM.PushEnv iden]
-compileCall params op args = compileBuiltinCall params op args <> compileCustomCall params op args
+compileCall params (AST.Identifier op) args = compileBuiltinCall params op args <> compileCustomCall params op args
+compileCall _ (AST.Lambda _ _) _ = Left "not yet supported"
+compileCall _ _ _ = Left "Unknown call"
 
 getScopedInstructions :: [VM.Insts] -> [VM.Insts]
 getScopedInstructions insts = map VM.EraseEnv (mapMaybe getIdentifierFromInst insts)

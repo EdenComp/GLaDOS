@@ -24,9 +24,9 @@ testAstTypes =
         , TestCase (assertEqual "String" (show (AST.String "test")) "\"test\"")
         , TestCase (assertEqual "Identifier" (show (AST.Identifier "x")) "(Identifier x)")
         , TestCase (assertEqual "Function" (show (AST.Function "foo" [] [AST.Return $ Just $ AST.Integer 1])) "Function \"foo\" [] [Return Just 1]")
-        , TestCase (assertEqual "Call" (show (AST.Call "bar" [AST.Integer 42])) "(Call bar [42])")
-        , TestCase (assertEqual "Operator" (show (AST.Call "+" [AST.Integer 2, AST.Integer 3])) "(Call + [2,3])")
-        , TestCase (assertEqual "AssignVariable" (show (AST.Call "=" [AST.Identifier "int", AST.Identifier "x", AST.Integer 42])) "(Call = [(Identifier int),(Identifier x),42])")
+        , TestCase (assertEqual "Call" (show (AST.Call (AST.Identifier "bar") [AST.Integer 42])) "(Call (Identifier bar) [42])")
+        , TestCase (assertEqual "Operator" (show (AST.Call (AST.Identifier "+") [AST.Integer 2, AST.Integer 3])) "(Call (Identifier +) [2,3])")
+        , TestCase (assertEqual "AssignVariable" (show (AST.Call (AST.Identifier "=") [AST.Identifier "int", AST.Identifier "x", AST.Integer 42])) "(Call (Identifier =) [(Identifier int),(Identifier x),42])")
         , TestCase
             ( assertEqual
                 "If"

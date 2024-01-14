@@ -168,19 +168,19 @@ parseBinaryOperation =
                 >>= \op ->
                     parseStripped parseExpression
                         >>= \b ->
-                            return (Call op [a, b])
+                            return (Call (Identifier op) [a, b])
 parseUnaryOperation :: Parser AstNode
 parseUnaryOperation =
     ( parseStripped parseUnaryPrefixOperator
         >>= \op ->
             parseStripped parseAtom
-                >>= \operand -> return (Call op [operand])
+                >>= \operand -> return (Call (Identifier op) [operand])
     )
         <|> ( parseStripped parseAtom
                 >>= \operand ->
                     parseStripped parseUnarySuffixOperator
                         >>= \op ->
-                            return (Call op [operand])
+                            return (Call (Identifier op) [operand])
             )
 
 parseUnarySuffixOperator :: Parser String
@@ -260,7 +260,7 @@ parseVariableDeclaration =
                 >>= \variableIdentifier ->
                     parseStripped (parseChar '=')
                         >> parseStripped parseExpression
-                        >>= \expression -> return $ Call "=" [typeIdentifier, variableIdentifier, expression]
+                        >>= \expression -> return $ Call (Identifier "=") [typeIdentifier, variableIdentifier, expression]
 
 parseTypeIdentifier :: Parser String
 parseTypeIdentifier =
@@ -281,7 +281,7 @@ parseFunctionCall =
     parseStripped parseIdentifierString
         >>= \identifier ->
             parseEnclosed ("(", ")") (parseOrValue parseFunctionCallArgs [])
-                >>= \args -> return (Call identifier args)
+                >>= \args -> return (Call (Identifier identifier) args)
 
 parseFunctionCallArgs :: Parser [AstNode]
 parseFunctionCallArgs =
