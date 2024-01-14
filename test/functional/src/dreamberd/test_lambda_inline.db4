@@ -1,0 +1,9 @@
+int max = ((a, b) => {
+    if (a > b) {
+        a
+    } else {
+        b
+    }
+})(21, 23);
+
+print(max);

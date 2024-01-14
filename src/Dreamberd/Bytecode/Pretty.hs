@@ -24,7 +24,7 @@ prettyPrintValue (Float nbr) _ = "Float " ++ show nbr
 prettyPrintValue (Bool b) _ = "Bool " ++ show b
 prettyPrintValue (String str) _ = "String " ++ show str
 prettyPrintValue (Symbol sym) _ = "Symbol " ++ show sym
-prettyPrintValue (Lambda insts) sp = "Lambda (\n" ++ prettyPrintInstructions insts (sp + 2) ++ replicate sp ' ' ++ ")"
+prettyPrintValue (Lambda args insts) sp = "Lambda (" ++ show args ++ " arguments) (\n" ++ prettyPrintInstructions insts (sp + 2) ++ replicate sp ' ' ++ ")"
 prettyPrintValue Void _ = "Void"
 
 prettyPrintDefine :: String -> DefineEnvType -> Maybe EnvValue -> Int -> String
