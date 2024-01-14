@@ -1,0 +1,3 @@
+fn get_seed() {
+    return 42;
+}

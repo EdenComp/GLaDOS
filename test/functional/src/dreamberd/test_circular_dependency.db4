@@ -1,0 +1,3 @@
+import "../samples/basic.db4";
+
+print("I'm the last one here!\n");

@@ -1,0 +1,6 @@
+import "util.db4";
+
+fn get_second_number() {
+    int seed = get_seed();
+    return seed + 19;
+}
