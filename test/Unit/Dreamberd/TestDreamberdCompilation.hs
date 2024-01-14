@@ -187,7 +187,7 @@ testCompileNode =
         , TestCase
             ( assertEqual
                 "compile Function node"
-                (Right [VM.DefineEnv "myFunc" VM.Define (Just (VM.Function 1 [VM.PushArg 0, VM.DefineEnv "x" VM.Override Nothing, VM.PushEnv "x", VM.Ret, VM.EraseEnv "x"]))])
+                (Right [VM.DefineEnv "myFunc" VM.Define (Just (VM.Function 1 [VM.PushArg 0, VM.DefineEnv "x" VM.Override Nothing, VM.PushEnv "x", VM.Ret]))])
                 (compileNode [] (AST.Function "myFunc" ["x"] [AST.Return (Just (AST.Identifier "x"))]))
             )
         , TestCase
@@ -239,7 +239,7 @@ testCompileFunction =
         [ TestCase
             ( assertEqual
                 "compile simple function"
-                (Right [VM.DefineEnv "myFunc" VM.Define (Just $ VM.Function 1 [VM.PushArg 0, VM.DefineEnv "x" VM.Override Nothing, VM.PushEnv "x", VM.Ret, VM.EraseEnv "x"])])
+                (Right [VM.DefineEnv "myFunc" VM.Define (Just $ VM.Function 1 [VM.PushArg 0, VM.DefineEnv "x" VM.Override Nothing, VM.PushEnv "x", VM.Ret])])
                 (compileFunction [] "myFunc" ["x"] [AST.Return (Just (AST.Identifier "x"))])
             )
         , TestCase
@@ -251,7 +251,7 @@ testCompileFunction =
         , TestCase
             ( assertEqual
                 "compile function with multiple parameters"
-                (Right [VM.DefineEnv "multiParamsFunc" VM.Define (Just $ VM.Function 3 [VM.PushArg 0, VM.DefineEnv "x" VM.Override Nothing, VM.PushArg 1, VM.DefineEnv "y" VM.Override Nothing, VM.PushArg 2, VM.DefineEnv "z" VM.Override Nothing, VM.PushEnv "x", VM.Ret, VM.EraseEnv "x", VM.EraseEnv "y", VM.EraseEnv "z"])])
+                (Right [VM.DefineEnv "multiParamsFunc" VM.Define (Just $ VM.Function 3 [VM.PushArg 0, VM.DefineEnv "x" VM.Override Nothing, VM.PushArg 1, VM.DefineEnv "y" VM.Override Nothing, VM.PushArg 2, VM.DefineEnv "z" VM.Override Nothing, VM.PushEnv "x", VM.Ret])])
                 (compileFunction [] "multiParamsFunc" ["x", "y", "z"] [AST.Return (Just (AST.Identifier "x"))])
             )
         ]
