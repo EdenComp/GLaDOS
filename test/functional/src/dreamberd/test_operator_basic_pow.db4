@@ -1,0 +1,6 @@
+int a = 12;
+print(a ** 2);
+a = 0;
+print(a ** 2);
+a = -4;
+print(a ** 3);

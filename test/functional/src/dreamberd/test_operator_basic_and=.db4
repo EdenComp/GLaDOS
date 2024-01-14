@@ -1,0 +1,8 @@
+bool a = true;
+a &&= false;
+print(a);
+a &&= true;
+print(a);
+a = true;
+a &&= true;
+print(a);

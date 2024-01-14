@@ -1,0 +1,5 @@
+int i = 12;
+print(i % 5);
+print(i % 3);
+print(i % 12);
+print(i % 17);

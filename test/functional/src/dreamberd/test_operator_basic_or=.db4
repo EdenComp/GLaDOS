@@ -1,0 +1,7 @@
+bool a = false;
+a ||= false;
+print(a);
+a ||= true;
+print(a);
+a ||= true;
+print(a);
