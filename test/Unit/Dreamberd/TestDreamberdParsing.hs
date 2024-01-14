@@ -1,11 +1,11 @@
 module Unit.Dreamberd.TestDreamberdParsing (testDreamberdParsing) where
 
-import Dreamberd.Parser (parse, parseAndWith, parseChar, parseDreamberd, parseInteger, parseMany)
+import Dreamberd.Parser (parse, parseAndWith, parseChar, parseDreamberd, parseInteger, parseMany, parseBinaryOperator)
 import Dreamberd.Types (AstNode (..), File (File))
 import Test.HUnit (Test (..), assertBool, assertEqual)
 
 testDreamberdParsing :: Test
-testDreamberdParsing = TestList [testParseInteger, testParseDreamberd, testParseAndWith, testParseMany]
+testDreamberdParsing = TestList [testParseInteger, testParseDreamberd, testParseAndWith, testParseMany, testParseBinaryOperator]
 
 testParseInteger :: Test
 testParseInteger =
@@ -48,6 +48,65 @@ testParseMany =
             )
         , TestCase (assertEqual "for (parseMany (parseChar 'a') on empty string)" (Right ("", ("", ("", 1, 1)))) (parse (parseMany (parseChar 'a')) ("", ("", 1, 1))))
         ]
+
+testParseBinaryOperator :: Test
+testParseBinaryOperator =
+    TestList [
+        TestCase (assertEqual "parse addition operator"
+            (Right ("+", ("", ("", 1, 2))))
+            (parse parseBinaryOperator ("+", ("", 1, 1)))),
+
+        TestCase (assertEqual "parse subtraction operator"
+            (Right ("-", ("", ("", 1, 2))))
+            (parse parseBinaryOperator ("-", ("", 1, 1)))),
+
+        TestCase (assertEqual "parse multiplication operator"
+            (Right ("*", ("", ("", 1, 2))))
+            (parse parseBinaryOperator ("*", ("", 1, 1)))),
+
+        TestCase (assertEqual "parse division operator"
+            (Right ("/", ("", ("", 1, 2))))
+            (parse parseBinaryOperator ("/", ("", 1, 1)))),
+
+        TestCase (assertEqual "parse modulus operator"
+            (Right ("%", ("", ("", 1, 2))))
+            (parse parseBinaryOperator ("%", ("", 1, 1)))),
+
+        TestCase (assertEqual "parse equality operator"
+            (Right ("==", ("", ("", 1, 3))))
+            (parse parseBinaryOperator ("==", ("", 1, 1)))),
+
+        TestCase (assertEqual "parse inequality operator"
+            (Right ("!=", ("", ("", 1, 3))))
+            (parse parseBinaryOperator ("!=", ("", 1, 1)))),
+        TestCase (assertEqual "parse less than operator"
+            (Right ("<", ("", ("", 1, 2))))
+            (parse parseBinaryOperator ("<", ("", 1, 1)))),
+        TestCase (assertEqual "parse less than or equal operator"
+            (Right ("<=", ("", ("", 1, 3))))
+            (parse parseBinaryOperator ("<=", ("", 1, 1)))),
+        TestCase (assertEqual "parse greater than operator"
+            (Right (">", ("", ("", 1, 2))))
+            (parse parseBinaryOperator (">", ("", 1, 1)))),
+        TestCase (assertEqual "parse greater than or equal operator"
+            (Right (">=", ("", ("", 1, 3))))
+            (parse parseBinaryOperator (">=", ("", 1, 1)))),
+        TestCase (assertEqual "parse and operator"
+            (Right ("&&", ("", ("", 1, 3))))
+            (parse parseBinaryOperator ("&&", ("", 1, 1)))),
+        TestCase (assertEqual "parse or operator"
+            (Right ("||", ("", ("", 1, 3))))
+            (parse parseBinaryOperator ("||", ("", 1, 1)))),
+        TestCase (assertEqual "parse xor operator"
+            (Right ("^", ("", ("", 1, 2))))
+            (parse parseBinaryOperator ("^", ("", 1, 1)))),
+        TestCase (assertEqual "parse bitwise and operator"
+            (Left ":1:1: Expected '%' but found '&'")
+            (parse parseBinaryOperator ("&", ("", 1, 1)))),
+        TestCase (assertEqual "parse bitwise or operator"
+            (Left ":1:1: Expected '%' but found '|'")
+            (parse parseBinaryOperator ("|", ("", 1, 1))))
+    ]
 
 testParseDreamberd :: Test
 testParseDreamberd =
@@ -479,5 +538,17 @@ testParseDreamberd =
                 "empty file with carriage return and newline"
                 (Left "'\r\n' at :1:1")
                 (parseDreamberd (File "" "\r\n"))
+            )
+        , TestCase
+            ( assertEqual
+                "file with one function definition but no ;"
+                (Left ":1:3: Expected ';' but found 'f'")
+                (parseDreamberd (File "" "a fn() {return 1;}"))
+            )
+        , TestCase
+            ( assertEqual
+                "file with one function definition but no ; no space"
+                (Left ":1:6: Expected ';' but found '{'")
+                (parseDreamberd (File "" "afn(){return 1;}"))
             )
         ]
