@@ -54,7 +54,7 @@ compileReturn _ Nothing = Right [VM.Push VM.Void, VM.Ret]
 compileFunction :: [String] -> String -> [String] -> [AST.AstNode] -> Either String [VM.Insts]
 compileFunction params name args body =
     compileNodes (args ++ params) body []
-        >>= \bodyInsts -> Right [VM.DefineEnv name False (Just $ VM.Function (concatMap (\nb -> [VM.PushArg nb, VM.DefineEnv (args !! nb) False Nothing]) [0..(length args - 1)] ++ bodyInsts ++ map VM.EraseEnv args))]
+        >>= \bodyInsts -> Right [VM.DefineEnv name False (Just $ VM.Function (concatMap (\nb -> [VM.PushArg nb, VM.DefineEnv (args !! nb) False Nothing]) [0 .. (length args - 1)] ++ bodyInsts ++ map VM.EraseEnv args))]
 
 compileCall :: [String] -> String -> [AST.AstNode] -> Either String [VM.Insts]
 compileCall params "=" [_, AST.Identifier iden, value] = compileAssignation params iden value False
