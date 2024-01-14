@@ -1,0 +1,3 @@
+print(true && false);
+print(true && true);
+print(false && false);

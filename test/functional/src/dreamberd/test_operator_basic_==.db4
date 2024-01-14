@@ -1,0 +1,3 @@
+int i = 102;
+print(i == 102);
+print(i == 103);

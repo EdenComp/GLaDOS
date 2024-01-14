@@ -1,0 +1,4 @@
+int a = 12;
+print(a < 5);
+print(a < 12);
+print(a < 50);

@@ -1,0 +1,4 @@
+int i = 102;
+print(i <= 102);
+print(i <= 103);
+print(i <= 101);
