@@ -8,6 +8,7 @@ import Unit.Dreamberd.TestDreamberdVm (testDreamberdVm)
 import Unit.Lisp.TestLispEval (testLispEvaluation)
 import Unit.Lisp.TestLispParsing (testLispParsing)
 import Unit.Lisp.TestLispSExpr (testLispSExpr)
+import Unit.Dreamberd.TestDreamberdCompilation (testDreamberdCompilation)
 
 main :: IO ()
 main = do
@@ -24,4 +25,5 @@ listTests =
         , testDreamberdVm
         , testDreamberdBytecode
         , testDreamberdTypes
+        , testDreamberdCompilation
         ]
