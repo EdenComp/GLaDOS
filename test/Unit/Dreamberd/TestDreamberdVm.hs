@@ -56,12 +56,14 @@ testCalls =
 testBuiltins :: Test
 testBuiltins =
     TestList
-        [ TestCase $ execVM [Push (VM.Integer 3), Push (VM.Integer 2), Push (VM.Symbol (Builtin Pow)), Call, Ret] >>= assertEqual "Integers: pow" (Right (VM.Integer 8))
+        [ TestCase $ execVM [Push (VM.String "bonsoir"), Push (VM.Bool True), Push (VM.Symbol (Builtin Add)), Call, Ret] >>= assertEqual "Strings: concat" (Right (VM.String "Truebonsoir"))
+        , TestCase $ execVM [Push (VM.Integer 3), Push (VM.Integer 2), Push (VM.Symbol (Builtin Pow)), Call, Ret] >>= assertEqual "Integers: pow" (Right (VM.Integer 8))
         , TestCase $ execVM [Push (VM.Float 1.44), Push (VM.Float 2.56), Push (VM.Symbol (Builtin Add)), Call, Ret] >>= assertEqual "Floats: add" (Right (VM.Float 4.0))
         , TestCase $ execVM [Push (VM.Float 10.8), Push (VM.Float 1.5), Push (VM.Symbol (Builtin Sub)), Call, Ret] >>= assertEqual "Floats: sub" (Right (VM.Float (-9.3)))
         , TestCase $ execVM [Push (VM.Float 2.5), Push (VM.Float 2.5), Push (VM.Symbol (Builtin Mul)), Call, Ret] >>= assertEqual "Floats: mul" (Right (VM.Float 6.25))
         , TestCase $ execVM [Push (VM.Float 1.4), Push (VM.Float 5.6), Push (VM.Symbol (Builtin Div)), Call, Ret] >>= assertEqual "Floats: div" (Right (VM.Float 4.0))
         , TestCase $ execVM [Push (VM.Float 1.5), Push (VM.Float 5.5), Push (VM.Symbol (Builtin Mod)), Call, Ret] >>= assertEqual "Floats: mod" (Right (VM.Float 1.0))
+        , TestCase $ execVM [Push (VM.Float 10.5), Push (VM.Float 2.2), Push (VM.Symbol (Builtin Pow)), Call, Ret] >>= assertEqual "Floats: pow" (Right (VM.Float 3939.473184462729))
         , TestCase $ execVM [Push (VM.Float 1.5), Push (VM.Float 5.5), Push (VM.Symbol (Builtin Less)), Call, Ret] >>= assertEqual "Floats: less" (Right (VM.Bool False))
         , TestCase $ execVM [Push (VM.Float 1.5), Push (VM.Float 5.5), Push (VM.Symbol (Builtin LessOrEqual)), Call, Ret] >>= assertEqual "Floats: less or equal" (Right (VM.Bool False))
         , TestCase $ execVM [Push (VM.Float 1.5), Push (VM.Float 5.5), Push (VM.Symbol (Builtin Greater)), Call, Ret] >>= assertEqual "Floats: greater" (Right (VM.Bool True))
@@ -74,6 +76,9 @@ testBuiltins =
         , TestCase $ execVM [Push (VM.Integer 18), Push (VM.String "the last integer is... "), Push (VM.Symbol (Builtin Add)), Call, Ret] >>= assertEqual "Strings: concat to an integer" (Right (VM.String "the last integer is... 18"))
         , TestCase $ execVM [Push (VM.Bool False), Push (VM.Bool True), Push (VM.Symbol (Builtin Eq)), Call, Ret] >>= assertEqual "Bools: eq" (Right (VM.Bool False))
         , TestCase $ execVM [Push (VM.Bool False), Push (VM.Bool True), Push (VM.Symbol (Builtin Neq)), Call, Ret] >>= assertEqual "Bools: neq" (Right (VM.Bool True))
+        , TestCase $ execVM [Push (VM.Bool False), Push (VM.Bool True), Push (VM.Symbol (Builtin And)), Call, Ret] >>= assertEqual "Bools: and" (Right (VM.Bool False))
+        , TestCase $ execVM [Push (VM.Bool False), Push (VM.Bool False), Push (VM.Symbol (Builtin Or)), Call, Ret] >>= assertEqual "Bools: or" (Right (VM.Bool False))
+        , TestCase $ execVM [Push (VM.Bool True), Push (VM.Bool True), Push (VM.Symbol (Builtin Xor)), Call, Ret] >>= assertEqual "Bools: xor" (Right (VM.Bool False))
         , TestCase $ execVM [Push (VM.String "hello"), Push (VM.String "hello"), Push (VM.Symbol (Builtin Eq)), Call, Ret] >>= assertEqual "Strings: eq" (Right (VM.Bool True))
         , TestCase $ execVM [Push (VM.String "hello"), Push (VM.String "hello"), Push (VM.Symbol (Builtin Neq)), Call, Ret] >>= assertEqual "Strings: neq" (Right (VM.Bool False))
         , TestCase $ execVM [Push (VM.Float 0), Push (VM.Float 1), Push (VM.Symbol (Builtin Div)), Call, Ret] >>= assertEqual "Floats: div by zero" (Left "Cannot divide by 0")
@@ -82,6 +87,7 @@ testBuiltins =
         , TestCase $ execVM [Push (VM.String "hey"), Push (VM.String "yo"), Push (VM.Symbol (Builtin GreaterOrEqual)), Call, Ret] >>= assertEqual "Strings: incompatible operator" (Left "Wrong data types in stack: GreaterOrEqual with a string as left operator")
         , TestCase $ execVM [Push (VM.Integer 2), Push (VM.String "yo"), Push (VM.Symbol (Builtin Sub)), Call, Ret] >>= assertEqual "String and Integer: incompatible operator" (Left "Wrong data types in stack: Sub with a string and an integer")
         , TestCase $ execVM [Push (VM.Integer 1), Push (VM.Integer 56), Push (VM.Symbol (Builtin Xor)), Call, Ret] >>= assertEqual "Integers: incompatible operator" (Left "Wrong data types in stack: Xor with 2 integers")
+        , TestCase $ execVM [Push (VM.Float 1.2), Push (VM.Float 7.0), Push (VM.Symbol (Builtin Or)), Call, Ret] >>= assertEqual "Integers: incompatible operator" (Left "Wrong data types in stack: Or with 2 floats")
         ]
 
 testEnvDefinesAndRedefines :: Test
