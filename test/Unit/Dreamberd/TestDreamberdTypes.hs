@@ -23,18 +23,18 @@ testAstTypes =
         , TestCase (assertEqual "Boolean False" (show (AST.Boolean False)) "false")
         , TestCase (assertEqual "String" (show (AST.String "test")) "\"test\"")
         , TestCase (assertEqual "Identifier" (show (AST.Identifier "x")) "(Identifier x)")
-        , TestCase (assertEqual "Function" (show (AST.Function "foo" [] [AST.Return (AST.Integer 1)])) "Function \"foo\" [] [Return 1]")
+        , TestCase (assertEqual "Function" (show (AST.Function "foo" [] [AST.Return $ Just $ AST.Integer 1])) "Function \"foo\" [] [Return Just 1]")
         , TestCase (assertEqual "Call" (show (AST.Call "bar" [AST.Integer 42])) "(Call bar [42])")
         , TestCase (assertEqual "Operator" (show (AST.Call "+" [AST.Integer 2, AST.Integer 3])) "(Call + [2,3])")
         , TestCase (assertEqual "AssignVariable" (show (AST.Call "=" [AST.Identifier "int", AST.Identifier "x", AST.Integer 42])) "(Call = [(Identifier int),(Identifier x),42])")
         , TestCase
             ( assertEqual
                 "If"
-                (show (AST.If (AST.Boolean True) [AST.Return (AST.Integer 1)] [AST.Return (AST.Integer 2)]))
-                "If (true) [Return 1] [Return 2]"
+                (show (AST.If (AST.Boolean True) [AST.Return $ Just $ AST.Integer 1] [AST.Return $ Just $ AST.Integer 2]))
+                "If (true) [Return Just 1] [Return Just 2]"
             )
-        , TestCase (assertEqual "Return" (show (AST.Return (AST.String "hello"))) "Return \"hello\"")
-        , TestCase (assertEqual "Loop" (show (AST.Loop (AST.Boolean True) [AST.Return (AST.Integer 1)] Nothing Nothing)) "(Loop true [Return 1] Nothing Nothing)")
+        , TestCase (assertEqual "Return" (show (AST.Return $ Just $ AST.String "hello")) "Return Just \"hello\"")
+        , TestCase (assertEqual "Loop" (show (AST.Loop (AST.Boolean True) [AST.Return $ Just $ AST.Integer 1] Nothing Nothing)) "(Loop true [Return Just 1] Nothing Nothing)")
         , TestCase (assertEqual "List" (show (AST.List [AST.Integer 1, AST.Integer 2, AST.Integer 3])) "[1 2 3]")
         ]
 

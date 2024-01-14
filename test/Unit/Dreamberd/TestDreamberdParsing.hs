@@ -196,25 +196,25 @@ testParseDreamberd =
           TestCase
             ( assertEqual
                 "parse function declaration"
-                (Right [Function "myFunc" ["x"] [Return (Identifier "x")]])
+                (Right [Function "myFunc" ["x"] [Return $ Just $ Identifier "x"]])
                 (parseDreamberd (File "" "fn myFunc(x) {return x;}"))
             )
         , TestCase
             ( assertEqual
                 "parse function declaration no space"
-                (Right [Function "myFunc" ["x"] [Return (Identifier "x")]])
+                (Right [Function "myFunc" ["x"] [Return $ Just $ Identifier "x"]])
                 (parseDreamberd (File "" "fn myFunc(x){return x;}"))
             )
         , TestCase
             ( assertEqual
                 "parse function declaration no args"
-                (Right [Function "myFunc" [] [Return (Identifier "x")]])
+                (Right [Function "myFunc" [] [Return $ Just $ Identifier "x"]])
                 (parseDreamberd (File "" "fn myFunc() {return x;}"))
             )
         , TestCase
             ( assertEqual
                 "parse function declaration no args no parenthesis"
-                (Right [Function "myFunc" [] [Return (Identifier "x")]])
+                (Right [Function "myFunc" [] [Return $ Just $ Identifier "x"]])
                 (parseDreamberd (File "" "fn myFunc {return x;}"))
             )
         , TestCase
@@ -244,7 +244,7 @@ testParseDreamberd =
         , TestCase
             ( assertEqual
                 "parse function declaration with if else and return value"
-                (Right [Function "myFunc" [] [If (Boolean True) [Return (Integer 1)] [Return (Integer 2)]]])
+                (Right [Function "myFunc" [] [If (Boolean True) [Return $ Just $ Integer 1] [Return $ Just $ Integer 2]]])
                 (parseDreamberd (File "" "fn myFunc {if (true) {return 1;} else {return 2;}}"))
             )
         , -- Test for function call
@@ -410,7 +410,7 @@ testParseDreamberd =
         , TestCase
             ( assertEqual
                 "parse a strlen function in dreamberd4"
-                (Right [Function "strlen" ["str"] [If (Call "==" [Identifier "str", String ""]) [Return (Integer 0)] [Return (Call "+" [Integer 1, Call "strlen" [Call "substr" [Identifier "str", Integer 1]]])]]])
+                (Right [Function "strlen" ["str"] [If (Call "==" [Identifier "str", String ""]) [Return $ Just $ Integer 0] [Return $ Just $ Call "+" [Integer 1, Call "strlen" [Call "substr" [Identifier "str", Integer 1]]]]]])
                 (parseDreamberd (File "" "fn strlen(str) {if (str \n== \"\") {return \n\n0\n\n;} \n\nelse {\n\nreturn \n1 + strlen(substr(\nstr, 1));}}"))
             )
         ]
