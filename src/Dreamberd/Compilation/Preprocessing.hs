@@ -12,7 +12,7 @@ import System.Directory (getCurrentDirectory, getHomeDirectory)
 executePreprocessing :: File [AstNode] -> IO (Either String [AstNode])
 executePreprocessing file =
     preprocessImports file >>= \case
-        Right nodes' -> return $ Right $ preprocessOptimisations $ preprocessFunctions nodes'
+        Right nodes' -> return $ Right $ preprocessOptimizations $ preprocessFunctions nodes'
         Left err -> return $ Left err
 
 preprocessImports :: File [AstNode] -> IO (Either String [AstNode])
@@ -114,25 +114,21 @@ hoistFunctions (If cond trueBody falseBody) = If cond (preprocessFunctions trueB
 hoistFunctions (Loop test body initNode updateNode) = Loop test (preprocessFunctions body) initNode updateNode
 hoistFunctions a = a
 
-preprocessOptimisations :: [AstNode] -> [AstNode]
-preprocessOptimisations (Call name [Integer x, Integer y] : xs) = optimiseIntegerCall name x y : preprocessOptimisations xs
-preprocessOptimisations (Call name [Float x, Float y] : xs) = optimiseFloatCall name x y : preprocessOptimisations xs
-preprocessOptimisations (Call name [Boolean x, Boolean y] : xs) = optimiseBoolCall name x y : preprocessOptimisations xs
-preprocessOptimisations (Call name [String x, String y] : xs) = optimiseStringCall name x y : preprocessOptimisations xs
-preprocessOptimisations (Call name insts : xs) = preprocessOptimisations' (Call name (preprocessOptimisations insts) : xs)
-preprocessOptimisations (x : xs) = x : preprocessOptimisations xs
-preprocessOptimisations [] = []
+preprocessOptimizations :: [AstNode] -> [AstNode]
+preprocessOptimizations (Call name insts : xs) = preprocessOptimizations' (Call name (preprocessOptimizations insts) : xs)
+preprocessOptimizations (x : xs) = x : preprocessOptimizations xs
+preprocessOptimizations [] = []
 
-preprocessOptimisations' :: [AstNode] -> [AstNode]
-preprocessOptimisations' (Call name [Integer x, Integer y] : xs) = optimiseIntegerCall name x y : preprocessOptimisations xs
-preprocessOptimisations' (Call name [Float x, Float y] : xs) = optimiseFloatCall name x y : preprocessOptimisations xs
-preprocessOptimisations' (Call name [Boolean x, Boolean y] : xs) = optimiseBoolCall name x y : preprocessOptimisations xs
-preprocessOptimisations' (Call name [String x, String y] : xs) = optimiseStringCall name x y : preprocessOptimisations xs
-preprocessOptimisations' (x : xs) = x : preprocessOptimisations xs
-preprocessOptimisations' [] = []
+preprocessOptimizations' :: [AstNode] -> [AstNode]
+preprocessOptimizations' (Call name [Integer x, Integer y] : xs) = optimizeIntegerCall name x y : preprocessOptimizations xs
+preprocessOptimizations' (Call name [Float x, Float y] : xs) = optimizeFloatCall name x y : preprocessOptimizations xs
+preprocessOptimizations' (Call name [Boolean x, Boolean y] : xs) = optimizeBoolCall name x y : preprocessOptimizations xs
+preprocessOptimizations' (Call name [String x, String y] : xs) = optimizeStringCall name x y : preprocessOptimizations xs
+preprocessOptimizations' (x : xs) = x : preprocessOptimizations xs
+preprocessOptimizations' [] = []
 
-optimiseIntegerCall :: String -> Int -> Int -> AstNode
-optimiseIntegerCall name x y = case name of
+optimizeIntegerCall :: String -> Int -> Int -> AstNode
+optimizeIntegerCall name x y = case name of
     "+" -> Integer (x + y)
     "-" -> Integer (x - y)
     "*" -> Integer (x * y)
@@ -147,8 +143,8 @@ optimiseIntegerCall name x y = case name of
     ">=" -> Boolean (x >= y)
     _ -> Call name [Integer x, Integer y]
 
-optimiseFloatCall :: String -> Double -> Double -> AstNode
-optimiseFloatCall name x y = case name of
+optimizeFloatCall :: String -> Double -> Double -> AstNode
+optimizeFloatCall name x y = case name of
     "+" -> Float (x + y)
     "-" -> Float (x - y)
     "*" -> Float (x * y)
@@ -162,8 +158,8 @@ optimiseFloatCall name x y = case name of
     ">=" -> Boolean (x >= y)
     _ -> Call name [Float x, Float y]
 
-optimiseBoolCall :: String -> Bool -> Bool -> AstNode
-optimiseBoolCall name x y = case name of
+optimizeBoolCall :: String -> Bool -> Bool -> AstNode
+optimizeBoolCall name x y = case name of
     "&&" -> Boolean (x && y)
     "||" -> Boolean (x || y)
     "==" -> Boolean (x == y)
@@ -171,8 +167,8 @@ optimiseBoolCall name x y = case name of
     "^" -> Boolean (x /= y)
     _ -> Call name [Boolean x, Boolean y]
 
-optimiseStringCall :: String -> String -> String -> AstNode
-optimiseStringCall name x y = case name of
+optimizeStringCall :: String -> String -> String -> AstNode
+optimizeStringCall name x y = case name of
     "+" -> String (x ++ y)
     "==" -> Boolean (x == y)
     "!=" -> Boolean (x /= y)
