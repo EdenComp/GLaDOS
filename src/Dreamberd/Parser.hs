@@ -178,6 +178,8 @@ parseBinaryOperator =
         <|> parseString "<="
         <|> parseString ">="
         <|> parseString "%="
+        <|> parseString "&&="
+        <|> parseString "||="
         <|> parseString "&&"
         <|> parseString "||"
         <|> parseString "**"
