@@ -302,7 +302,7 @@ parseElifStatement =
 parseElseStatement :: Parser [AstNode]
 parseElseStatement =
     parseStripped (parseString "else")
-        >> parseStripped parseScope
+        >> parseStripped (parseScope <|> ((: []) <$> parseStatement))
 
 parseStripped :: Parser a -> Parser a
 parseStripped p = parseManyWhiteSpaces *> p <* parseManyWhiteSpaces
@@ -319,7 +319,7 @@ parseForLoop =
     parseStripped (parseString "for")
         >> parseEnclosed ("(", ")") parseForParts
         >>= \(initNode, conditionNode, updateNode) ->
-            parseStripped parseScope
+            parseStripped (parseScope <|> ((: []) <$> parseStatement))
                 >>= \body -> return (Loop conditionNode body (Just initNode) (Just updateNode))
 
 parseForParts :: Parser (AstNode, AstNode, AstNode)
@@ -335,7 +335,7 @@ parseConditionalScope :: Parser (AstNode, [AstNode])
 parseConditionalScope =
     parseEnclosed ("(", ")") parseExpression
         >>= \condition ->
-            parseStripped parseScope
+            parseStripped (parseScope <|> ((: []) <$> parseStatement))
                 >>= \body -> return (condition, body)
 
 parseScope :: Parser [AstNode]
