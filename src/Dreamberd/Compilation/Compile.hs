@@ -16,7 +16,7 @@ compileNodes params (curNode : nextNodes) insts = compileNode params curNode >>=
 
 compileScopeNodes :: [String] -> [AST.AstNode] -> [VM.Insts] -> Either String [VM.Insts]
 compileScopeNodes _ [] insts = Right insts
-compileScopeNodes params (curNode : nextNodes) insts = compileNode params curNode >>= (\curInsts -> compileScopeNodes params nextNodes (insts ++ curInsts)) . getScopedInstructions
+compileScopeNodes params (curNode : nextNodes) insts = compileNode params curNode >>= (\curInsts -> compileScopeNodes params nextNodes (insts ++ curInsts)) >>= \finalInsts -> Right $ finalInsts ++ getScopedInstructions finalInsts
 
 compileNode :: [String] -> AST.AstNode -> Either String [VM.Insts]
 compileNode params (AST.Call op args) = compileCall params op args
@@ -24,7 +24,7 @@ compileNode params (AST.If test trueBody falseBody) = compileIf params test true
 compileNode params (AST.Function name args body) = compileFunction params name args body
 compileNode params (AST.Return value) = compileReturn params value
 compileNode params (AST.Loop test body initNode updateNode) = compileLoop params test body initNode updateNode
-compileNode params (AST.Scope body) = getScopedInstructions <$> compileScopeNodes params body []
+compileNode params (AST.Scope body) = compileScopeNodes params body [] >>= \insts -> Right $ insts ++ getScopedInstructions insts
 compileNode _ node = (compileValuePush node >>= \inst -> Right [inst]) <> Left "Unknown node type"
 
 compileLoop :: [String] -> AST.AstNode -> [AST.AstNode] -> Maybe AST.AstNode -> Maybe AST.AstNode -> Either String [VM.Insts]
@@ -44,6 +44,7 @@ compileLoop params test body initNode updateNode =
                                             ++ bodyInsts
                                             ++ updateInsts
                                             ++ [VM.Jump (-(length bodyInsts + length updateInsts + length testInsts + 2)) Nothing]
+                                            ++ getScopedInstructions initInsts
   where
     compileMaybeNode = maybe (Right []) (compileNode params)
 
@@ -76,10 +77,10 @@ compileCall params [opA, opB] [AST.Identifier iden]
 compileCall params op args = compileBuiltinCall params op args <> compileCustomCall params op args
 
 getScopedInstructions :: [VM.Insts] -> [VM.Insts]
-getScopedInstructions insts = insts ++ map VM.EraseEnv (mapMaybe getIdenfierFromInst insts)
+getScopedInstructions insts = map VM.EraseEnv (mapMaybe getIdentifierFromInst insts)
   where
-    getIdenfierFromInst (VM.DefineEnv iden _ _) = Just iden
-    getIdenfierFromInst _ = Nothing
+    getIdentifierFromInst (VM.DefineEnv iden _ _) = Just iden
+    getIdentifierFromInst _ = Nothing
 
 compileIf :: [String] -> AST.AstNode -> [AST.AstNode] -> [AST.AstNode] -> Either String [VM.Insts]
 compileIf params test trueBody falseBody =
