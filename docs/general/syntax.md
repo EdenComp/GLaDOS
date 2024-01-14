@@ -2,24 +2,27 @@
 
 Let's go through the syntax of Dreamberd.
 
-If you try it, you'll that it is quite similar to JavaScript, with some parts borrowed from
-Python, C...
+If you try it, you'll see that it is quite similar to JavaScript, with some parts borrowed from
+Python, C, Rust...
 
 To understand the whole syntax, here's the BNF of the language:
 ```text
 <syntax> ::= <empty> | <optional_whitespace> <statement> <optional_whitespace> <syntax>
 
-<statement> ::= <var_assignment> | <var_reassignment> | <if_statement> | <while_statement> | <function_definition> | <function_call>
+<statement> ::= <var_assignment> | <var_reassignment> | <if_statement> | <while_statement> | <function_definition> | <function_call> | <lambda_function> | <import> | <return>
 <identifier> ::= <identifier_char> | <identifier_char> <identifier>
-<function_definition> ::= "fn" <mandatory_whitespace> <identifier> <optional_whitespace> "(" <optional_whitespace> <comma_separated_identifier_list> <optional_whitespace> ")" <optional_whitespace> <scoped_code>
+<function_definition> ::= "fn" <mandatory_whitespace> <identifier> <optional_whitespace> ["(" <optional_whitespace> [<comma_separated_identifier_list>] <optional_whitespace> ")" <optional_whitespace>] <scoped_code>
 <while_statement> ::= "while" <optional_whitespace> <condition> <optional_whitespace> <scoped_code>
+<for-statement> ::= "for" <optional_whitespace> "(" <optional_whitespace> <value> <optional_whitespace> ";" <optional_whitespace> <value> <optional_whitespace> ";" <optional_whitespace> <value> <optional_whitespace> ")" <optional_whitespace> <code-block>
 <if_statement> ::= "if" <optional_whitespace> <condition> <optional_whitespace> <scoped_code> <optional_whitespace> <elif_statement> <else_statement>
 <elif_statement> ::= <empty> | "elif" <optional_whitespace> <condition> <optional_whitespace> <scoped_code> <optional_whitespace> <elif_statement>
 <else_statement> ::= <empty> | "else" <optional_whitespace> <scoped_code>
 <function_call> ::= <identifier> <optional_whitespace> "(" <optional_whitespace> <function_call_params_list> <optional_whitespace> ")" <optional_whitespace> ";"
+<lambda_function> ::= "(" <optional_whitespace> [<comma_separated_identifier_list>] <optional_whitespace> ")" <optional_whitespace> <lambda_sign> <optional_whitespace> <scoped_code>
 <var_assignment> ::= <var_type> <mandatory_whitespace> <identifier> <optional_whitespace> "=" <optional_whitespace> <value> <optional_whitespace> ";"
-<var_reassignment> ::= <identifier> <optional_whitespace> <reassignment_operator> <optional_whitespace> <value> <optional_whitespace> ";"
-
+<var_reassignment> ::= <identifier> <optional_whitespace> <reassignment_operator> <optional_whitespace> <value> <optional_whitespace> ";" | <var_increment_decrement>
+<import> ::= "import" <optional_whitespace> <string> <optional_whitespace> ";"
+<return> ::= "return" <optional_whitespace> <value> <optional_whitespace> ";" | <optional_whitespace> <value> <optional_whitespace>
 
 <float> ::= <int> "." <int>
 <int> ::= <digit> | <digit> <int>
@@ -29,17 +32,22 @@ To understand the whole syntax, here's the BNF of the language:
 
 
 <function_call_params_list> ::= <value> | <value> <optional_whitespace> "," <optional_whitespace> <function_call_params_list> | <empty>
-<comma_separated_identifier_list> ::= <identifier> | <identifier> <optional_whitespace> "," <optional_whitespace> <comma_separated_identifier_list> | <empty>
+<comma_separated_identifier_list> ::= <identifier> | <identifier> <optional_whitespace> "," <optional_whitespace> <comma_separated_identifier_list>
 
 <value> ::= (<expression> | <infix>)
-<expression> ::= <identifier> | <int> | <float> | <bool> | <string> | <function_call>
-<infix> ::= <expression> <optional_whitespace> <infix_operator> <optional_whitespace> <expression>
+<expression> ::= <identifier> | <int> | <float> | <bool> | <string> | <function_call> | <lambda_function> | <var_increment_decrement>
+<infix> ::= <expression> | <infix> <optional_whitespace> <infix_operator> <optional_whitespace> <expression>
 
 <condition> ::= "(" <optional_whitespace> <value> <optional_whitespace> ")"
 <scoped_code> ::= "{" <syntax> "}"
 
-<infix_operator> ::= "+" | "-" | "*" | "/" | "%" | "==" | "=" | "<=" | "<" | ">=" | ">" | "!="
-<reassignment_operator> ::= "=" | "+=" | "-=" | "*=" | "/=" | "%="
+<infix_operator> ::= "+" | "-" | "*" | "/" | "%" | "==" | "=" | "<=" | "<" | ">=" | ">" | "!=" | "||" | "&&" | "^"
+<reassignment_operator> ::= "=" | "+=" | "-=" | "*=" | "/=" | "%=" | "&&=" | "||="
+
+<var_increment_decrement> ::= <identifier> <optional_whitespace> <increment_decrement_operator> <optional_whitespace> ";"
+<increment_decrement_operator> ::= "++" | "--"
+
+<lambda_sign> ::= "->" | "=>" | "|>"
 
 <ascii_char> ::= <letter> | <digit> | <complex_char>
 <identifier_char> ::= <letter> | <digit> | "-" | "_"
