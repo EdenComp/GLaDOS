@@ -1,6 +1,7 @@
 module Dreamberd.Parser (parseDreamberd, parse, Parser, parseChar, parseAnyChar, parseAndWith, parseMany, parseSome, parseInteger, parseBinaryOperator) where
 
 import Control.Applicative (Alternative (..))
+import Debug.Trace (trace)
 import Dreamberd.Types (AstNode (..), File (..))
 import Options.Applicative (optional)
 
@@ -227,7 +228,7 @@ parseInfixFunctionIdentifierString :: Parser String
 parseInfixFunctionIdentifierString = parseChar '`' *> parseIdentifierString <* parseChar '`'
 
 parseAtom :: Parser AstNode
-parseAtom = parseEnclosed ("(", ")") parseExpression <|> parseFunctionCall <|> parseLiteral <|> parseIdentifier
+parseAtom = parseFunctionCall <|> parseEnclosed ("(", ")") parseExpression <|> parseLiteral <|> parseLambda <|> parseIdentifier
 
 parseLiteral :: Parser AstNode
 parseLiteral = (Boolean <$> parseBoolean) <|> (String <$> parseStringLiteral) <|> (Float <$> parseFloat) <|> (Integer <$> parseInteger)
@@ -278,10 +279,21 @@ parseIdentifier = Identifier <$> parseIdentifierString
 
 parseFunctionCall :: Parser AstNode
 parseFunctionCall =
-    parseStripped parseIdentifierString
-        >>= \identifier ->
+    parseStripped (parseEnclosed ("(", ")") parseCallee <|> parseCallee)
+        >>= \callee ->
             parseEnclosed ("(", ")") (parseOrValue parseFunctionCallArgs [])
-                >>= \args -> return (Call (Identifier identifier) args)
+                >>= \args -> return (Call callee args)
+parseCallee :: Parser AstNode
+parseCallee = parseEnclosed ("(", ")") parseLambda <|> (Identifier <$> parseIdentifierString)
+
+parseLambda :: Parser AstNode
+parseLambda =
+    parseStripped (parseEnclosed ("(", ")") (parseOrValue parseFunctionDeclarationArgs []))
+        >>= \args ->
+            parseStripped $
+                (parseString "=>" <|> parseString "->" <|> parseString "|>")
+                    >> parseStripped (parseScope <|> ((: []) <$> (Return . Just <$> parseExpression)))
+                    >>= \body -> return (Lambda args body)
 
 parseFunctionCallArgs :: Parser [AstNode]
 parseFunctionCallArgs =
