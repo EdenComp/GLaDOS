@@ -79,7 +79,7 @@ compileCall params op args = compileBuiltinCall params op args <> compileCustomC
 getScopedInstructions :: [VM.Insts] -> [VM.Insts]
 getScopedInstructions insts = map VM.EraseEnv (mapMaybe getIdentifierFromInst insts)
   where
-    getIdentifierFromInst (VM.DefineEnv iden _ _) = Just iden
+    getIdentifierFromInst (VM.DefineEnv iden VM.Define _) = Just iden
     getIdentifierFromInst _ = Nothing
 
 compileIf :: [String] -> AST.AstNode -> [AST.AstNode] -> [AST.AstNode] -> Either String [VM.Insts]
