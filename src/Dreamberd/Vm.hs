@@ -12,7 +12,7 @@ module Dreamberd.Vm (
 
 import Data.Fixed (mod')
 import GHC.Float (int2Double)
-import System.IO (hFlush, stdout)
+import System.IO (hFlush, hPutStr, stderr, stdout)
 
 data Value
     = Integer Int
@@ -100,8 +100,9 @@ execInstruction env args stack insts (Push val) idx scopeIdx = exec env args (va
 execInstruction env args stack insts (PushArg arg) idx scopeIdx
     | arg >= length args || arg < 0 = return (Left "Argument index out of bounds")
     | otherwise = exec env args ((args !! arg) : stack) insts (idx + 1) scopeIdx
-execInstruction env args stack insts (PushEnv "print") idx scopeIdx = exec env args (Symbol (FunctionName "print") : stack) insts (idx + 1) scopeIdx
 execInstruction env args stack insts (PushEnv "input") idx scopeIdx = exec env args (Symbol (FunctionName "input") : stack) insts (idx + 1) scopeIdx
+execInstruction env args stack insts (PushEnv "print") idx scopeIdx = exec env args (Symbol (FunctionName "print") : stack) insts (idx + 1) scopeIdx
+execInstruction env args stack insts (PushEnv "error") idx scopeIdx = exec env args (Symbol (FunctionName "error") : stack) insts (idx + 1) scopeIdx
 execInstruction env args stack insts (PushEnv name) idx scopeIdx =
     case findEnvValue name env of
         Just (Function _ _, _) -> exec env args (Symbol (FunctionName name) : stack) insts (idx + 1) scopeIdx
@@ -120,9 +121,11 @@ execInstruction env args stack insts (Jump num cond) idx scopeIdx = execJump env
 
 execCall :: [Env] -> [Value] -> Int -> IO (Either String [Value])
 execCall _ [] _ = return (Left "Stack is empty for a Call instruction")
-execCall _ (Symbol (FunctionName "print") : val : xs) _ = putStr (show val) >> return (Right xs)
-execCall _ (Symbol (FunctionName "print") : _) _ = return (Left "Stack is empty for print instruction")
 execCall _ (Symbol (FunctionName "input") : xs) _ = hFlush stdout >> getLine >>= \line -> return (Right (String line : xs))
+execCall _ (Symbol (FunctionName "print") : val : xs) _ = putStr (show val) >> return (Right xs)
+execCall _ (Symbol (FunctionName "print") : _) _ = return (Left "Stack is empty for a print instruction")
+execCall _ (Symbol (FunctionName "error") : val : xs) _ = hPutStr stderr (show val) >> return (Right xs)
+execCall _ (Symbol (FunctionName "error") : _) _ = return (Left "Stack is empty for an error instruction")
 execCall env (Symbol (FunctionName fct) : xs) scopeIdx = case findEnvValue fct env of
     Just (Function args insts, fctScope) -> do
         ret <- exec (filter (\e -> scope e <= fctScope) env) xs [] insts 0 (scopeIdx + 1)
