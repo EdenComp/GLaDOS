@@ -37,12 +37,16 @@ Integer: 8 bytes for length + integral number as bits
 - `0x33`: Mul
 - `0x34`: Div
 - `0x35`: Mod
-- `0x36`: Eq
-- `0x37`: Neq
-- `0x38`: Less
-- `0x39`: LessOrEqual
-- `0x3A`: Greater
-- `0x3B`: GreaterOrEqual
+- `0x36`: Pow
+- `0x37`: Eq
+- `0x38`: Neq
+- `0x39`: Less
+- `0x3A`: LessOrEqual
+- `0x3B`: Greater
+- `0x3C`: GreaterOrEqual
+- `0x3D`: And
+- `0x3E`: Or
+- `0x3F`: Xor
 
 ## DefineEnv
 

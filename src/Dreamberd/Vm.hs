@@ -51,12 +51,16 @@ data Operator
     | Mul
     | Div
     | Mod
+    | Pow
     | Eq
     | Neq
     | Less
     | LessOrEqual
     | Greater
     | GreaterOrEqual
+    | And
+    | Or
+    | Xor
     deriving (Enum, Eq, Show)
 
 data Insts
@@ -159,27 +163,34 @@ execBuiltin (Integer l : Integer r : xs) op = case op of
     Mul -> Right (Integer (l * r) : xs)
     Div -> Right (Integer (div l r) : xs)
     Mod -> Right (Integer (mod l r) : xs)
+    Pow -> Right (Integer (l ^ r) : xs)
     Eq -> Right (Bool (l == r) : xs)
     Neq -> Right (Bool (l /= r) : xs)
     Less -> Right (Bool (l < r) : xs)
     LessOrEqual -> Right (Bool (l <= r) : xs)
     Greater -> Right (Bool (l > r) : xs)
     GreaterOrEqual -> Right (Bool (l >= r) : xs)
+    _ -> Left ("Wrong data types in stack: " ++ show op ++ " with 2 numbers")
 execBuiltin (Float l : Float r : xs) op = case op of
     Add -> Right (Float (l + r) : xs)
     Sub -> Right (Float (l - r) : xs)
     Mul -> Right (Float (l * r) : xs)
     Div -> Right (Float (l / r) : xs)
     Mod -> Right (Float (mod' l r) : xs)
+    Pow -> Right (Float (l ** r) : xs)
     Eq -> Right (Bool (l == r) : xs)
     Neq -> Right (Bool (l /= r) : xs)
     Less -> Right (Bool (l < r) : xs)
     LessOrEqual -> Right (Bool (l <= r) : xs)
     Greater -> Right (Bool (l > r) : xs)
     GreaterOrEqual -> Right (Bool (l >= r) : xs)
+    _ -> Left ("Wrong data types in stack: " ++ show op ++ " with 2 floats")
 execBuiltin (Bool l : Bool r : xs) op = case op of
     Eq -> Right (Bool (l == r) : xs)
     Neq -> Right (Bool (l /= r) : xs)
+    And -> Right (Bool (l && r) : xs)
+    Or -> Right (Bool (l || r) : xs)
+    Xor -> Right (Bool (l /= r) : xs)
     _ -> Left ("Wrong data types in stack: " ++ show op ++ " with 2 booleans")
 execBuiltin (String str : Integer nb : xs) op = case op of
     Add -> Right (String (str ++ show nb) : xs)
