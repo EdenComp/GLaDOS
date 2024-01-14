@@ -187,6 +187,6 @@ compileValuePush _ (AST.Boolean b) = Right $ VM.Push $ VM.Bool b
 compileValuePush _ (AST.Integer n) = Right $ VM.Push $ VM.Integer n
 compileValuePush _ (AST.String s) = Right $ VM.Push $ VM.String s
 compileValuePush _ (AST.Float f) = Right $ VM.Push $ VM.Float f
-compileValuePush params (AST.Lambda args body) = VM.Push . VM.Lambda <$> compileFunctionBody params args body
+compileValuePush params (AST.Lambda args body) = compileFunctionBody params args body >>= \insts -> Right $ VM.Push (VM.Lambda (length args) insts)
 compileValuePush _ (AST.Identifier i) = Right $ VM.PushEnv i
 compileValuePush _ _ = Left "Unknown value type"
