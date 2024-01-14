@@ -431,4 +431,35 @@ testParseDreamberd =
                 (Right [Function "strcmp" ["str1", "str2"] [If (Call "==" [Identifier "str1", String ""]) [If (Call "==" [Identifier "str2", String ""]) [Return $ Just $ Integer 0] [Return $ Just $ Call "-" [Integer 1]]] [If (Call "==" [Identifier "str2", String ""]) [Return $ Just $ Integer 1] [If (Call "==" [Call "substr" [Identifier "str1", Integer 0, Integer 1], Call "substr" [Identifier "str2", Integer 0, Integer 1]]) [Return $ Just $ Call "strcmp" [Call "substr" [Identifier "str1", Integer 1], Call "substr" [Identifier "str2", Integer 1]]] [If (Call "<" [Call "substr" [Identifier "str1", Integer 0, Integer 1], Call "substr" [Identifier "str2", Integer 0, Integer 1]]) [Return $ Just $ Call "-" [Integer 1]] [Return $ Just $ Integer 1]]]]]])
                 (parseDreamberd (File "" "fn strcmp(str1,str2){if(str1==\"\"){if(str2==\"\"){return 0;}else{return -1;}}else{if(str2==\"\"){return 1;}else{if(substr(str1,0,1)==substr(str2,0,1)){return strcmp(substr(str1,1),substr(str2,1));}else{if(substr(str1,0,1)<substr(str2,0,1)){return -1;}else{return 1;}}}}}\n"))
             )
+        -- Test that should fail
+        , TestCase
+            ( assertEqual
+                "parse a strcmp function in dreamberd4 no space"
+                (Left ":1:3: Expected ';' but found 's'")
+                (parseDreamberd (File "" "a strcmp(str1,str2){if(str1==\"\"){if(str2==\"\"){return 0;}else{return -1;}}else{if(str2==\"\"){return 1;}else{if(substr(str1,0,1)==substr(str2,0,1)){return strcmp(substr(str1,1),substr(str2,1));}else{if(substr(str1,0,1)<substr(str2,0,1)){return -1;}else{return 1;}}}}}\n"))
+            )
+        , TestCase
+            ( assertEqual
+                "nothing coherent"
+                (Left ":1:11: Expected ';' but found 'j'")
+                (parseDreamberd (File "" "kezenfjzn j ifna , ok,d"))
+            )
+        , TestCase
+            ( assertEqual
+                "empty file"
+                (Right [])
+                (parseDreamberd (File "" ""))
+            )
+        , TestCase
+            ( assertEqual
+                "empty file with space"
+                (Left "' ' at :1:1")
+                (parseDreamberd (File "" " "))
+            )
+        , TestCase
+            ( assertEqual
+                "empty file with newline"
+                (Left "'\n' at :1:1")
+                (parseDreamberd (File "" "\n"))
+            )
         ]
