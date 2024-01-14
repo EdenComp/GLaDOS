@@ -32,7 +32,7 @@ instance Show Value where
 data EnvValue
     = Function Int [Insts]
     | Variable Value
-    deriving (Show)
+    deriving (Eq, Show)
 
 data Env = Env
     { identifier :: String
@@ -79,7 +79,7 @@ data Insts
     | EraseEnv String
     | Jump Int (Maybe Bool)
     | Ret
-    deriving (Show)
+    deriving (Eq, Show)
 
 execVM :: [Insts] -> IO (Either String Value)
 execVM insts = exec [] [] [] insts 0 0

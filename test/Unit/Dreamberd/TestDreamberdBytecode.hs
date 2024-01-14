@@ -1,5 +1,6 @@
 module Unit.Dreamberd.TestDreamberdBytecode (testDreamberdBytecode) where
 
+import Dreamberd.Bytecode.Decode (getFromBytecode)
 import Dreamberd.Bytecode.Encode (transpileCall, transpileInstruction, transpileInt, transpileIntoBytecode, transpileString)
 import Dreamberd.Vm (
     Call (..),
@@ -16,6 +17,8 @@ testDreamberdBytecode =
     TestList
         [ testTypesTranspilation
         , testTranspilation
+        , testEncodeDecode
+        , testDecodeErrorHandling
         ]
 
 testTypesTranspilation :: Test
@@ -52,4 +55,26 @@ testTranspilation =
         , TestCase $ assertEqual "jump too long (should not raise)" (transpileIntoBytecode [Push (Bool True), Jump 46 (Just True), Ret]) "db4\n\SOH\DC3\SOH\a\NUL\NUL\NUL\NUL\NUL\NUL\NUL.Q\b\n"
         , TestCase $ assertEqual "invalid variables for op (should not raise)" (transpileIntoBytecode [Push Void, Push (String "bonsoir a tous"), Push (Bool True), Push (Symbol (Builtin Eq)), Call, Ret]) "db4\n\SOH\SYN\SOH\DC4\NUL\NUL\NUL\NUL\NUL\NUL\NUL\SObonsoir a tous\SOH\DC3\SOH\SOH\NAK!7\EOT\b\n"
         , TestCase $ assertEqual "invalid redefine (should not raise)" (transpileIntoBytecode [DefineEnv "b" Define Nothing, DefineEnv "a" Redefine (Just (Variable (String "haha"))), Ret]) "db4\n\ENQ\NUL\NUL\NUL\NUL\NUL\NUL\NUL\SOHbES\ENQ\NUL\NUL\NUL\NUL\NUL\NUL\NUL\SOHaFB\DC4\NUL\NUL\NUL\NUL\NUL\NUL\NUL\EOThaha\b\n"
+        ]
+
+testEncodeDecode :: Test
+testEncodeDecode =
+    TestList
+        [ TestCase $ assertEqual "basic compilation" (getFromBytecode (transpileIntoBytecode [Push (Integer 1), Ret])) (Right [Push (Integer 1), Ret])
+        , TestCase $ assertEqual "function" (getFromBytecode (transpileIntoBytecode [DefineEnv "abs" Define (Just (Function 1 [PushArg 0, Push (Integer (-1))])), Ret])) (Right [DefineEnv "abs" Define (Just (Function 1 [PushArg 0, Push (Integer (-1))])), Ret])
+        , TestCase $ assertEqual "operators with floats" (getFromBytecode (transpileIntoBytecode [Push (Float 1.12), Push (Float (-2.47)), Push (Symbol (Builtin Mul)), Call, PushEnv "print"])) (Right [Push (Float 1.12), Push (Float (-2.47)), Push (Symbol (Builtin Mul)), Call, PushEnv "print"])
+        , TestCase $ assertEqual "defines with variables" (getFromBytecode (transpileIntoBytecode [Push (Bool True), DefineEnv "flt" Override Nothing, DefineEnv "cop" Redefine (Just (Variable (String "yes")))])) (Right [Push (Bool True), DefineEnv "flt" Override Nothing, DefineEnv "cop" Redefine (Just (Variable (String "yes")))])
+        , TestCase $ assertEqual "define with jump" (getFromBytecode (transpileIntoBytecode [DefineEnv "b" Define (Just (Variable (Bool False))), Jump (-1) (Just True), Ret])) (Right [DefineEnv "b" Define (Just (Variable (Bool False))), Jump (-1) (Just True), Ret])
+        , TestCase $ assertEqual "define and erase with jumps" (getFromBytecode (transpileIntoBytecode [Jump 0 (Just False), DefineEnv "b" Define (Just (Variable (Bool False))), Jump 1 Nothing, EraseEnv "b", PushEnv "b", Ret])) (Right [Jump 0 (Just False), DefineEnv "b" Define (Just (Variable (Bool False))), Jump 1 Nothing, EraseEnv "b", PushEnv "b", Ret])
+        ]
+
+testDecodeErrorHandling :: Test
+testDecodeErrorHandling =
+    TestList
+        [ TestCase $ assertEqual "wrong header" (getFromBytecode "db5\n\SOH\DC2Q\NUL\NUL\NUL\NUL\NUL\NUL\NUL\a\FS\NUL\NUL\NUL\NUL\NUL\NUL\255\255\255\255\255\255\255\206\n") (Left "Exec format error")
+        , TestCase $ assertEqual "wrong integer size (inf)" (getFromBytecode "db4\n\SOH\DC2Q\NUL\NUL\NUL\NUL\NUL\NUL\NUL\a\FS\NUL\NUL\NUL\NUL\NUL\NUL\255\255\255\255\255") (Left "Not enough space for an int")
+        , TestCase $ assertEqual "wrong integer size (code)" (getFromBytecode "db4\n\SOH\DC2Q\NUL\NUL\NUL\NUL\NUL\NUL\NUL\a\FS\NUL\NUL\NUL\NUL") (Left "Not enough space for an integer")
+        , TestCase $ assertEqual "wrong int size" (getFromBytecode "db4\n\SOH\DC2Q\NUL") (Left "Not enough space for an int")
+        , TestCase $ assertEqual "wrong int size" (getFromBytecode "db4\n\SOH\DC4\NUL\NUL\NUL\NUL\NUL\NUL\NUL\ENQHell\n") (Left "Wrong string length")
+
         ]
