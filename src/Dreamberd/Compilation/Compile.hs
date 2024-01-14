@@ -59,6 +59,8 @@ compileFunction params name args body =
 compileCall :: [String] -> String -> [AST.AstNode] -> Either String [VM.Insts]
 compileCall params "=" [_, AST.Identifier iden, value] = compileAssignation params iden value False
 compileCall params "=" [AST.Identifier iden, value] = compileAssignation params iden value True
+compileCall _ "-" [AST.Number n] = Right [VM.Push $ VM.Number (-n)]
+compileCall _ "-" [AST.Float n] = Right [VM.Push $ VM.Float (-n)]
 compileCall params [op, '='] [AST.Identifier iden, value]
     | op `elem` "+-*/%" =
         compileBuiltinCall params [op] [AST.Identifier iden, value]
