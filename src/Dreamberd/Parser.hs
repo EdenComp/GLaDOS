@@ -2,6 +2,7 @@ module Dreamberd.Parser (parseDreamberd, parse, Parser, parseChar, parseAnyChar,
 
 import Control.Applicative (Alternative (..))
 import Dreamberd.Types (AstNode (..), File (..))
+import Options.Applicative (optional)
 
 newtype Parser a = Parser {parse :: (String, (String, Int, Int)) -> Either String (a, (String, (String, Int, Int)))}
 
@@ -289,7 +290,7 @@ parseFunctionDeclarationArgs =
 parseReturn :: Parser AstNode
 parseReturn =
     parseStripped (parseString "return")
-        >> parseStripped parseExpression
+        >> parseStripped (optional parseExpression)
         >>= \expression -> return (Return expression)
 
 parseIfStatement :: Parser AstNode
