@@ -1,0 +1,43 @@
+import "std:Format";
+
+fn main() {
+    fn calculate_polynomial(x) {
+        return ((((2*(x**3))) + (3*(x**2))) - ((5*x) + 1));
+    }
+
+    fn draw_line(length) {
+        for (int j = 0; j < length; j++) {
+            print("#");
+        }
+        println("");
+    }
+
+    int a = 2;
+    int b = 3;
+    int c = -5;
+    int d = 1;
+
+    int start = -50;
+    int end = 10;
+
+    println("Calcul du polynôme 2x^3 + 3x^2 - 5x + 1 :");
+
+    int result = 0;
+    for (int x = start; x <= end; x = x + 1) {
+        result = calculate_polynomial(x);
+        print("f(" + x + ") = " + result + " : ");
+
+        for (int i = 0; i < result; i = i + 1) {
+            if ((i % 2) == 0) {
+                print("*");
+            }
+        }
+        println("");
+    }
+
+    draw_line(180);
+
+    return 0;
+}
+
+main();
