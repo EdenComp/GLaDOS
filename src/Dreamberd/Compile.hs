@@ -127,7 +127,8 @@ compileAssignation params iden value True = compileNode params value >>= \pushIn
 
 compileValuePush :: [String] -> AST.AstNode -> Either String VM.Insts
 compileValuePush _ (AST.Boolean b) = Right $ VM.Push $ VM.Bool b
-compileValuePush _ (AST.Number n) = Right $ VM.Push $ VM.Number n
+compileValuePush _ (AST.Integer n) = Right $ VM.Push $ VM.Integer n
 compileValuePush _ (AST.String s) = Right $ VM.Push $ VM.String s
+compileValuePush _ (AST.Float f) = Right $ VM.Push $ VM.Float f
 compileValuePush params (AST.Identifier i) = Right $ maybe (VM.PushEnv i) VM.PushArg $ elemIndex i params
 compileValuePush _ _ = Left "Unknown value type"

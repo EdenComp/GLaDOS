@@ -42,7 +42,7 @@ parseValue (c : val : bytes) | fromEnum c == 0x13 = case fromEnum val of
     1 -> Right (Bool True, bytes)
     _ -> Left "Unknown value for type Bool"
 parseValue (c : bytes) = case fromEnum c of
-    0x11 -> parseInt bytes >>= \(val, rest) -> Right (Number val, rest)
+    0x11 -> parseInt bytes >>= \(val, rest) -> Right (Integer val, rest)
     0x12 -> parseInteger bytes >>= \(l, rest) -> parseInt rest >>= \(r, rest') -> Right (Float (encodeFloat l r), rest')
     0x14 -> parseString bytes >>= \(val, rest) -> Right (String val, rest)
     0x15 -> parseCall bytes >>= \(val, rest) -> Right (Symbol val, rest)

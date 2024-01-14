@@ -33,7 +33,7 @@ executeDreamberdInsts insts = do
     ret <- execVM insts
     case ret of
         Right Void -> return ()
-        Right (Number nb) -> exitWith (ExitFailure nb)
+        Right (Integer nb) -> exitWith (ExitFailure nb)
         Right (Float nb) -> exitWith (ExitFailure (floor nb))
         Right (Bool b) -> exitWith (ExitFailure $ fromEnum b)
         Right val -> putStrLn ("Warning: main scope returned a non-numerical value: " ++ show val)

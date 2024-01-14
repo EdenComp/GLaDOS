@@ -1,8 +1,8 @@
 module Dreamberd.Types (AstNode (..), File (..)) where
 
 data AstNode
-    = Number Int
-    | Float Float
+    = Integer Int
+    | Float Double
     | Boolean Bool
     | String String
     | Identifier String
@@ -17,7 +17,7 @@ data AstNode
 data File a = File String a
 
 instance Show AstNode where
-    show (Number val) = show val
+    show (Integer val) = show val
     show (Float val) = show val
     show (Boolean True) = "true"
     show (Boolean False) = "false"
