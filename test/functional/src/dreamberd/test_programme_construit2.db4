@@ -11,7 +11,7 @@ fn display_info(name, age, temperature, isSummer) {
 }
 
 fn calculate_discount(amount_spent) {
-    var discount_rate = 0.1;
+    float discount_rate = 0.1;
 
     if (amount_spent > 100.0) {
         return amount_spent * discount_rate;
@@ -27,16 +27,16 @@ fn calculate_age_in_months(age_in_years) {
 fn main() {
     display_info("Alice", 25, 28.5, true);
 
-    var total_amount = 120.0;
-    var discount = calculate_discount(total_amount);
+    float total_amount = 120.0;
+    float discount = calculate_discount(total_amount);
 
     print("Montant total: " + total_amount + "\n");
     print("Réduction applicable: " + discount + "\n");
 
-    var age_in_months = calculate_age_in_months(25);
+    int age_in_months = calculate_age_in_months(25);
     print("Âge en mois: " + age_in_months + "\n");
 
-    var age_sum = 25 + age_in_months;
+    int age_sum = 25 + age_in_months;
     print("Somme de l'âge et de l'âge en mois: " + age_sum + "\n");
 }
 
