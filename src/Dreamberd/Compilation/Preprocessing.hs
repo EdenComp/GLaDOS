@@ -12,7 +12,7 @@ import System.Directory (getCurrentDirectory, getHomeDirectory)
 executePreprocessing :: File [AstNode] -> IO (Either String [AstNode])
 executePreprocessing file =
     preprocessImports file >>= \case
-        Right nodes' -> return $ Right $ preprocessFunctions nodes'
+        Right nodes' -> return $ Right $ preprocessOptimisations $ preprocessFunctions nodes'
         Left err -> return $ Left err
 
 preprocessImports :: File [AstNode] -> IO (Either String [AstNode])
@@ -113,3 +113,67 @@ hoistFunctions (Function name args ast) = Function name args (preprocessFunction
 hoistFunctions (If cond trueBody falseBody) = If cond (preprocessFunctions trueBody) (preprocessFunctions falseBody)
 hoistFunctions (Loop test body initNode updateNode) = Loop test (preprocessFunctions body) initNode updateNode
 hoistFunctions a = a
+
+preprocessOptimisations :: [AstNode] -> [AstNode]
+preprocessOptimisations (Call name [Integer x, Integer y] : xs) = optimiseIntegerCall name x y : preprocessOptimisations xs
+preprocessOptimisations (Call name [Float x, Float y] : xs) = optimiseFloatCall name x y : preprocessOptimisations xs
+preprocessOptimisations (Call name [Boolean x, Boolean y] : xs) = optimiseBoolCall name x y : preprocessOptimisations xs
+preprocessOptimisations (Call name [String x, String y] : xs) = optimiseStringCall name x y : preprocessOptimisations xs
+preprocessOptimisations (Call name insts : xs) = preprocessOptimisations' (Call name (preprocessOptimisations insts) : xs)
+preprocessOptimisations (x : xs) = x : preprocessOptimisations xs
+preprocessOptimisations [] = []
+
+preprocessOptimisations' :: [AstNode] -> [AstNode]
+preprocessOptimisations' (Call name [Integer x, Integer y] : xs) = optimiseIntegerCall name x y : preprocessOptimisations xs
+preprocessOptimisations' (Call name [Float x, Float y] : xs) = optimiseFloatCall name x y : preprocessOptimisations xs
+preprocessOptimisations' (Call name [Boolean x, Boolean y] : xs) = optimiseBoolCall name x y : preprocessOptimisations xs
+preprocessOptimisations' (Call name [String x, String y] : xs) = optimiseStringCall name x y : preprocessOptimisations xs
+preprocessOptimisations' (x : xs) = x : preprocessOptimisations xs
+preprocessOptimisations' [] = []
+
+optimiseIntegerCall :: String -> Int -> Int -> AstNode
+optimiseIntegerCall name x y = case name of
+    "+" -> Integer (x + y)
+    "-" -> Integer (x - y)
+    "*" -> Integer (x * y)
+    "/" -> Integer (x `div` y)
+    "%" -> Integer (x `mod` y)
+    "^" -> Integer (x ^ y)
+    "==" -> Boolean (x == y)
+    "!=" -> Boolean (x /= y)
+    "<" -> Boolean (x < y)
+    ">" -> Boolean (x > y)
+    "<=" -> Boolean (x <= y)
+    ">=" -> Boolean (x >= y)
+    _ -> Call name [Integer x, Integer y]
+
+optimiseFloatCall :: String -> Double -> Double -> AstNode
+optimiseFloatCall name x y = case name of
+    "+" -> Float (x + y)
+    "-" -> Float (x - y)
+    "*" -> Float (x * y)
+    "/" -> Float (x / y)
+    "^" -> Float (x ** y)
+    "==" -> Boolean (x == y)
+    "!=" -> Boolean (x /= y)
+    "<" -> Boolean (x < y)
+    ">" -> Boolean (x > y)
+    "<=" -> Boolean (x <= y)
+    ">=" -> Boolean (x >= y)
+    _ -> Call name [Float x, Float y]
+
+optimiseBoolCall :: String -> Bool -> Bool -> AstNode
+optimiseBoolCall name x y = case name of
+    "&&" -> Boolean (x && y)
+    "||" -> Boolean (x || y)
+    "==" -> Boolean (x == y)
+    "!=" -> Boolean (x /= y)
+    "^" -> Boolean (x /= y)
+    _ -> Call name [Boolean x, Boolean y]
+
+optimiseStringCall :: String -> String -> String -> AstNode
+optimiseStringCall name x y = case name of
+    "+" -> String (x ++ y)
+    "==" -> Boolean (x == y)
+    "!=" -> Boolean (x /= y)
+    _ -> Call name [String x, String y]
