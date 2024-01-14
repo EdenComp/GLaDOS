@@ -1,0 +1,71 @@
+fn print_roof(size) {
+    int i = 0;
+    int j = 0;
+
+    while (i < size) {
+        j = 0;
+        while (j < size) {
+            if ((j < ((size - 1) / 2) - (i / 2)) || (j > (size / 2) + (i / 2))) {
+                print("  ");
+            } else if ((j == ((size - 1) / 2) - (i / 2))) {
+                print("/*");
+            } else if ((j == (size / 2) + (i / 2))) {
+                print("*\\");
+            } else {
+                print(" *");
+            }
+            j = j + 1;
+        }
+        print("\n");
+        i = i + 1;
+    }
+}
+
+fn print_body(size) {
+    int j = 0;
+    for (int i = 0; i < size; i = i + 1) {
+        j = 0;
+        while (j < size) {
+            if ((j == 0) || (j == size - 1)) {
+                print("**");
+            } else {
+                print("  ");
+            }
+            j = j + 1;
+        }
+        print("\n");
+    }
+}
+
+fn print_base(size) {
+    int i = 0;
+
+    while (i < size) {
+        if (((i % 2) == 0) || (i == size - 1)) {
+            print("**");
+        } else {
+            print("  ");
+        }
+        i = i + 1;
+    }
+    print("\n");
+    for (int j = 0; j < size; j++) {
+        print("**");
+    }
+}
+
+fn print_house(size) {
+    print_roof(size);
+    print_body(size);
+    print_base(size);
+}
+
+fn main() {
+    print_house(5);
+    print("\n");
+    print_house(6);
+    print("\n");
+    print_house(9);
+}
+
+main();
