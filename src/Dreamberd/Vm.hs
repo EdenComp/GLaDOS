@@ -140,7 +140,7 @@ execCall env (Lambda insts : xs) scopeIdx = do
     ret <- exec env xs [] insts 0 (scopeIdx + 1)
     case ret of
         Left err -> return (Left err)
-        Right val -> return (Right (val : xs))
+        Right val -> return (Right (val : xs)) -- TODO: Fix lambda call is not dropping arguments from the stack
 execCall _ _ _ = return (Left "Stack argument is not a symbol or a lambda")
 
 execJump :: [Env] -> [Value] -> [Value] -> [Insts] -> Int -> Int -> Int -> Maybe Bool -> IO (Either String Value)
