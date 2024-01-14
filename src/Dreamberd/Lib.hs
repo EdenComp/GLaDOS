@@ -11,13 +11,13 @@ module Dreamberd.Lib (
 
 import Dreamberd.Bytecode.Decode (getFromBytecode)
 import Dreamberd.Bytecode.Encode (transpileIntoBytecode)
+import Dreamberd.Bytecode.Pretty (prettyPrintInsts)
 import Dreamberd.Compilation.Compile (compileAst)
 import Dreamberd.Compilation.Preprocessing (executePreprocessing)
 import Dreamberd.Parser (parseDreamberd)
 import Dreamberd.Types (File (..))
 import Dreamberd.Vm (Insts (..), Value (..), execVM)
 import System.Exit (ExitCode (ExitFailure), exitWith)
-import Dreamberd.Bytecode.Pretty (prettyPrintInsts)
 
 compileDreamberdCode :: File String -> String -> IO ()
 compileDreamberdCode (File filename sourcecode) outputFile =
