@@ -18,22 +18,6 @@ import Dreamberd.Types (File (..))
 import Dreamberd.Vm (Insts (..), Value (..), execVM)
 import System.Exit (ExitCode (ExitFailure), exitWith)
 
-{--
-import Dreamberd.Compilation.Compile (compileAst)
-import Dreamberd.Parsing.Main (parseDreamberd)
-import Dreamberd.Compilation.Preprocessing (executePreprocessing)
-import Dreamberd.Vm (Insts (..), execVM)
-import System.Exit (ExitCode (ExitFailure), exitWith)
-
-compileDreamberdCode :: String -> String -> IO ()
-compileDreamberdCode sourceCode outputFile =
-    case parseDreamberd sourceCode [] of
-        Right ast -> executePreprocessing ast >>= \case
-            Right ast' -> case compileAst ast' of
-                Right insts -> writeFile outputFile (transpileIntoBytecode insts)
-                Left err -> returnWithError err
---}
-
 compileDreamberdCode :: File String -> String -> IO ()
 compileDreamberdCode (File filename sourcecode) outputFile =
     case parseDreamberd (File filename sourcecode) of
@@ -61,16 +45,6 @@ executeDreamberdInsts insts = do
         Right (Bool b) -> exitWith (ExitFailure $ fromEnum b)
         Right val -> putStrLn ("Warning: main scope returned a non-numerical value: " ++ show val)
         Left err -> returnWithError err
-
-{--
-runDreamberdCode :: String -> IO ()
-runDreamberdCode sourceCode =
-    case parseDreamberd sourceCode [] of
-        Right ast -> executePreprocessing ast >>= \case
-            Right ast' -> case compileAst ast' of
-                Right insts -> executeDreamberdInsts insts
-                Left err -> returnWithError err
---}
 
 runDreamberdCode :: File String -> IO ()
 runDreamberdCode (File filename sourcecode) =
