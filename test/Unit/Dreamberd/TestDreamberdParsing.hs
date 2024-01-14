@@ -13,7 +13,7 @@ testParseInteger =
         [ TestCase
             ( assertEqual
                 "for (parseInteger \"123\")"
-                (Right (Integer 123, ("", ("", 1, 4))))
+                (Right (123, ("", ("", 1, 4))))
                 (parse parseInteger ("123", ("", 1, 1)))
             )
         ]
