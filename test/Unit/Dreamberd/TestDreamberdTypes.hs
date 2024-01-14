@@ -35,7 +35,7 @@ testAstTypes =
             )
         , TestCase (assertEqual "Return" (show (AST.Return $ Just $ AST.String "hello")) "Return Just \"hello\"")
         , TestCase (assertEqual "Loop" (show (AST.Loop (AST.Boolean True) [AST.Return $ Just $ AST.Integer 1] Nothing Nothing)) "(Loop true [Return Just 1] Nothing Nothing)")
-        , TestCase (assertEqual "List" (show (AST.List [AST.Integer 1, AST.Integer 2, AST.Integer 3])) "[1 2 3]")
+        , TestCase (assertEqual "List" (show (AST.Scope [AST.Integer 1, AST.Integer 2, AST.Integer 3])) "{1 2 3}")
         ]
 
 testVmTypes :: Test

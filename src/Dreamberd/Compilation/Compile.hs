@@ -24,6 +24,7 @@ compileNode params (AST.If test trueBody falseBody) = compileIf params test true
 compileNode params (AST.Function name args body) = compileFunction params name args body
 compileNode params (AST.Return value) = compileReturn params value
 compileNode params (AST.Loop test body initNode updateNode) = compileLoop params test body initNode updateNode
+compileNode params (AST.Scope body) = compileScopeNodes params body []
 compileNode _ node = (compileValuePush node >>= \inst -> Right [inst]) <> Left "Unknown node type"
 
 compileLoop :: [String] -> AST.AstNode -> [AST.AstNode] -> Maybe AST.AstNode -> Maybe AST.AstNode -> Either String [VM.Insts]

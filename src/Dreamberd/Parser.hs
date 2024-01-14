@@ -124,6 +124,7 @@ parseStatement =
                 <|> parseIfStatement
                 <|> parseWhileLoop
                 <|> parseForLoop
+                <|> (Scope <$> parseScope)
                 <|> parseStatementExpression
            )
         <* parseLineComments
