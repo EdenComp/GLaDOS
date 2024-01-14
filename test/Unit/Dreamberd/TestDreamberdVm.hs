@@ -44,7 +44,7 @@ testStackPushes =
 testCalls :: Test
 testCalls =
     TestList
-        [ TestCase $ execVM [Push (VM.Integer 0), Call] >>= assertEqual "not a symbol" (Left "Stack argument is not a symbol")
+        [ TestCase $ execVM [Push (VM.Integer 0), Call] >>= assertEqual "not a symbol" (Left "Stack argument is not a symbol or a lambda")
         , TestCase $ execVM [Call] >>= assertEqual "empty stack" (Left "Stack is empty for a Call instruction")
         , TestCase $ execVM [Push (VM.Symbol (FunctionName "test")), Call] >>= assertEqual "unknown function" (Left "Environment test does not exist")
         , TestCase $ execVM [Push (VM.Integer 2), Push (VM.Integer 2), Push (VM.Integer 6), Push (VM.Symbol (Builtin Sub)), Call, Push (VM.Integer 20), Push (VM.Symbol (Builtin Div)), Call, Push (VM.Symbol (Builtin Mod)), Call, Ret] >>= assertEqual "mixed operations" (Right (VM.Integer 1))

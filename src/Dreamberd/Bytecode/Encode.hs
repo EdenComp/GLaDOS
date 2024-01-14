@@ -44,7 +44,10 @@ transpileValue (Float nb) = toEnum 0x12 : transpileInteger l ++ transpileInt r
 transpileValue (Bool b) = toEnum 0x13 : (if b then [toEnum 1] else [toEnum 0])
 transpileValue (String str) = toEnum 0x14 : transpileString str
 transpileValue (Symbol call) = toEnum 0x15 : transpileCall call
-transpileValue Void = [toEnum 0x16]
+transpileValue (Lambda insts) = toEnum 0x16 : transpileInt (length nested) ++ nested
+  where
+    nested = foldMap transpileInstruction insts
+transpileValue Void = [toEnum 0x17]
 
 transpileEnvValue :: Maybe EnvValue -> [Char]
 transpileEnvValue Nothing = [toEnum 0x53]

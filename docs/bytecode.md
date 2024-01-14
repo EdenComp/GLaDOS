@@ -20,7 +20,8 @@ Here are all the definitions of the bytecode:
 - `0x13` + 1 byte: Bool
 - `0x14`: String
 - `0x15` + (Symbol or function name): Symbol
-- `0x16`: Void
+- `0x16` + 8 bytes instructions length: Lambda
+- `0x17`: Void
 
 Strings: 8 bytes for length + string content
 Integer: 8 bytes for length + integral number as bits
