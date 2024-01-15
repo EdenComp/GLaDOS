@@ -1,0 +1,6 @@
+int succ = |a| |> {
+    a + 1
+};
+
+
+print(succ(9));

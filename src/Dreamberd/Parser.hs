@@ -287,7 +287,7 @@ parseCallee = parseEnclosed ("(", ")") parseLambda <|> (Identifier <$> parseIden
 
 parseLambda :: Parser AstNode
 parseLambda =
-    parseStripped (parseEnclosed ("(", ")") (parseOrValue parseFunctionDeclarationArgs []))
+    parseStripped (parseEnclosed ("|", "|") (parseOrValue parseFunctionDeclarationArgs []))
         >>= \args ->
             parseStripped $
                 (parseString "=>" <|> parseString "->" <|> parseString "|>")

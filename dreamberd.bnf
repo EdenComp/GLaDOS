@@ -9,7 +9,7 @@
 <elif_statement> ::= <empty> | "elif" <optional_whitespace> <condition> <optional_whitespace> <scoped_code> <optional_whitespace> <elif_statement>
 <else_statement> ::= <empty> | "else" <optional_whitespace> <scoped_code>
 <function_call> ::= <identifier> <optional_whitespace> "(" <optional_whitespace> <function_call_params_list> <optional_whitespace> ")" <optional_whitespace> ";"
-<lambda_function> ::= "(" <optional_whitespace> [<comma_separated_identifier_list>] <optional_whitespace> ")" <optional_whitespace> <lambda_sign> <optional_whitespace> <scoped_code>
+<lambda_function> ::= "|" <optional_whitespace> [<comma_separated_identifier_list>] <optional_whitespace> "|" <optional_whitespace> <lambda_sign> <optional_whitespace> <scoped_code>
 <var_assignment> ::= <var_type> <mandatory_whitespace> <identifier> <optional_whitespace> "=" <optional_whitespace> <value> <optional_whitespace> ";"
 <var_reassignment> ::= <identifier> <optional_whitespace> <reassignment_operator> <optional_whitespace> <value> <optional_whitespace> ";" | <var_increment_decrement>
 <import> ::= "import" <optional_whitespace> <string> <optional_whitespace> ";"

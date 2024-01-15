@@ -1,4 +1,4 @@
-int max = (a, b) => {
+int max = |a, b| => {
     if (a > b) {
         a
     } else {
