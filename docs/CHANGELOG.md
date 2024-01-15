@@ -1,3 +1,19 @@
+<a name="v1.0.1"></a>
+# [v1.0.1 🌈](https://github.com/EdenComp/GLaDOS/releases/tag/v1.0.1) - 15 Jan 2024
+
+## Changes
+
+Always aim for perfection
+
+## 🚀 Features
+
+- 😢Lambdas with one parameters [@Croos3r](https://github.com/Croos3r) ([#119](https://github.com/EdenComp/GLaDOS/issues/119))
+- Update changelog for "v1.0.0" [@github-actions](https://github.com/github-actions) ([#118](https://github.com/EdenComp/GLaDOS/issues/118))
+
+
+[Changes][v1.0.1]
+
+
 <a name="v1.0.0"></a>
 # [v1.0.0 🌈](https://github.com/EdenComp/GLaDOS/releases/tag/v1.0.0) - 14 Jan 2024
 
@@ -289,6 +305,7 @@ Project setup with CI, evaluation of SExpr and documentation
 [Changes][v0.1.0]
 
 
+[v1.0.1]: https://github.com/EdenComp/GLaDOS/compare/v1.0.0...v1.0.1
 [v1.0.0]: https://github.com/EdenComp/GLaDOS/compare/v0.9.0...v1.0.0
 [v0.9.0]: https://github.com/EdenComp/GLaDOS/compare/v0.8.0...v0.9.0
 [v0.8.0]: https://github.com/EdenComp/GLaDOS/compare/v0.7.0...v0.8.0
