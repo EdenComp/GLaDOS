@@ -182,6 +182,8 @@ execBuiltin (Integer _ : Integer 0 : _) Div = Left "Cannot divide by 0"
 execBuiltin (Integer _ : Integer 0 : _) Mod = Left "Cannot divide by 0"
 execBuiltin (Float _ : Float 0 : _) Div = Left "Cannot divide by 0"
 execBuiltin (Float _ : Float 0 : _) Mod = Left "Cannot divide by 0"
+execBuiltin (Float _ : Integer 0 : _) Div = Left "Cannot divide by 0"
+execBuiltin (Float _ : Integer 0 : _) Mod = Left "Cannot divide by 0"
 execBuiltin (Integer l : Integer r : xs) op = case op of
     Add -> Right (Integer (l + r) : xs)
     Sub -> Right (Integer (l - r) : xs)
