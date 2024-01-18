@@ -71,7 +71,7 @@ compileFunction params name args body =
                     name
                     VM.Define
                     ( Just $
-                        VM.Function (length args) bodyInsts
+                        VM.Lambda (length args) bodyInsts
                     )
                 ]
 

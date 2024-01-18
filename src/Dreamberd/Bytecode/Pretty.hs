@@ -2,7 +2,7 @@ module Dreamberd.Bytecode.Pretty (
     prettyPrintInsts,
 ) where
 
-import Dreamberd.Vm (DefineEnvType (..), EnvValue (..), Insts (..), Value (..))
+import Dreamberd.Vm (DefineEnvType (..), Insts (..), Value (..))
 
 prettyPrintInsts :: [Insts] -> String
 prettyPrintInsts insts = prettyPrintInstructions insts 0
@@ -27,17 +27,13 @@ prettyPrintValue (Symbol sym) _ = "Symbol " ++ show sym
 prettyPrintValue (Lambda args insts) sp = "Lambda (" ++ show args ++ " arguments) (\n" ++ prettyPrintInstructions insts (sp + 2) ++ replicate sp ' ' ++ ")"
 prettyPrintValue Void _ = "Void"
 
-prettyPrintDefine :: String -> DefineEnvType -> Maybe EnvValue -> Int -> String
+prettyPrintDefine :: String -> DefineEnvType -> Maybe Value -> Int -> String
 prettyPrintDefine name Define Nothing _ = "DefineEnvFromStack " ++ name
 prettyPrintDefine name Redefine Nothing _ = "RedefineEnvFromStack " ++ name
 prettyPrintDefine name Override Nothing _ = "OverrideEnvFromStack " ++ name
-prettyPrintDefine name Define (Just val) sp = "DefineEnv " ++ name ++ " " ++ prettyPrintEnvValue val sp
-prettyPrintDefine name Redefine (Just val) sp = "RedefineEnv " ++ name ++ " " ++ prettyPrintEnvValue val sp
-prettyPrintDefine name Override (Just val) sp = "OverrideEnv " ++ name ++ " " ++ prettyPrintEnvValue val sp
-
-prettyPrintEnvValue :: EnvValue -> Int -> String
-prettyPrintEnvValue (Function args insts) sp = "Function (" ++ show args ++ " arguments) (\n" ++ prettyPrintInstructions insts (sp + 2) ++ replicate sp ' ' ++ ")"
-prettyPrintEnvValue (Variable val) sp = "Variable (" ++ prettyPrintValue val sp ++ replicate sp ' ' ++ ")"
+prettyPrintDefine name Define (Just val) sp = "DefineEnv " ++ name ++ " " ++ prettyPrintValue val sp
+prettyPrintDefine name Redefine (Just val) sp = "RedefineEnv " ++ name ++ " " ++ prettyPrintValue val sp
+prettyPrintDefine name Override (Just val) sp = "OverrideEnv " ++ name ++ " " ++ prettyPrintValue val sp
 
 prettyPrintJump :: Int -> Maybe Bool -> String
 prettyPrintJump val Nothing = "Jump " ++ show val

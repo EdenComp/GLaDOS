@@ -51,16 +51,11 @@ Integer: 8 bytes for length + integral number as bits
 
 ## DefineEnv
 
-Both DefineEnv and DefineEnvFromStack use 1 byte to determine the type of the definition:
-
-- `0x41`: Function (+ 8 bytes args length) (+ 8 bytes instructions length)
-- `0x42`: Value
-
 There is 3 types of DefineEnv:
 
-- `0x45`: Define (does not allow redefinitions)
-- `0x46`: Redefine (does not allow definitions)
-- `0x47`: Override (redefines if necessary, otherwise defines)
+- `0x41`: Define (does not allow redefinitions)
+- `0x42`: Redefine (does not allow definitions)
+- `0x43`: Override (redefines if necessary, otherwise defines)
 
 ## TriBools
 

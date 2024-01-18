@@ -1,13 +1,15 @@
+{-# LANGUAGE LambdaCase #-}
+
 module Dreamberd.Vm (
     exec,
     execVM,
     Call (..),
     DefineEnvType (..),
     Env (..),
-    EnvValue (..),
     Insts (..),
     Operator (..),
     Value (..),
+    Variable (..),
 ) where
 
 import Data.Fixed (mod')
@@ -33,15 +35,12 @@ instance Show Value where
     show (Lambda _ _) = "<lambda>"
     show Void = ""
 
-data EnvValue
-    = Function Int [Insts]
-    | Variable Value
+data Variable = Variable Value Int
     deriving (Eq, Show)
 
-data Env = Env
+data Env = Env 
     { identifier :: String
-    , value :: EnvValue
-    , scope :: Int
+    , value :: Variable
     }
     deriving (Show)
 
@@ -79,36 +78,37 @@ data Insts
     | PushArg Int
     | PushEnv String
     | Call
-    | DefineEnv String DefineEnvType (Maybe EnvValue)
+    | DefineEnv String DefineEnvType (Maybe Value)
     | EraseEnv String
     | Jump Int (Maybe Bool)
     | Ret
     deriving (Eq, Show)
 
 execVM :: [Insts] -> IO (Either String Value)
-execVM insts = exec [] [] [] insts 0 0
+execVM insts = exec [] [] [] insts 0 0 >>= \case
+    Left err -> return (Left err)
+    Right (Variable val _) -> return (Right val)
 
-exec :: [Env] -> [Value] -> [Value] -> [Insts] -> Int -> Int -> IO (Either String Value)
-exec _ _ _ [] _ _ = return (Right Void)
+exec :: [Env] -> [Variable] -> [Variable] -> [Insts] -> Int -> Int -> IO (Either String Variable)
+exec _ _ _ [] _ scopeIdx = return $ Right (Variable Void scopeIdx)
 exec env args stack insts idx scopeIdx
     | idx < 0 || idx > length insts = return (Left "Instructions index out of bounds")
-    | idx == length insts = return (Right Void)
+    | idx == length insts = return $ Right (Variable Void scopeIdx)
     | otherwise = execInstruction env args stack insts (insts !! idx) idx scopeIdx
 
-execInstruction :: [Env] -> [Value] -> [Value] -> [Insts] -> Insts -> Int -> Int -> IO (Either String Value)
-execInstruction _ _ [] _ Ret _ _ = return (Right Void)
-execInstruction _ _ (val : _) _ Ret _ _ = return (Right val)
-execInstruction env args stack insts (Push val) idx scopeIdx = exec env args (val : stack) insts (idx + 1) scopeIdx
+execInstruction :: [Env] -> [Variable] -> [Variable] -> [Insts] -> Insts -> Int -> Int -> IO (Either String Variable)
+execInstruction _ _ [] _ Ret _ scopeIdx = return $ Right (Variable Void scopeIdx)
+execInstruction _ _ (val : _) _ Ret _ _ = return $ Right val
+execInstruction env args stack insts (Push val) idx scopeIdx = exec env args (Variable val scopeIdx : stack) insts (idx + 1) scopeIdx
 execInstruction env args stack insts (PushArg arg) idx scopeIdx
     | arg >= length args || arg < 0 = return (Left "Argument index out of bounds")
     | otherwise = exec env args ((args !! arg) : stack) insts (idx + 1) scopeIdx
-execInstruction env args stack insts (PushEnv "input") idx scopeIdx = exec env args (Symbol (FunctionName "input") : stack) insts (idx + 1) scopeIdx
-execInstruction env args stack insts (PushEnv "print") idx scopeIdx = exec env args (Symbol (FunctionName "print") : stack) insts (idx + 1) scopeIdx
-execInstruction env args stack insts (PushEnv "error") idx scopeIdx = exec env args (Symbol (FunctionName "error") : stack) insts (idx + 1) scopeIdx
+execInstruction env args stack insts (PushEnv "input") idx scopeIdx = exec env args (Variable (Symbol (FunctionName "input")) scopeIdx : stack) insts (idx + 1) scopeIdx
+execInstruction env args stack insts (PushEnv "print") idx scopeIdx = exec env args (Variable (Symbol (FunctionName "print")) scopeIdx : stack) insts (idx + 1) scopeIdx
+execInstruction env args stack insts (PushEnv "error") idx scopeIdx = exec env args (Variable (Symbol (FunctionName "error")) scopeIdx : stack) insts (idx + 1) scopeIdx
 execInstruction env args stack insts (PushEnv name) idx scopeIdx =
     case findEnvValue name env of
-        Just (Function _ _, _) -> exec env args (Symbol (FunctionName name) : stack) insts (idx + 1) scopeIdx
-        Just (Variable v, _) -> exec env args (v : stack) insts (idx + 1) scopeIdx
+        Just v -> exec env args (v : stack) insts (idx + 1) scopeIdx
         _ -> return (Left ("Environment " ++ name ++ " does not exist"))
 execInstruction env args stack insts (EraseEnv name) idx scopeIdx = case findEnvValue name env of
     Just _ -> exec (removeEnvValue name env) args stack insts (idx + 1) scopeIdx
@@ -121,142 +121,120 @@ execInstruction env args stack insts Call idx scopeIdx = do
         Right newValues -> exec env args newValues insts (idx + 1) scopeIdx
 execInstruction env args stack insts (Jump num cond) idx scopeIdx = execJump env args stack insts idx scopeIdx num cond
 
-execCall :: [Env] -> [Value] -> Int -> IO (Either String [Value])
+execCall :: [Env] -> [Variable] -> Int -> IO (Either String [Variable])
 execCall _ [] _ = return (Left "Stack is empty for a Call instruction")
-execCall _ (Symbol (FunctionName "input") : xs) _ = hFlush stdout >> hFlush stderr >> getLine >>= \line -> return (Right (String line : xs))
-execCall _ (Symbol (FunctionName "print") : val : xs) _ = putStr (show val) >> return (Right xs)
-execCall _ (Symbol (FunctionName "print") : _) _ = return (Left "Stack is empty for a print instruction")
-execCall _ (Symbol (FunctionName "error") : val : xs) _ = hPutStr stderr (show val) >> return (Right xs)
-execCall _ (Symbol (FunctionName "error") : _) _ = return (Left "Stack is empty for an error instruction")
-execCall env (Symbol (FunctionName fct) : xs) scopeIdx = case findEnvValue fct env of
-    Just (Function args insts, fctScope) -> do
-        ret <- exec (filter (\e -> scope e <= fctScope) env) xs [] insts 0 (scopeIdx + 1)
+execCall _ (Variable (Symbol (FunctionName "input")) _ : xs) scopeIdx = hFlush stdout >> hFlush stderr >> getLine >>= \line -> return $ Right (Variable (String line) scopeIdx : xs)
+execCall _ (Variable (Symbol (FunctionName "print")) _ : (Variable val _) : xs) _ = putStr (show val) >> return (Right xs)
+execCall _ (Variable (Symbol (FunctionName "print")) _ : _) _ = return (Left "Stack is empty for a print instruction")
+execCall _ (Variable (Symbol (FunctionName "error")) _ : (Variable val _) : xs) _ = hPutStr stderr (show val) >> return (Right xs)
+execCall _ (Variable (Symbol (FunctionName "error")) _ : _) _ = return (Left "Stack is empty for an error instruction")
+execCall env (Variable (Symbol (FunctionName fct)) _ : xs) scopeIdx = case findEnvValue fct env of
+    Just (Variable (Lambda args insts) fctScope) -> do
+        ret <- exec (filter (\(Env _ (Variable _ scope)) -> scope <= fctScope) env) xs [] insts 0 (scopeIdx + 1)
         case ret of
             Left err -> return (Left err)
             Right val -> return (Right (val : drop args xs))
     _ -> return (Left ("Environment " ++ fct ++ " does not exist"))
-execCall _ (Symbol (Builtin op) : xs) _ = return (execBuiltin xs op)
-execCall env (Lambda args insts : xs) scopeIdx = do
-    ret <- exec env xs [] insts 0 (scopeIdx + 1)
+execCall _ (Variable (Symbol (Builtin op)) _ : (Variable l _) : (Variable r _) : xs) scopeIdx = case execOperation l r op of
+    Left err -> return (Left err)
+    Right res -> return (Right (Variable res scopeIdx : xs))
+execCall env (Variable (Lambda args insts) fctScope : xs) scopeIdx = do
+    ret <- exec (filter (\(Env _ (Variable _ scope)) -> scope <= fctScope) env) xs [] insts 0 (scopeIdx + 1)
     case ret of
         Left err -> return (Left err)
         Right val -> return (Right (val : drop args xs))
 execCall _ _ _ = return (Left "Stack argument is not a symbol or a lambda")
 
-execJump :: [Env] -> [Value] -> [Value] -> [Insts] -> Int -> Int -> Int -> Maybe Bool -> IO (Either String Value)
+execJump :: [Env] -> [Variable] -> [Variable] -> [Insts] -> Int -> Int -> Int -> Maybe Bool -> IO (Either String Variable)
 execJump _ _ _ _ _ _ (-1) _ = return (Left "Invalid number of instructions")
 execJump _ _ _ insts idx _ num _ | num > 0 && num >= (length insts - idx) = return (Left "Invalid number of instructions")
 execJump _ _ _ _ idx _ num _ | num < (idx + 1) * (-1) = return (Left "Invalid number of instructions")
 execJump env args stack insts idx scopeIdx num Nothing = exec env args stack insts (idx + num + 1) scopeIdx
-execJump env args (x : xs) insts idx scopeIdx num (Just b)
-    | toBool x == b && num == length insts - idx = return $ Right Void
+execJump env args ((Variable x _) : xs) insts idx scopeIdx num (Just b)
+    | toBool x == b && num == length insts - idx = return $ Right (Variable Void scopeIdx)
     | toBool x == b = exec env args xs insts (idx + num + 1) scopeIdx
     | otherwise = exec env args xs insts (idx + 1) scopeIdx
 execJump _ _ _ _ _ _ _ _ = return (Left "Stack is empty for a conditional jump")
 
-execDefineEnv :: [Env] -> [Value] -> [Value] -> [Insts] -> Int -> Int -> String -> DefineEnvType -> Maybe EnvValue -> IO (Either String Value)
+execDefineEnv :: [Env] -> [Variable] -> [Variable] -> [Insts] -> Int -> Int -> String -> DefineEnvType -> Maybe Value -> IO (Either String Variable)
 execDefineEnv _ _ [] _ _ _ _ _ Nothing = return (Left "Stack is empty for a DefineEnv from stack instruction")
-execDefineEnv env args (x : xs) insts idx scopeIdx name Define Nothing =
-    case findEnvValue name env of
-        Just _ -> return (Left ("Environment " ++ name ++ " already exists"))
-        Nothing -> exec (addEnvValue name (Variable x) scopeIdx env) args xs insts (idx + 1) scopeIdx
+execDefineEnv env args ((Variable val _) : xs) insts idx scopeIdx name x Nothing = execDefineEnv env args xs insts idx scopeIdx name x (Just val)
 execDefineEnv env args stack insts idx scopeIdx name Define (Just val) =
     case findEnvValue name env of
         Just _ -> return (Left ("Environment " ++ name ++ " already exists"))
-        Nothing -> exec (addEnvValue name val scopeIdx env) args stack insts (idx + 1) scopeIdx
-execDefineEnv env args (x : xs) insts idx scopeIdx name Redefine Nothing =
-    case findEnvValue name env of
-        Just (_, initialScope) -> exec (addEnvValue name (Variable x) initialScope env) args xs insts (idx + 1) scopeIdx
-        Nothing -> return (Left ("Environment " ++ name ++ " does not exist"))
+        Nothing -> exec (addEnvValue name (Variable val scopeIdx) env) args stack insts (idx + 1) scopeIdx
 execDefineEnv env args stack insts idx scopeIdx name Redefine (Just val) =
     case findEnvValue name env of
-        Just (_, initialScope) -> exec (addEnvValue name val initialScope env) args stack insts (idx + 1) scopeIdx
+        Just (Variable _ scope) -> exec (addEnvValue name (Variable val scope) env) args stack insts (idx + 1) scopeIdx
         Nothing -> return (Left ("Environment " ++ name ++ " does not exist"))
-execDefineEnv env args (x : xs) insts idx scopeIdx name Override Nothing =
-    exec (addEnvValue name (Variable x) scopeIdx env) args xs insts (idx + 1) scopeIdx
 execDefineEnv env args stack insts idx scopeIdx name Override (Just val) =
-    exec (addEnvValue name val scopeIdx env) args stack insts (idx + 1) scopeIdx
+    case findEnvValue name env of
+        Just (Variable _ scope) -> exec (addEnvValue name (Variable val scope) env) args stack insts (idx + 1) scopeIdx
+        Nothing -> exec (addEnvValue name (Variable val scopeIdx) env) args stack insts (idx + 1) scopeIdx
 
-execBuiltin :: [Value] -> Operator -> Either String [Value]
-execBuiltin (Integer _ : Integer 0 : _) Div = Left "Cannot divide by 0"
-execBuiltin (Integer _ : Integer 0 : _) Mod = Left "Cannot divide by 0"
-execBuiltin (Float _ : Float 0 : _) Div = Left "Cannot divide by 0"
-execBuiltin (Float _ : Float 0 : _) Mod = Left "Cannot divide by 0"
-execBuiltin (Float _ : Integer 0 : _) Div = Left "Cannot divide by 0"
-execBuiltin (Float _ : Integer 0 : _) Mod = Left "Cannot divide by 0"
-execBuiltin (Integer l : Integer r : xs) op = case op of
-    Add -> Right (Integer (l + r) : xs)
-    Sub -> Right (Integer (l - r) : xs)
-    Mul -> Right (Integer (l * r) : xs)
-    Div -> Right (Integer (div l r) : xs)
-    Mod -> Right (Integer (mod l r) : xs)
-    Pow -> Right (Integer (l ^ r) : xs)
-    Eq -> Right (Bool (l == r) : xs)
-    Neq -> Right (Bool (l /= r) : xs)
-    Less -> Right (Bool (l < r) : xs)
-    LessOrEqual -> Right (Bool (l <= r) : xs)
-    Greater -> Right (Bool (l > r) : xs)
-    GreaterOrEqual -> Right (Bool (l >= r) : xs)
+execOperation :: Value -> Value -> Operator -> Either String Value
+execOperation (Integer _) (Integer 0) op | op == Div || op == Mod = Left "Cannot divide by 0"
+execOperation (Float _) (Float 0) op | op == Div || op == Mod = Left "Cannot divide by 0"
+execOperation (Float l) (Integer r) op = execOperation (Float l) (Float (int2Double r)) op
+execOperation (Integer l) (Float r) op = execOperation (Float (int2Double l)) (Float r) op
+execOperation (Integer l) (Integer r) op = case op of
+    Add -> Right $ Integer $ l + r
+    Sub -> Right $ Integer $ l - r
+    Mul -> Right $ Integer $ l * r
+    Div -> Right $ Integer $ div l r
+    Mod -> Right $ Integer $ mod l r
+    Pow -> Right $ Integer $ l ^ r
+    Eq -> Right $ Bool $ l == r
+    Neq -> Right $ Bool $ l /= r
+    Less -> Right $ Bool $ l < r
+    LessOrEqual -> Right $ Bool $ l <= r
+    Greater -> Right $ Bool $ l > r
+    GreaterOrEqual -> Right $ Bool $ l >= r
     _ -> Left ("Wrong data types in stack: " ++ show op ++ " with 2 integers")
-execBuiltin (Float l : Float r : xs) op = case op of
-    Add -> Right (Float (l + r) : xs)
-    Sub -> Right (Float (l - r) : xs)
-    Mul -> Right (Float (l * r) : xs)
-    Div -> Right (Float (l / r) : xs)
-    Mod -> Right (Float (mod' l r) : xs)
-    Pow -> Right (Float (l ** r) : xs)
-    Eq -> Right (Bool (l == r) : xs)
-    Neq -> Right (Bool (l /= r) : xs)
-    Less -> Right (Bool (l < r) : xs)
-    LessOrEqual -> Right (Bool (l <= r) : xs)
-    Greater -> Right (Bool (l > r) : xs)
-    GreaterOrEqual -> Right (Bool (l >= r) : xs)
+execOperation (Float l) (Float r) op = case op of
+    Add -> Right $ Float $ l + r
+    Sub -> Right $ Float $ l - r
+    Mul -> Right $ Float $ l * r
+    Div -> Right $ Float $ l / r
+    Mod -> Right $ Float $ mod' l r
+    Pow -> Right $ Float $ l ** r
+    Eq -> Right $ Bool $ l == r
+    Neq -> Right $ Bool $ l /= r
+    Less -> Right $ Bool $ l < r
+    LessOrEqual -> Right $ Bool $ l <= r
+    Greater -> Right $ Bool $ l > r
+    GreaterOrEqual -> Right $ Bool $ l >= r
     _ -> Left ("Wrong data types in stack: " ++ show op ++ " with 2 floats")
-execBuiltin (Float l : Integer r : xs) op = case op of
-    Add -> Right (Float (l + int2Double r) : xs)
-    Sub -> Right (Float (l - int2Double r) : xs)
-    Mul -> Right (Float (l * int2Double r) : xs)
-    Div -> Right (Float (l / int2Double r) : xs)
-    Mod -> Right (Float (mod' l (int2Double r)) : xs)
-    Pow -> Right (Float (l ** int2Double r) : xs)
-    Eq -> Right (Bool (l == int2Double r) : xs)
-    Neq -> Right (Bool (l /= int2Double r) : xs)
-    Less -> Right (Bool (l < int2Double r) : xs)
-    LessOrEqual -> Right (Bool (l <= int2Double r) : xs)
-    Greater -> Right (Bool (l > int2Double r) : xs)
-    GreaterOrEqual -> Right (Bool (l >= int2Double r) : xs)
-    _ -> Left ("Wrong data types in stack: " ++ show op ++ " with a float and an integer")
-execBuiltin (Integer l : Float r : xs) op = execBuiltin (Float (int2Double l) : Float r : xs) op
-execBuiltin (Bool l : Bool r : xs) op = case op of
-    Eq -> Right (Bool (l == r) : xs)
-    Neq -> Right (Bool (l /= r) : xs)
-    And -> Right (Bool (l && r) : xs)
-    Or -> Right (Bool (l || r) : xs)
-    Xor -> Right (Bool (l /= r) : xs)
+execOperation (Bool l) (Bool r) op = case op of
+    Eq -> Right $ Bool $ l == r
+    Neq -> Right $ Bool $ l /= r
+    And -> Right $ Bool $ l && r
+    Or -> Right $ Bool $ l || r
+    Xor -> Right $ Bool $ l /= r
     _ -> Left ("Wrong data types in stack: " ++ show op ++ " with 2 booleans")
-execBuiltin (String str : Integer nb : xs) op = case op of
-    Add -> Right (String (str ++ show nb) : xs)
-    Mul -> Right (String (concat $ replicate nb str) : xs)
+execOperation (String str) (Integer nb) op = case op of
+    Add -> Right $ String $ str ++ show nb
+    Mul -> Right $ String $ concat $ replicate nb str
     _ -> Left ("Wrong data types in stack: " ++ show op ++ " with a string and an integer")
-execBuiltin (String str : r : xs) op = case op of
-    Add -> Right (String (str ++ show r) : xs)
-    Eq -> Right (Bool (str == show r) : xs)
-    Neq -> Right (Bool (str /= show r) : xs)
+execOperation (String str) r op = case op of
+    Add -> Right $ String $ str ++ show r
+    Eq -> Right $ Bool $ str == show r
+    Neq -> Right $ Bool $ str /= show r
     _ -> Left ("Wrong data types in stack: " ++ show op ++ " with a string as left operator")
-execBuiltin (l : String str : xs) Add = Right (String (show l ++ str) : xs)
-execBuiltin _ op = Left ("Wrong stack variables for builtin " ++ show op)
+execOperation l (String str) Add = Right $ String $ show l ++ str
+execOperation _ _ op = Left ("Wrong stack variables for builtin " ++ show op)
 
-findEnvValue :: String -> [Env] -> Maybe (EnvValue, Int)
+findEnvValue :: String -> [Env] -> Maybe Variable
 findEnvValue _ [] = Nothing
 findEnvValue searchIdentifier (x : xs)
-    | identifier x == searchIdentifier = Just (value x, scope x)
+    | identifier x == searchIdentifier = Just $ value x
     | otherwise = findEnvValue searchIdentifier xs
 
-addEnvValue :: String -> EnvValue -> Int -> [Env] -> [Env]
-addEnvValue iden val scopeIdx (x : xs)
-    | identifier x == iden = Env{identifier = iden, value = val, scope = scopeIdx} : xs
-    | otherwise = x : addEnvValue iden val scopeIdx xs
-addEnvValue iden val scopeIdx [] = [Env{identifier = iden, value = val, scope = scopeIdx}]
+addEnvValue :: String -> Variable -> [Env] -> [Env]
+addEnvValue iden val (x : xs)
+    | identifier x == iden = Env iden val : xs
+    | otherwise = x : addEnvValue iden val xs
+addEnvValue iden val [] = [Env iden val]
 
 removeEnvValue :: String -> [Env] -> [Env]
 removeEnvValue iden = filter (\x -> identifier x /= iden)
