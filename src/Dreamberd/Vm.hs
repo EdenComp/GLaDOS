@@ -3,6 +3,7 @@
 module Dreamberd.Vm (
     exec,
     execVM,
+    Builtin (..),
     Call (..),
     DefineEnvType (..),
     Env (..),
@@ -51,9 +52,15 @@ data DefineEnvType
     deriving (Eq, Show)
 
 data Call
-    = Builtin Operator
-    | FunctionName String
+    = Builtin Builtin
+    | Operator Operator
     deriving (Eq, Show)
+
+data Builtin
+    = Input
+    | Print
+    | Error
+    deriving (Enum, Eq, Show)
 
 data Operator
     = Add
@@ -104,9 +111,6 @@ execInstruction env args stack insts (Push val) idx scopeIdx = exec env args (Va
 execInstruction env args stack insts (PushArg arg) idx scopeIdx
     | arg >= length args || arg < 0 = return (Left "Argument index out of bounds")
     | otherwise = exec env args ((args !! arg) : stack) insts (idx + 1) scopeIdx
-execInstruction env args stack insts (PushEnv "input") idx scopeIdx = exec env args (Variable (Symbol (FunctionName "input")) scopeIdx : stack) insts (idx + 1) scopeIdx
-execInstruction env args stack insts (PushEnv "print") idx scopeIdx = exec env args (Variable (Symbol (FunctionName "print")) scopeIdx : stack) insts (idx + 1) scopeIdx
-execInstruction env args stack insts (PushEnv "error") idx scopeIdx = exec env args (Variable (Symbol (FunctionName "error")) scopeIdx : stack) insts (idx + 1) scopeIdx
 execInstruction env args stack insts (PushEnv name) idx scopeIdx =
     case findEnvValue name env of
         Just v -> exec env args (v : stack) insts (idx + 1) scopeIdx
@@ -124,19 +128,12 @@ execInstruction env args stack insts (Jump num cond) idx scopeIdx = execJump env
 
 execCall :: [Env] -> [Variable] -> Int -> IO (Either String [Variable])
 execCall _ [] _ = return (Left "Stack is empty for a Call instruction")
-execCall _ (Variable (Symbol (FunctionName "input")) _ : xs) scopeIdx = hFlush stdout >> hFlush stderr >> getLine >>= \line -> return $ Right (Variable (String line) scopeIdx : xs)
-execCall _ (Variable (Symbol (FunctionName "print")) _ : (Variable val _) : xs) _ = putStr (show val) >> return (Right xs)
-execCall _ (Variable (Symbol (FunctionName "print")) _ : _) _ = return (Left "Stack is empty for a print instruction")
-execCall _ (Variable (Symbol (FunctionName "error")) _ : (Variable val _) : xs) _ = hPutStr stderr (show val) >> return (Right xs)
-execCall _ (Variable (Symbol (FunctionName "error")) _ : _) _ = return (Left "Stack is empty for an error instruction")
-execCall env (Variable (Symbol (FunctionName fct)) _ : xs) scopeIdx = case findEnvValue fct env of
-    Just (Variable (Lambda args insts) fctScope) -> do
-        ret <- exec (filter (\(Env _ (Variable _ scope)) -> scope <= fctScope) env) xs [] insts 0 (scopeIdx + 1)
-        case ret of
-            Left err -> return (Left err)
-            Right val -> return (Right (val : drop args xs))
-    _ -> return (Left ("Environment " ++ fct ++ " does not exist"))
-execCall _ (Variable (Symbol (Builtin op)) _ : (Variable l _) : (Variable r _) : xs) scopeIdx = case execOperation l r op of
+execCall _ (Variable (Symbol (Builtin Input)) _ : xs) scopeIdx = hFlush stdout >> hFlush stderr >> getLine >>= \line -> return $ Right (Variable (String line) scopeIdx : xs)
+execCall _ (Variable (Symbol (Builtin Print)) _ : (Variable val _) : xs) _ = putStr (show val) >> return (Right xs)
+execCall _ (Variable (Symbol (Builtin Print)) _ : _) _ = return (Left "Stack is empty for a print instruction")
+execCall _ (Variable (Symbol (Builtin Error)) _ : (Variable val _) : xs) _ = hPutStr stderr (show val) >> return (Right xs)
+execCall _ (Variable (Symbol (Builtin Error)) _ : _) _ = return (Left "Stack is empty for an error instruction")
+execCall _ (Variable (Symbol (Operator op)) _ : (Variable l _) : (Variable r _) : xs) scopeIdx = case execOperation l r op of
     Left err -> return (Left err)
     Right res -> return (Right (Variable res scopeIdx : xs))
 execCall env (Variable (Lambda args insts) fctScope : xs) scopeIdx = do

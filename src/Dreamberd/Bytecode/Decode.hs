@@ -28,12 +28,12 @@ parseString bytes =
 
 parseCall :: [Char] -> Either String (Call, [Char])
 parseCall [] = Left "No call provided"
-parseCall (c : op : bytes) | fromEnum c == 0x21 && hex >= 0x31 && hex <= 0x3F = Right (Builtin (toEnum $ hex - 0x31), bytes)
+parseCall (c : op : bytes)
+    | fromEnum c == 0x21 && hex >= 0x31 && hex <= 0x3F = Right (Operator (toEnum $ hex - 0x31), bytes)
+    | fromEnum c == 0x22 && hex >= 0x25 && hex <= 0x27 = Right (Builtin (toEnum $ hex - 0x25), bytes)
   where
     hex = fromEnum op
-parseCall (c : bytes)
-    | fromEnum c == 0x22 = parseString bytes >>= \(name, rest) -> Right (FunctionName name, rest)
-    | otherwise = Left "Unknown call"
+parseCall _ = Left "Unknown call"
 
 parseValue :: [Char] -> Either String (Value, [Char])
 parseValue [] = Left "No value provided"

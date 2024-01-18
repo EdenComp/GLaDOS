@@ -28,10 +28,14 @@ Integer: 8 bytes for length + integral number as bits
 
 ## Symbols
 
-- `0x21`: Builtin + 1 byte: Operator
-- `0x22`: Function Name
+- `0x21`: Operator + 1 byte
+- `0x22`: Builtin + 1 Builtin
 
-## Builtins
+- `0x25`: Input
+- `0x26`: Print
+- `0x27`: Error
+
+## Operators
 
 - `0x31`: Add
 - `0x32`: Sub

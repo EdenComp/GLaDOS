@@ -3,6 +3,7 @@
 module Dreamberd.Lib (
     compileDreamberdCode,
     compileToAst,
+    compileToPostprocessedInsts,
     compileToPreprocessedAst,
     compileToVm,
     executeDreamberdBytecode,
@@ -19,6 +20,7 @@ import Dreamberd.Parser (parseDreamberd)
 import Dreamberd.Types (File (..))
 import Dreamberd.Vm (Insts (..), Value (..), execVM)
 import System.Exit (ExitCode (ExitFailure), exitWith)
+import Dreamberd.Compilation.Postprocessing (executePostprocessing)
 
 compileDreamberdCode :: File String -> String -> IO ()
 compileDreamberdCode (File filename sourcecode) outputFile =
@@ -26,7 +28,7 @@ compileDreamberdCode (File filename sourcecode) outputFile =
         Right ast ->
             executePreprocessing (File filename ast) >>= \case
                 Right ast' -> case compileAst ast' of
-                    Right insts -> writeFile outputFile (transpileIntoBytecode insts)
+                    Right insts -> writeFile outputFile $ transpileIntoBytecode $ executePostprocessing insts
                     Left err -> returnWithError err
                 Left err -> returnWithError err
         Left err -> returnWithError err
@@ -54,7 +56,7 @@ runDreamberdCode (File filename sourcecode) =
         Right ast ->
             executePreprocessing (File filename ast) >>= \case
                 Right ast' -> case compileAst ast' of
-                    Right insts -> executeDreamberdInsts insts
+                    Right insts -> executeDreamberdInsts $ executePostprocessing insts
                     Left err -> returnWithError err
                 Left err -> returnWithError err
         Left err -> returnWithError err
@@ -81,6 +83,17 @@ compileToVm (File filename sourcecode) =
             executePreprocessing (File filename ast) >>= \case
                 Right ast' -> case compileAst ast' of
                     Right insts -> putStr $ prettyPrintInsts insts
+                    Left err -> returnWithError err
+                Left err -> returnWithError err
+        Left err -> returnWithError err
+
+compileToPostprocessedInsts :: File String -> IO ()
+compileToPostprocessedInsts (File filename sourcecode) =
+    case parseDreamberd (File filename sourcecode) of
+        Right ast ->
+            executePreprocessing (File filename ast) >>= \case
+                Right ast' -> case compileAst ast' of
+                    Right insts -> putStr $ prettyPrintInsts $ executePostprocessing insts
                     Left err -> returnWithError err
                 Left err -> returnWithError err
         Left err -> returnWithError err

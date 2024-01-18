@@ -147,7 +147,7 @@ compileBuiltinCall params op [a, b] =
             compileNode params a
                 >>= \aPush ->
                     compileNode params b
-                        >>= \bPush -> Right $ bPush ++ aPush ++ [VM.Push $ VM.Symbol $ VM.Builtin call, VM.Call]
+                        >>= \bPush -> Right $ bPush ++ aPush ++ [VM.Push $ VM.Symbol $ VM.Operator call, VM.Call]
 compileBuiltinCall _ _ _ = Left "Unknown builtin call"
 
 getBuiltinCallForOp :: String -> Either String VM.Operator

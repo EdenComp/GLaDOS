@@ -33,8 +33,8 @@ transpileString :: String -> [Char]
 transpileString str = transpileInt (length str) ++ str
 
 transpileCall :: Call -> [Char]
-transpileCall (Builtin op) = toEnum 0x21 : [toEnum (0x31 + fromEnum op)]
-transpileCall (FunctionName str) = toEnum 0x22 : transpileString str
+transpileCall (Operator op) = toEnum 0x21 : [toEnum (0x31 + fromEnum op)]
+transpileCall (Builtin builtin) = toEnum 0x22 : [toEnum (0x25 + fromEnum builtin)]
 
 transpileValue :: Value -> [Char]
 transpileValue (Integer nb) = toEnum 0x11 : transpileInt nb
