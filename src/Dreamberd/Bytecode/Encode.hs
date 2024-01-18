@@ -10,7 +10,7 @@ module Dreamberd.Bytecode.Encode (
 
 import Data.Bits (shiftR)
 import Data.Char (chr)
-import Dreamberd.Vm (Call (..), DefineEnvType (..), EnvValue (..), Insts (..), Value (..))
+import Dreamberd.Vm (Call (..), DefineEnvType (..), Insts (..), Value (..))
 import System.Endian (Endianness (..), getSystemEndianness)
 
 getIntegerSize :: Integer -> Int
@@ -49,21 +49,18 @@ transpileValue (Lambda args insts) = toEnum 0x16 : transpileInt args ++ transpil
     nested = foldMap transpileInstruction insts
 transpileValue Void = [toEnum 0x17]
 
-transpileEnvValue :: Maybe EnvValue -> [Char]
-transpileEnvValue Nothing = [toEnum 0x53]
-transpileEnvValue (Just (Function args insts)) = toEnum 0x41 : transpileInt args ++ transpileInt (length nested) ++ nested
-  where
-    nested = foldMap transpileInstruction insts
-transpileEnvValue (Just (Variable val)) = toEnum 0x42 : transpileValue val
+transpileDefineValue :: Maybe Value -> [Char]
+transpileDefineValue Nothing = [toEnum 0x53]
+transpileDefineValue (Just val) = toEnum 0x51 : transpileValue val
 
 transpileInstruction :: Insts -> [Char]
 transpileInstruction (Push v) = toEnum 0x01 : transpileValue v
 transpileInstruction (PushArg idx) = toEnum 0x02 : transpileInt idx
 transpileInstruction (PushEnv env) = toEnum 0x03 : transpileString env
 transpileInstruction Call = [toEnum 0x04]
-transpileInstruction (DefineEnv name Define value) = toEnum 0x05 : transpileString name ++ [toEnum 0x45] ++ transpileEnvValue value
-transpileInstruction (DefineEnv name Redefine value) = toEnum 0x05 : transpileString name ++ [toEnum 0x46] ++ transpileEnvValue value
-transpileInstruction (DefineEnv name Override value) = toEnum 0x05 : transpileString name ++ [toEnum 0x47] ++ transpileEnvValue value
+transpileInstruction (DefineEnv name Define value) = toEnum 0x05 : transpileString name ++ [toEnum 0x41] ++ transpileDefineValue value
+transpileInstruction (DefineEnv name Redefine value) = toEnum 0x05 : transpileString name ++ [toEnum 0x42] ++ transpileDefineValue value
+transpileInstruction (DefineEnv name Override value) = toEnum 0x05 : transpileString name ++ [toEnum 0x43] ++ transpileDefineValue value
 transpileInstruction (EraseEnv name) = toEnum 0x06 : transpileString name
 transpileInstruction (Jump nb (Just True)) = toEnum 0x07 : transpileInt nb ++ [toEnum 0x51]
 transpileInstruction (Jump nb (Just False)) = toEnum 0x07 : transpileInt nb ++ [toEnum 0x52]

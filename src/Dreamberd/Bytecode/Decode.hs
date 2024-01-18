@@ -4,7 +4,7 @@ module Dreamberd.Bytecode.Decode (
 
 import Data.Bits (shiftL, (.|.))
 import Data.Char (ord)
-import Dreamberd.Vm (Call (..), DefineEnvType (..), EnvValue (..), Insts (..), Value (..))
+import Dreamberd.Vm (Call (..), DefineEnvType (..), Insts (..), Value (..))
 
 parseInt :: [Char] -> Either String (Int, [Char])
 parseInt (b1 : b2 : b3 : b4 : b5 : b6 : b7 : b8 : rest) = Right ((ord b1 `shiftL` 56) .|. (ord b2 `shiftL` 48) .|. (ord b3 `shiftL` 40) .|. (ord b4 `shiftL` 32) .|. (ord b5 `shiftL` 24) .|. (ord b6 `shiftL` 16) .|. (ord b7 `shiftL` 8) .|. ord b8, rest)
@@ -53,23 +53,19 @@ parseValue (c : bytes) = case fromEnum c of
     0x17 -> Right (Void, bytes)
     _ -> Left "Unknown value type"
 
-parseEnvValue :: [Char] -> Either String (Maybe EnvValue, [Char])
-parseEnvValue [] = Left "No value provided"
-parseEnvValue (c : bytes)
-    | fromEnum c == 0x41 =
-        parseInt bytes >>= \(args, rest) ->
-            parseInt rest >>= \(len, rest') ->
-                let (insts, rest'') = splitAt len rest' in parseInstructions insts >>= \func -> if length rest' < len then Left "Wrong function body length" else Right (Just (Function args func), rest'')
-    | fromEnum c == 0x42 = parseValue bytes >>= \(val, rest) -> Right (Just (Variable val), rest)
+parseDefineValue :: [Char] -> Either String (Maybe Value, [Char])
+parseDefineValue [] = Left "No value provided"
+parseDefineValue (c : bytes)
+    | fromEnum c == 0x51 = parseValue bytes >>= \(val, rest) -> Right (Just val, rest)
     | fromEnum c == 0x53 = Right (Nothing, bytes)
     | otherwise = Left "Unknown value type"
 
 parseDefineEnv :: String -> [Char] -> Either String (Insts, [Char])
 parseDefineEnv _ [] = Left "No value provided"
 parseDefineEnv name (c : bytes) = case fromEnum c of
-    0x45 -> parseEnvValue bytes >>= \(val, rest) -> Right (DefineEnv name Define val, rest)
-    0x46 -> parseEnvValue bytes >>= \(val, rest) -> Right (DefineEnv name Redefine val, rest)
-    0x47 -> parseEnvValue bytes >>= \(val, rest) -> Right (DefineEnv name Override val, rest)
+    0x41 -> parseDefineValue bytes >>= \(val, rest) -> Right (DefineEnv name Define val, rest)
+    0x42 -> parseDefineValue bytes >>= \(val, rest) -> Right (DefineEnv name Redefine val, rest)
+    0x43 -> parseDefineValue bytes >>= \(val, rest) -> Right (DefineEnv name Override val, rest)
     _ -> Left "Unknown define env"
 
 parseJump :: (Int, [Char]) -> Either String [Insts]
