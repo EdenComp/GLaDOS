@@ -38,7 +38,7 @@ instance Show Value where
 data Variable = Variable Value Int
     deriving (Eq, Show)
 
-data Env = Env 
+data Env = Env
     { identifier :: String
     , value :: Variable
     }
@@ -85,9 +85,10 @@ data Insts
     deriving (Eq, Show)
 
 execVM :: [Insts] -> IO (Either String Value)
-execVM insts = exec [] [] [] insts 0 0 >>= \case
-    Left err -> return (Left err)
-    Right (Variable val _) -> return (Right val)
+execVM insts =
+    exec [] [] [] insts 0 0 >>= \case
+        Left err -> return (Left err)
+        Right (Variable val _) -> return (Right val)
 
 exec :: [Env] -> [Variable] -> [Variable] -> [Insts] -> Int -> Int -> IO (Either String Variable)
 exec _ _ _ [] _ scopeIdx = return $ Right (Variable Void scopeIdx)
