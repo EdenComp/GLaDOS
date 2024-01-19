@@ -1,6 +1,6 @@
 module Unit.Dreamberd.TestDreamberdParsing (testDreamberdParsing) where
 
-import Dreamberd.Parser (parse, parseAndWith, parseBinaryOperator, parseChar, parseDreamberd, parseInteger, parseMany)
+import Dreamberd.Parser (Location (..), parse, parseAndWith, parseBinaryOperator, parseChar, parseDreamberd, parseInteger, parseMany)
 import Dreamberd.Types (AstNode (..), File (File))
 import Test.HUnit (Test (..), assertBool, assertEqual)
 
@@ -13,8 +13,8 @@ testParseInteger =
         [ TestCase
             ( assertEqual
                 "for (parseInteger \"123\")"
-                (Right (123, ("", ("", 1, 4))))
-                (parse parseInteger ("123", ("", 1, 1)))
+                (Right (123, ("", Location "" 1 4)))
+                (parse parseInteger ("123", Location "" 1 1))
             )
         ]
 
@@ -24,13 +24,13 @@ testParseAndWith =
         [ TestCase
             ( assertEqual
                 "for (parseAndWith (,) (parseChar 'a') (parseChar 'a') on \"aa\")"
-                (Right (('a', 'a'), ("", ("", 1, 3))))
-                (parse (parseAndWith (,) (parseChar 'a') (parseChar 'a')) ("aa", ("", 1, 1)))
+                (Right (('a', 'a'), ("", Location "" 1 3)))
+                (parse (parseAndWith (,) (parseChar 'a') (parseChar 'a')) ("aa", Location "" 1 1))
             )
         , TestCase
             ( assertBool
                 "for failure case of parseAndWith"
-                ( case parse (parseAndWith (,) (parseChar 'a') (parseChar 'a')) ("ab", ("", 1, 1)) of
+                ( case parse (parseAndWith (,) (parseChar 'a') (parseChar 'a')) ("ab", Location "" 1 1) of
                     Left _ -> True
                     Right _ -> False
                 )
@@ -43,10 +43,10 @@ testParseMany =
         [ TestCase
             ( assertEqual
                 "for (parseMany (parseChar 'a') on \"aaa\")"
-                (Right ("aaa", ("", ("", 1, 4))))
-                (parse (parseMany (parseChar 'a')) ("aaa", ("", 1, 1)))
+                (Right ("aaa", ("", Location "" 1 4)))
+                (parse (parseMany (parseChar 'a')) ("aaa", Location "" 1 1))
             )
-        , TestCase (assertEqual "for (parseMany (parseChar 'a') on empty string)" (Right ("", ("", ("", 1, 1)))) (parse (parseMany (parseChar 'a')) ("", ("", 1, 1))))
+        , TestCase (assertEqual "for (parseMany (parseChar 'a') on empty string)" (Right ("", ("", Location "" 1 1))) (parse (parseMany (parseChar 'a')) ("", Location "" 1 1)))
         ]
 
 testParseBinaryOperator :: Test
@@ -55,98 +55,98 @@ testParseBinaryOperator =
         [ TestCase
             ( assertEqual
                 "parse addition operator"
-                (Right ("+", ("", ("", 1, 2))))
-                (parse parseBinaryOperator ("+", ("", 1, 1)))
+                (Right ("+", ("", Location "" 1 2)))
+                (parse parseBinaryOperator ("+", Location "" 1 1))
             )
         , TestCase
             ( assertEqual
                 "parse subtraction operator"
-                (Right ("-", ("", ("", 1, 2))))
-                (parse parseBinaryOperator ("-", ("", 1, 1)))
+                (Right ("-", ("", Location "" 1 2)))
+                (parse parseBinaryOperator ("-", Location "" 1 1))
             )
         , TestCase
             ( assertEqual
                 "parse multiplication operator"
-                (Right ("*", ("", ("", 1, 2))))
-                (parse parseBinaryOperator ("*", ("", 1, 1)))
+                (Right ("*", ("", Location "" 1 2)))
+                (parse parseBinaryOperator ("*", Location "" 1 1))
             )
         , TestCase
             ( assertEqual
                 "parse division operator"
-                (Right ("/", ("", ("", 1, 2))))
-                (parse parseBinaryOperator ("/", ("", 1, 1)))
+                (Right ("/", ("", Location "" 1 2)))
+                (parse parseBinaryOperator ("/", Location "" 1 1))
             )
         , TestCase
             ( assertEqual
                 "parse modulus operator"
-                (Right ("%", ("", ("", 1, 2))))
-                (parse parseBinaryOperator ("%", ("", 1, 1)))
+                (Right ("%", ("", Location "" 1 2)))
+                (parse parseBinaryOperator ("%", Location "" 1 1))
             )
         , TestCase
             ( assertEqual
                 "parse equality operator"
-                (Right ("==", ("", ("", 1, 3))))
-                (parse parseBinaryOperator ("==", ("", 1, 1)))
+                (Right ("==", ("", Location "" 1 3)))
+                (parse parseBinaryOperator ("==", Location "" 1 1))
             )
         , TestCase
             ( assertEqual
                 "parse inequality operator"
-                (Right ("!=", ("", ("", 1, 3))))
-                (parse parseBinaryOperator ("!=", ("", 1, 1)))
+                (Right ("!=", ("", Location "" 1 3)))
+                (parse parseBinaryOperator ("!=", Location "" 1 1))
             )
         , TestCase
             ( assertEqual
                 "parse less than operator"
-                (Right ("<", ("", ("", 1, 2))))
-                (parse parseBinaryOperator ("<", ("", 1, 1)))
+                (Right ("<", ("", Location "" 1 2)))
+                (parse parseBinaryOperator ("<", Location "" 1 1))
             )
         , TestCase
             ( assertEqual
                 "parse less than or equal operator"
-                (Right ("<=", ("", ("", 1, 3))))
-                (parse parseBinaryOperator ("<=", ("", 1, 1)))
+                (Right ("<=", ("", Location "" 1 3)))
+                (parse parseBinaryOperator ("<=", Location "" 1 1))
             )
         , TestCase
             ( assertEqual
                 "parse greater than operator"
-                (Right (">", ("", ("", 1, 2))))
-                (parse parseBinaryOperator (">", ("", 1, 1)))
+                (Right (">", ("", Location "" 1 2)))
+                (parse parseBinaryOperator (">", Location "" 1 1))
             )
         , TestCase
             ( assertEqual
                 "parse greater than or equal operator"
-                (Right (">=", ("", ("", 1, 3))))
-                (parse parseBinaryOperator (">=", ("", 1, 1)))
+                (Right (">=", ("", Location "" 1 3)))
+                (parse parseBinaryOperator (">=", Location "" 1 1))
             )
         , TestCase
             ( assertEqual
                 "parse and operator"
-                (Right ("&&", ("", ("", 1, 3))))
-                (parse parseBinaryOperator ("&&", ("", 1, 1)))
+                (Right ("&&", ("", Location "" 1 3)))
+                (parse parseBinaryOperator ("&&", Location "" 1 1))
             )
         , TestCase
             ( assertEqual
                 "parse or operator"
-                (Right ("||", ("", ("", 1, 3))))
-                (parse parseBinaryOperator ("||", ("", 1, 1)))
+                (Right ("||", ("", Location "" 1 3)))
+                (parse parseBinaryOperator ("||", Location "" 1 1))
             )
         , TestCase
             ( assertEqual
                 "parse xor operator"
-                (Right ("^", ("", ("", 1, 2))))
-                (parse parseBinaryOperator ("^", ("", 1, 1)))
+                (Right ("^", ("", Location "" 1 2)))
+                (parse parseBinaryOperator ("^", Location "" 1 1))
             )
         , TestCase
             ( assertEqual
                 "parse bitwise and operator"
                 (Left ":1:1: Expected '%' but found '&'")
-                (parse parseBinaryOperator ("&", ("", 1, 1)))
+                (parse parseBinaryOperator ("&", Location "" 1 1))
             )
         , TestCase
             ( assertEqual
                 "parse bitwise or operator"
                 (Left ":1:1: Expected '%' but found '|'")
-                (parse parseBinaryOperator ("|", ("", 1, 1)))
+                (parse parseBinaryOperator ("|", Location "" 1 1))
             )
         ]
 
@@ -554,31 +554,31 @@ testParseDreamberd =
         , TestCase
             ( assertEqual
                 "empty file with space"
-                (Left "' ' at :1:1")
+                (Left ":1:1: Expected '_' but found ' '")
                 (parseDreamberd (File "" " "))
             )
         , TestCase
             ( assertEqual
                 "empty file with newline"
-                (Left "'\n' at :1:1")
+                (Left ":1:1: Expected '_' but found '\n'")
                 (parseDreamberd (File "" "\n"))
             )
         , TestCase
             ( assertEqual
                 "empty file with tab"
-                (Left "'\t' at :1:1")
+                (Left ":1:1: Expected '_' but found '\t'")
                 (parseDreamberd (File "" "\t"))
             )
         , TestCase
             ( assertEqual
                 "empty file with carriage return"
-                (Left "'\r' at :1:1")
+                (Left ":1:1: Expected '_' but found '\r'")
                 (parseDreamberd (File "" "\r"))
             )
         , TestCase
             ( assertEqual
                 "empty file with carriage return and newline"
-                (Left "'\r\n' at :1:1")
+                (Left ":1:1: Expected '_' but found '\r'")
                 (parseDreamberd (File "" "\r\n"))
             )
         , TestCase

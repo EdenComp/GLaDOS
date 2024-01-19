@@ -1,4 +1,4 @@
-int succ = |a| |> {
+int succ = |a| => {
     a + 1
 };
 
