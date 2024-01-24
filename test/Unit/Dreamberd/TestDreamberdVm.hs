@@ -11,7 +11,7 @@ import Dreamberd.Vm (
     Variable (..),
     exec,
     execVM,
-    )
+ )
 import Test.HUnit (Test (..), assertEqual)
 
 testDreamberdVm :: Test
