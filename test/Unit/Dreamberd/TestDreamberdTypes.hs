@@ -45,19 +45,19 @@ testVmTypes =
         , TestCase (assertEqual "Float" (show (VM.Float 1.001)) "1.001")
         , TestCase (assertEqual "Boolean" (show (VM.Bool True)) "True")
         , TestCase (assertEqual "String" (show (VM.String "test")) "test")
-        , TestCase (assertEqual "Symbol" (show (VM.Symbol (VM.FunctionName "foo"))) "FunctionName \"foo\"")
+        , TestCase (assertEqual "Symbol" (show (VM.Symbol (VM.Builtin VM.Print))) "Builtin Print")
         , TestCase (assertEqual "Void" (show VM.Void) "")
-        , TestCase (assertEqual "EnvValue" (show (VM.Variable (VM.String "test"))) "Variable test")
+        , TestCase (assertEqual "EnvValue" (show (VM.Variable (VM.String "test") 3)) "Variable test 3")
         , TestCase (assertEqual "DefineEnvType" (show VM.Redefine) "Redefine")
-        , TestCase (assertEqual "Env" (show (VM.Env{identifier = "salut", value = VM.Variable (VM.String "hello"), scope = 1})) "Env {identifier = \"salut\", value = Variable hello, scope = 1}")
+        , TestCase (assertEqual "Env" (show (VM.Env{identifier = "salut", value = VM.Variable (VM.String "hello") 1})) "Env {identifier = \"salut\", value = Variable hello 1}")
         , TestCase (assertEqual "Push" (show (VM.Push (VM.Integer 42))) "Push 42")
         ]
 
 testVmTypesComparison :: Test
 testVmTypesComparison =
     TestList
-        [ TestCase (assertEqual "Call equality" (VM.Builtin VM.Add == VM.Builtin VM.Add) True)
-        , TestCase (assertEqual "Call inequality" (VM.Builtin VM.Sub == VM.Builtin VM.Mod) False)
+        [ TestCase (assertEqual "Call equality" (VM.Operator VM.Add == VM.Operator VM.Add) True)
+        , TestCase (assertEqual "Call inequality" (VM.Operator VM.Sub == VM.Operator VM.Mod) False)
         , TestCase (assertEqual "Call enum value" (fromEnum VM.Sub) 1)
         , TestCase (assertEqual "Call enum value 2" (toEnum 4) VM.Mod)
         ]

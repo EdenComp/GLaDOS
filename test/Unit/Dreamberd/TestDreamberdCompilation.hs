@@ -187,7 +187,7 @@ testCompileNode =
         , TestCase
             ( assertEqual
                 "compile Function node"
-                (Right [VM.DefineEnv "myFunc" VM.Define (Just (VM.Function 1 [VM.PushArg 0, VM.DefineEnv "x" VM.Override Nothing, VM.PushEnv "x", VM.Ret]))])
+                (Right [VM.DefineEnv "myFunc" VM.Define (Just (VM.Lambda 1 [VM.PushArg 0, VM.DefineEnv "x" VM.Override Nothing, VM.PushEnv "x", VM.Ret]))])
                 (compileNode [] (AST.Function "myFunc" ["x"] [AST.Return (Just (AST.Identifier "x"))]))
             )
         , TestCase
@@ -239,19 +239,19 @@ testCompileFunction =
         [ TestCase
             ( assertEqual
                 "compile simple function"
-                (Right [VM.DefineEnv "myFunc" VM.Define (Just $ VM.Function 1 [VM.PushArg 0, VM.DefineEnv "x" VM.Override Nothing, VM.PushEnv "x", VM.Ret])])
+                (Right [VM.DefineEnv "myFunc" VM.Define (Just $ VM.Lambda 1 [VM.PushArg 0, VM.DefineEnv "x" VM.Override Nothing, VM.PushEnv "x", VM.Ret])])
                 (compileFunction [] "myFunc" ["x"] [AST.Return (Just (AST.Identifier "x"))])
             )
         , TestCase
             ( assertEqual
                 "compile function without parameters"
-                (Right [VM.DefineEnv "noParamsFunc" VM.Define (Just $ VM.Function 0 [VM.Push (VM.Integer 1), VM.Ret])])
+                (Right [VM.DefineEnv "noParamsFunc" VM.Define (Just $ VM.Lambda 0 [VM.Push (VM.Integer 1), VM.Ret])])
                 (compileFunction [] "noParamsFunc" [] [AST.Return (Just (AST.Integer 1))])
             )
         , TestCase
             ( assertEqual
                 "compile function with multiple parameters"
-                (Right [VM.DefineEnv "multiParamsFunc" VM.Define (Just $ VM.Function 3 [VM.PushArg 0, VM.DefineEnv "x" VM.Override Nothing, VM.PushArg 1, VM.DefineEnv "y" VM.Override Nothing, VM.PushArg 2, VM.DefineEnv "z" VM.Override Nothing, VM.PushEnv "x", VM.Ret])])
+                (Right [VM.DefineEnv "multiParamsFunc" VM.Define (Just $ VM.Lambda 3 [VM.PushArg 0, VM.DefineEnv "x" VM.Override Nothing, VM.PushArg 1, VM.DefineEnv "y" VM.Override Nothing, VM.PushArg 2, VM.DefineEnv "z" VM.Override Nothing, VM.PushEnv "x", VM.Ret])])
                 (compileFunction [] "multiParamsFunc" ["x", "y", "z"] [AST.Return (Just (AST.Identifier "x"))])
             )
         ]
@@ -297,7 +297,7 @@ testCompileCall =
         , TestCase
             ( assertEqual
                 "compile binary operation call"
-                (Right [VM.Push (VM.Integer 3), VM.Push (VM.Integer 2), VM.Push (VM.Symbol (VM.Builtin VM.Add)), VM.Call])
+                (Right [VM.Push (VM.Integer 3), VM.Push (VM.Integer 2), VM.Push (VM.Symbol (VM.Operator VM.Add)), VM.Call])
                 (compileCall [] (AST.Identifier "+") [AST.Integer 2, AST.Integer 3])
             )
         ]
@@ -331,19 +331,19 @@ testCompileBuiltinCall =
         [ TestCase
             ( assertEqual
                 "compile binary addition"
-                (Right [VM.Push (VM.Integer 3), VM.Push (VM.Integer 2), VM.Push (VM.Symbol (VM.Builtin VM.Add)), VM.Call])
+                (Right [VM.Push (VM.Integer 3), VM.Push (VM.Integer 2), VM.Push (VM.Symbol (VM.Operator VM.Add)), VM.Call])
                 (compileBuiltinCall [] "+" [AST.Integer 2, AST.Integer 3])
             )
         , TestCase
             ( assertEqual
                 "compile binary subtraction"
-                (Right [VM.Push (VM.Integer 2), VM.Push (VM.Integer 5), VM.Push (VM.Symbol (VM.Builtin VM.Sub)), VM.Call])
+                (Right [VM.Push (VM.Integer 2), VM.Push (VM.Integer 5), VM.Push (VM.Symbol (VM.Operator VM.Sub)), VM.Call])
                 (compileBuiltinCall [] "-" [AST.Integer 5, AST.Integer 2])
             )
         , TestCase
             ( assertEqual
                 "compile binary multiplication"
-                (Right [VM.Push (VM.Integer 6), VM.Push (VM.Integer 4), VM.Push (VM.Symbol (VM.Builtin VM.Mul)), VM.Call])
+                (Right [VM.Push (VM.Integer 6), VM.Push (VM.Integer 4), VM.Push (VM.Symbol (VM.Operator VM.Mul)), VM.Call])
                 (compileBuiltinCall [] "*" [AST.Integer 4, AST.Integer 6])
             )
         ]
