@@ -29,7 +29,7 @@ Integer: 8 bytes for length + integral number as bits
 ## Symbols
 
 - `0x21`: Operator + 1 byte
-- `0x22`: Builtin + 1 Builtin
+- `0x22`: Builtin + 1 byte for the builtin (list below)
 
 - `0x25`: Input
 - `0x26`: Print
