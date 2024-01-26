@@ -12,6 +12,7 @@ module Dreamberd.Bytecode.Encode (
 import Data.Bits (shiftR)
 import Data.Char (chr)
 import Dreamberd.Vm (Call (..), DefineEnvType (..), Insts (..), Value (..))
+import System.Endian (Endianness (..), getSystemEndianness)
 
 getIntegerSize :: Integer -> Int
 getIntegerSize nb = if nb == 0 then 0 else 1 + getIntegerSize (nb `shiftR` 8)
@@ -27,11 +28,15 @@ getNumberSize nb idx
     | otherwise = getNumberSize (nb `shiftR` 8) (idx + 1)
 
 transpileInt :: Int -> Int -> [Char]
-transpileInt nb size = map chr $ reverse $ map (`mod` 256) $ take size $ iterate (`shiftR` 8) nb
+transpileInt nb size = case getSystemEndianness of
+    LittleEndian -> map chr $ reverse $ map (`mod` 256) $ take size $ iterate (`shiftR` 8) nb
+    BigEndian -> reverse $ take size $ map (chr . (`mod` 256)) (take 8 $ iterate (`shiftR` 8) nb)
 
 transpileInteger :: Integer -> [Char]
 transpileInteger nb =
-    (if nb >= 0 then toEnum 0x51 else toEnum 0x52) : transpileSize size ++ map chr (reverse $ map (`mod` 256) $ take size $ iterate (`shiftR` 8) (fromInteger (abs nb)))
+    (if nb >= 0 then toEnum 0x51 else toEnum 0x52) : transpileSize size ++ case getSystemEndianness of
+        LittleEndian -> map chr $ reverse $ map (`mod` 256) $ take size $ iterate (`shiftR` 8) (fromInteger (abs nb))
+        BigEndian -> map (chr . (`mod` 256)) (take size $ iterate (`shiftR` 8) (fromInteger (abs nb)))
   where
     size = getIntegerSize (abs nb)
 
