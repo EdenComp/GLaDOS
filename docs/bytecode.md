@@ -31,6 +31,8 @@ Integer: 8 bytes for length + integral number as bits
 - `0x21`: Operator + 1 byte
 - `0x22`: Builtin + 1 byte for the builtin (list below)
 
+The language has 3 builtins to interact with the standard input / output / error:
+
 - `0x25`: Input
 - `0x26`: Print
 - `0x27`: Error
