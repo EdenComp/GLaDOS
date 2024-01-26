@@ -111,22 +111,38 @@ preprocessFunctions a = map hoistFunctions functions ++ map hoistFunctions rest
 
 hoistFunctions :: AstNode -> AstNode
 hoistFunctions (Function name args ast) = Function name args (preprocessFunctions ast)
+hoistFunctions (Lambda args ast) = Lambda args (preprocessFunctions ast)
 hoistFunctions (If cond trueBody falseBody) = If cond (preprocessFunctions trueBody) (preprocessFunctions falseBody)
 hoistFunctions (Loop test body initNode updateNode) = Loop test (preprocessFunctions body) initNode updateNode
+hoistFunctions (Scope ast) = Scope $ preprocessFunctions ast
 hoistFunctions a = a
 
 preprocessOptimizations :: [AstNode] -> [AstNode]
-preprocessOptimizations (Call name insts : xs) = preprocessOptimizations' (Call name (preprocessOptimizations insts) : xs)
+preprocessOptimizations (Call name insts : xs) = optimizeNode (Call name $ preprocessOptimizations insts) : preprocessOptimizations xs
+preprocessOptimizations (Function name args ast : xs) = Function name args (preprocessOptimizations ast) : preprocessOptimizations xs
+preprocessOptimizations (Lambda args ast : xs) = Lambda args (preprocessOptimizations ast) : xs
+preprocessOptimizations (If (Call name insts) trueBody falseBody : xs) = optimizeNode (If (optimizeNode $ Call name $ preprocessOptimizations insts) (preprocessOptimizations trueBody) (preprocessOptimizations falseBody)) : preprocessOptimizations xs
+preprocessOptimizations (If cond trueBody falseBody : xs) = optimizeNode (If cond (preprocessOptimizations trueBody) (preprocessOptimizations falseBody)) : preprocessOptimizations xs
+preprocessOptimizations (Loop (Call name insts) body initNode updateNode : xs) = optimizeNode (Loop (optimizeNode $ Call name $ preprocessOptimizations insts) (preprocessOptimizations body) initNode updateNode) : preprocessOptimizations xs
+preprocessOptimizations (Loop cond body initNode updateNode : xs) = optimizeNode (Loop cond (preprocessOptimizations body) initNode updateNode) : preprocessOptimizations xs
+preprocessOptimizations (Scope ast : xs) = Scope (preprocessOptimizations ast) : preprocessOptimizations xs
 preprocessOptimizations (x : xs) = x : preprocessOptimizations xs
 preprocessOptimizations [] = []
 
-preprocessOptimizations' :: [AstNode] -> [AstNode]
-preprocessOptimizations' (Call (Identifier name) [Integer x, Integer y] : xs) = optimizeIntegerCall name x y : preprocessOptimizations xs
-preprocessOptimizations' (Call (Identifier name) [Float x, Float y] : xs) = optimizeFloatCall name x y : preprocessOptimizations xs
-preprocessOptimizations' (Call (Identifier name) [Boolean x, Boolean y] : xs) = optimizeBoolCall name x y : preprocessOptimizations xs
-preprocessOptimizations' (Call (Identifier name) [String x, String y] : xs) = optimizeStringCall name x y : preprocessOptimizations xs
-preprocessOptimizations' (x : xs) = x : preprocessOptimizations xs
-preprocessOptimizations' [] = []
+optimizeNode :: AstNode -> AstNode
+optimizeNode (Call (Identifier name) [Integer x, Integer y]) = optimizeIntegerCall name x y
+optimizeNode (Call (Identifier name) [Float x, Float y]) = optimizeFloatCall name x y
+optimizeNode (Call (Identifier name) [Boolean x, Boolean y]) = optimizeBoolCall name x y
+optimizeNode (Call (Identifier name) [String x, String y]) = optimizeStringCall name x y
+optimizeNode (Call (Identifier name) [x, y]) = Call (Identifier name) [optimizeNode x, optimizeNode y]
+optimizeNode (If cond trueBody falseBody) = case astToBool cond of
+    Just True -> optimizeNode $ Scope trueBody
+    Just False -> optimizeNode $ Scope falseBody
+    Nothing -> If cond trueBody falseBody
+optimizeNode (Loop cond body initNode updateNode) = case astToBool cond of
+    Just False -> optimizeNode $ Scope []
+    _ -> Loop cond body initNode updateNode
+optimizeNode x = x
 
 optimizeIntegerCall :: String -> Int -> Int -> AstNode
 optimizeIntegerCall name x y = case name of
@@ -175,3 +191,13 @@ optimizeStringCall name x y = case name of
     "==" -> Boolean (x == y)
     "!=" -> Boolean (x /= y)
     _ -> Call (Identifier name) [String x, String y]
+
+astToBool :: AstNode -> Maybe Bool
+astToBool (Boolean x) = Just x
+astToBool (Integer 0) = Just False
+astToBool (Integer _) = Just True
+astToBool (Float 0) = Just False
+astToBool (Float _) = Just True
+astToBool (String "") = Just False
+astToBool (String _) = Just True
+astToBool _ = Nothing
