@@ -15,7 +15,7 @@ parseSize _ = Left "Not enough space for a size"
 
 parseUnsignedInt :: [Char] -> Int -> Int
 parseUnsignedInt [] _ = 0
-parseUnsignedInt (x:xs) idx = max (256 ^ (idx - 1)) 1 * fromEnum x + parseUnsignedInt xs (idx - 1)
+parseUnsignedInt (x : xs) idx = max (256 ^ (idx - 1)) 1 * fromEnum x + parseUnsignedInt xs (idx - 1)
 
 parseInt :: [Char] -> Either String (Int, [Char])
 parseInt (b1 : b2 : b3 : b4 : b5 : b6 : b7 : b8 : rest) = Right ((ord b1 `shiftL` 56) .|. (ord b2 `shiftL` 48) .|. (ord b3 `shiftL` 40) .|. (ord b4 `shiftL` 32) .|. (ord b5 `shiftL` 24) .|. (ord b6 `shiftL` 16) .|. (ord b7 `shiftL` 8) .|. ord b8, rest)

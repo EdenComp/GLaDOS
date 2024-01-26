@@ -22,8 +22,9 @@ transpileSize nb = toEnum size : transpileInt nb size
     size = getNumberSize nb 0
 
 getNumberSize :: Int -> Int -> Int
-getNumberSize nb idx | nb < 256 = idx + 1
-                     | otherwise = getNumberSize (nb `shiftR` 8) (idx + 1)
+getNumberSize nb idx
+    | nb < 256 = idx + 1
+    | otherwise = getNumberSize (nb `shiftR` 8) (idx + 1)
 
 transpileInt :: Int -> Int -> [Char]
 transpileInt nb size = map chr $ reverse $ map (`mod` 256) $ take size $ iterate (`shiftR` 8) nb
