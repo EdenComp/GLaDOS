@@ -313,7 +313,7 @@ parseDreamberd' infos =
 
 parseFunctionDeclaration :: Parser AstNode
 parseFunctionDeclaration =
-    parseStripped (parseString "fn")
+    parseStripped (parseString "fn" <|> parseString "function")
         >> parseStripped parseIdentifierString
         >>= \identifier ->
             parseOrValue (parseEnclosed ("(", ")") (parseOrValue parseFunctionDeclarationArgs [])) []
