@@ -27,5 +27,5 @@ Reach out to [`contact@dreamberd.fr`](mailto:contact@dreamberd.fr) and we'll get
 
 ## Team ❤️
 
-| [<img src="https://github.com/Croos3r.png?size=85" width=85><br><sub>Dorian MOY</sub>](https://github.com/Croos3r) | [<img src="https://github.com/EdenComp.png?size=85" width=85><br><sub>Florian LAUCH</sub>](https://github.com/EdenComp) | [<img src="https://github.com/Tomi-Tom.png?size=85" width=85><br><sub>Tom BARITEAU-PETER</sub>](https://github.com/Tomi-Tom) | [<img src="https://github.com/pablo0675.png?size=85" width=85><br><sub>Pablo LEVY</sub>](https://github.com/pablo0675) | [<img src="https://github.com/RezaRahemtola.png?size=85" width=85><br><sub>Reza RAHEMTOLA</sub>](https://github.com/RezaRahemtola)
+| [<img src="https://github.com/Croos3r.png?size=85" width=85><br><sub>Dorian MOY</sub>](https://github.com/Croos3r) | [<img src="https://github.com/EdenComp.png?size=85" width=85><br><sub>Florian LAUCH</sub>](https://github.com/EdenComp) | [<img src="https://github.com/Tomi-Tom.png?size=85" width=85><br><sub>Tom BARITEAU-PETER</sub>](https://github.com/Tomi-Tom) | [<img src="https://github.com/pablo0675.png?size=85" width=85><br><sub>Pablo LEVY</sub>](https://github.com/chuipagro) | [<img src="https://github.com/RezaRahemtola.png?size=85" width=85><br><sub>Reza RAHEMTOLA</sub>](https://github.com/RezaRahemtola)
 |:---:| :---: | :---: | :---: | :---: |
